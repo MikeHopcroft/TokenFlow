@@ -1,6 +1,6 @@
 - priority: 1
   suites: general
-  input: I'd like a black sedan with alloy wheels skip the extended warantty and a red convertable jacked with open headers
+  input: I'd like a black sedan with alloy wheels skip the extended waranty and a red convertible jacked with open headers
   expected: >-
     [INTENT:ADD_TO_ORDER] [QUANTITY:1] [ENTITY:BLACK_FOUR_DOOR_SEDAN,20]
     [QUANTITY:1] [ENTITY:ALLOY_RIMS,1000] [QUANTITY:0] [ENTITY:EXTENDED_WARRANTY,1800]
