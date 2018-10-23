@@ -45,7 +45,7 @@ If you are interested in taking a look, you can clone
 npm install token-flow
 ~~~
 
-As of [commit XXXXXXXX](), there are a number of working samples, based on a ficticious auto dealership.
+As of [commit 87407400](https://github.com/MikeHopcroft/TokenFlow/commit/8740740078ffd0bf6b506c34aa3c4ccc39991deb), there are a number of working samples, based on a ficticious auto dealership.
 
 Note that the samples are not included in the [token-flow npm package](https://www.npmjs.com/package/token-flow). To use them, you must
 clone the [repo from GitHub](https://github.com/MikeHopcroft/TokenFlow).
