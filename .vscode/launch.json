@@ -1,0 +1,71 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Mocha Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u",
+                "tdd",
+                "--timeout",
+                "999999",
+                "--colors",
+                "--recursive",
+                "${workspaceFolder}/build/**/*.test.js"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.js"
+            ],
+            "protocol": "inspector",
+            "skipFiles": [
+                "${workspaceFolder}/node_modules/**/*.js",
+                "<node_internals>/**/*.js"
+            ],
+            "smartStep": true,
+            "internalConsoleOptions":"openOnSessionStart",
+            "console":"integratedTerminal",
+            "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Junk",
+            "program": "${workspaceFolder}/build/samples/junk.js",
+            "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch relevance_demo_cars",
+            "program": "${workspaceFolder}/build/samples/relevance_demo_cars.js",
+            "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch pipeline_demo",
+            "program": "${workspaceFolder}/build/samples/pipeline_demo.js",
+            "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch REPL",
+            "program": "${workspaceFolder}/build/samples/repl.js",
+            "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Stemmer Confusion",
+            "program": "${workspaceFolder}/build/samples/stemmer_confusion_demo.js",
+            "outputCapture": "std"
+        }
+    ]
+}
