@@ -84,7 +84,7 @@ describe('Tokenizer', () => {
         it('should apply the Snowball English Stemmer', () => {
             const badWords = new Set([]);
             const tokenizer = new Tokenizer(badWords);
-            const input = 'organic wellness well customer customize customizable customized recreation create business busy organization organ organizer policy police universal university universe red convertible sedan rims tires knobby spinners slicks turbo charger';
+            const input = 'red convertible sedan rims tires knobby spinners slicks turbo charger';
             const terms = input.split(' ');
             const stemmed = terms.map((term) => tokenizer.stemTerm(term));
             const observed = stemmed.join(' ');
