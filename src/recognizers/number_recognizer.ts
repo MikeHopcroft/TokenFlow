@@ -16,7 +16,24 @@ export class NumberRecognizer implements Recognizer {
         this.tokenFactory = tokenFactory;
     }
 
-    private parseNumberSequence(sequence: PeekableSequence<string>): Token {
+    private parseSequence(sequence: PeekableSequence<string>): Token[] {
+        const tokens: Token[] = [];
+        while (!sequence.atEOF()) {
+            const term = sequence.peek();
+            if (NumberRecognizer.isArabicNumberalSequence(term)) {
+                tokens.push(this.parseArabicNumeralSequence(sequence));
+            }
+            else if (NumberRecognizer.lexicon.has(sequence.peek())) {
+                tokens.push(this.parseNumberTermSequence(sequence));
+            }
+            else {
+                tokens.push(this.parseTextSequence(sequence));
+            }
+        }
+        return tokens;
+    }
+
+    private parseNumberTermSequence(sequence: PeekableSequence<string>): Token {
         const terms: string[] = [];
         while (!sequence.atEOF()) {
             if (NumberRecognizer.lexicon.has(sequence.peek())) {
@@ -40,10 +57,16 @@ export class NumberRecognizer implements Recognizer {
         return this.tokenFactory(value, text);
     }
 
+    private parseArabicNumeralSequence(sequence: PeekableSequence<string>): Token {
+        const term = sequence.get();
+        const value = Number(term);
+        return this.tokenFactory(value, term);
+    }
+
     private parseTextSequence(sequence: PeekableSequence<string>): Token {
         const terms: string[] = [];
         while (!sequence.atEOF()) {
-            if (!NumberRecognizer.lexicon.has(sequence.peek())) {
+            if (!NumberRecognizer.isNumberTerm(sequence.peek())) {
                 terms.push(sequence.get());
             }
             else {
@@ -59,17 +82,13 @@ export class NumberRecognizer implements Recognizer {
         return { type: UNKNOWN, text };
     }
 
-    private parseSequence(sequence: PeekableSequence<string>): Token[] {
-        const tokens: Token[] = [];
-        while (!sequence.atEOF()) {
-            if (NumberRecognizer.lexicon.has(sequence.peek())) {
-                tokens.push(this.parseNumberSequence(sequence));
-            }
-            else {
-                tokens.push(this.parseTextSequence(sequence));
-            }
-        }
-        return tokens;
+    private static isNumberTerm(term: string) {
+        return NumberRecognizer.lexicon.has(term)
+            || NumberRecognizer.isArabicNumberalSequence(term);
+    }
+
+    private static isArabicNumberalSequence(term: string) {
+        return /^\d+$/.test(term);
     }
 
     apply = (token: Token) => {
