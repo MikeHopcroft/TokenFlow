@@ -30,7 +30,7 @@ describe('Diff', () => {
                 const expectedCommon = item[1][4];
 
                 const {match, cost, leftmostA, rightmostA, common} =
-                    diffString(query, prefix);
+                    diffString(query, prefix, new Set<string>());
 
                 console.log(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
 
@@ -61,7 +61,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2, 3];
             const expectedCost = 0;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix, predicate);
+            const {match, cost, rightmostA} = diff<number>(query, prefix, new Set<number>(), predicate);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -76,7 +76,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2];
             const expectedCost = 1;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix);
+            const {match, cost, rightmostA} = diff<number>(query, prefix, new Set<number>());
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);

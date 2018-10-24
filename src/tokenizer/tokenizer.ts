@@ -215,7 +215,7 @@ export class Tokenizer {
     }
 
     score(query: number[], prefix: number[]) {
-        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix);
+        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.hashedBadWordsSet);
 
         // Ratio of match length to match length + edit distance.
         const matchFactor = match.length / (match.length + cost);
@@ -246,6 +246,7 @@ export class Tokenizer {
         //     }
         // }, 0);
         // const badWordFactor = nonBadWordCount / match.length;
+        // TODO: Should this be terms common with match, instead of prefix?
         const commonTerms = this.commonTerms(query, prefix);
         const commonBadWords = this.commonBadWords(commonTerms);
 

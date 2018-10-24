@@ -98,7 +98,12 @@ export class NumberRecognizer implements Recognizer {
     }
 
     terms = () => {
-        return NumberRecognizer.lexicon;
+        // TODO: Remove this hack that hard-codes quantities for the contributedTerms set.
+        // Should move to a model where we pass a contributedTerms predicate.
+        // These predicates can then be chained.
+        const temp = new Set<string>(['0', '1', '2', '3', '4', '5', ...NumberRecognizer.lexicon]);
+        return temp;
+        // return NumberRecognizer.lexicon;
     }
 
     stemmer = (word: string): string => {

@@ -84,6 +84,8 @@ class DiffMatrix<T> {
     // The shorter, prefix sequence.
     b: T[];
 
+    contributedTerms: Set<T>;
+
     predicate: EqualityPredicate<T>;
 
     // Lengths of the two input sequences.
@@ -95,7 +97,7 @@ class DiffMatrix<T> {
 
     // Best sequence match and Levenshtein distance will be stored here once
     // the constructor exits.
-    result:DiffResults<T> = {
+    result: DiffResults<T> = {
         match: [],
         cost: 0,
         leftmostA: 0,
@@ -103,9 +105,15 @@ class DiffMatrix<T> {
         common: 0
     };
 
-    constructor(a: T[], b: T[], predicate: EqualityPredicate<T> = GenericEquality) {
+    constructor(
+        a: T[],
+        b: T[],
+        contributedTerms: Set<T>,
+        predicate: EqualityPredicate<T> = GenericEquality
+    ) {
         this.a = a;
         this.b = b;
+        this.contributedTerms = contributedTerms;
         this.predicate = predicate;
 
         this.aLen = a.length;
@@ -152,7 +160,6 @@ class DiffMatrix<T> {
                 this.matrix[j][i].update(Edit.DELETE_B, this.matrix[j - 1][i].cost + 1);
 
                 if (this.predicate(this.a[i - 1], this.b[j - 1])) {
-                // if (this.a[i - 1] === this.b[j - 1]) {
                     // Match
                     this.matrix[j][i].update(Edit.MATCH, this.matrix[j - 1][i - 1].cost);
                 }
@@ -187,7 +194,7 @@ class DiffMatrix<T> {
             switch (current.edit) {
                 case Edit.DELETE_A:
                     if (inSuffix) {
-                        cost -= 1;
+                        cost--;
                     }
                     ai--;
                     leftmostA = ai;
@@ -196,38 +203,74 @@ class DiffMatrix<T> {
                     bi--;
                     break;
                 case Edit.REPLACE:
-                    // DESIGN NOTE: it is important to take the item from
-                    // sequence `a` instead of `b`, in order to allow wildcards
-                    // from `b` to match items in `a`. In other words, we don't
-                    // want the match to contain the wildcard specifier from
-                    // `b`. Rather we want to it to contain the item from `a`
-                    // that matches the wildcard specifier.
-                    path.push(this.a[ai - 1]);
-                    // EXPERIMENT: replace above line with code below.
-                    // if (!inSuffix) {
-                    //     path.push(this.a[ai - 1]);
-                    // }
-                    ai--;
-                    bi--;
-                    // EXPERIMENT: comment out // inSuffix = false;
-                    inSuffix = false;
-                    leftmostA = ai;
+                    {
+                        // DESIGN NOTE: it is important to take the item from
+                        // sequence `a` instead of `b`, in order to allow wildcards
+                        // from `b` to match items in `a`. In other words, we don't
+                        // want the match to contain the wildcard specifier from
+                        // `b`. Rather we want to it to contain the item from `a`
+                        // that matches the wildcard specifier.
+                        const term = this.a[ai - 1];
+
+                        // Don't match a trailing contributed terms in the suffix.
+                        // For example, suppose the query is "rack and trailer hitch"
+                        // and the prefix is "rack and pinion". We don't want to
+                        // generate a match of "rack and".
+                        //
+                        // Take the matched term if either of the following is true
+                        //   1. we haven't taken any terms yet,
+                        //      meaning that we've been in the suffix
+                        //      and can continue trimming contributing terms
+                        //   2. this term is not a contributing term.
+                        //
+                        if (path.length > 0 || !this.contributedTerms.has(term)) {
+                            path.push(term);
+                            // TODO: Do we want to decrease the cost if we don't take the term?
+                            if (rightmostA < 0) {
+                                rightmostA = ai - 1;
+                            }
+                        }
+
+                        // EXPERIMENT: replace above line with code below.
+                        // if (!inSuffix) {
+                        //     path.push(this.a[ai - 1]);
+                        // }
+                        ai--;
+                        bi--;
+                        // EXPERIMENT: comment out // inSuffix = false;
+                        inSuffix = false;
+                        leftmostA = ai;
+                    }
                     break;
                 case Edit.MATCH:
-                    path.push(this.a[ai - 1]);
-                    ai--;
-                    bi--;
-                    common++;
-                    inSuffix = false;
-                    leftmostA = ai;
+                    {
+                        const term = this.a[ai - 1];
+
+                        // Take the matched term if any of the following are true
+                        //   1. we haven't taken any terms yet,
+                        //      meaning that we've been in the suffix
+                        //      and can continue trimming contributing terms
+                        //   2. this terms matches the last term in b,
+                        //      meaning we will stop trimming contributing terms.
+                        //   3. this term is not a contributing term.
+                        //
+                        if (path.length > 0 || bi === this.bLen || !this.contributedTerms.has(term)) {
+                            path.push(term);
+                            if (rightmostA < 0) {
+                                rightmostA = ai - 1;
+                            }
+                        }
+
+                        ai--;
+                        bi--;
+                        common++;
+                        inSuffix = false;
+                        leftmostA = ai;
+                    }
                     break;
                 default:
                     // Should never get here.
                     break;
-            }
-
-            if (rightmostA < 0 && !inSuffix) {
-                rightmostA = ai;
             }
 
             current = this.matrix[bi][ai];
@@ -244,18 +287,23 @@ class DiffMatrix<T> {
 }
 
 // Generic sequence diff.
-export function diff<T>(query: T[], prefix: T[], predicate:EqualityPredicate<T> = GenericEquality): DiffResults<T> {
-    const d = new DiffMatrix<T>(query, prefix, predicate);
+export function diff<T>(
+    query: T[],
+    prefix: T[],
+    contributedTerms: Set<T>,
+    predicate: EqualityPredicate<T> = GenericEquality
+): DiffResults<T> {
+    const d = new DiffMatrix<T>(query, prefix, contributedTerms, predicate);
     return d.result;
 }
 
 // String diff.
-export function diffString(query: string, prefix: string) {
+export function diffString(query: string, prefix: string, contributedTerms: Set<string>) {
     const a = [...query];
     const b = [...prefix];
-    const d = new DiffMatrix(a, b);
-    const {match, ...rest} = d.result;
-    return {match: match.join(''), ...rest};
+    const d = new DiffMatrix(a, b, contributedTerms);
+    const { match, ...rest } = d.result;
+    return { match: match.join(''), ...rest };
 }
 
 

@@ -108,6 +108,7 @@ export class Pipeline {
         const entityBadWords = new Set([
             ...this.intentRecognizer.terms(),
             ...this.quantityRecognizer.terms(),
+            ...this.numberRecognizer.terms(),
             ...this.attributeRecognizer.terms()
         ]);
 
