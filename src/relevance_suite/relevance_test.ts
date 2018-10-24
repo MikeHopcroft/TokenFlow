@@ -158,7 +158,7 @@ export class RelevanceSuite {
             return new TestCase(
                 index,
                 copyScalar<number>(test, 'priority', 'number').toString(),
-                copyScalar<string>(test, 'suites', 'string').split(' '),
+                copyScalar<string>(test, 'suites', 'string').split(/\s+/),
                 copyScalar<string>(test, 'input', 'string'),
                 copyScalar<string>(test, 'expected', 'string')
             );

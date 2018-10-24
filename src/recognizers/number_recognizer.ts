@@ -93,7 +93,7 @@ export class NumberRecognizer implements Recognizer {
 
     apply = (token: Token) => {
         const text = token.text;
-        const terms = text.split(' ');
+        const terms = text.split(/\s+/);
         return this.parseSequence(new PeekableSequence(terms[Symbol.iterator]()));
     }
 

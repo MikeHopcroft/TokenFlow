@@ -85,7 +85,7 @@ describe('Tokenizer', () => {
             const badWords = new Set([]);
             const tokenizer = new Tokenizer(badWords);
             const input = 'red convertible sedan rims tires knobby spinners slicks turbo charger';
-            const terms = input.split(' ');
+            const terms = input.split(/\s+/);
             const stemmed = terms.map((term) => tokenizer.stemTerm(term));
             const observed = stemmed.join(' ');
             const expected = 'red convert sedan rim tire knobbi spinner slick turbo charger';

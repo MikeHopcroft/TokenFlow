@@ -78,7 +78,7 @@ export class PatternRecognizer<T extends Item> implements Recognizer {
 
     apply = (token: Token) => {
         const path = this.tokenizer.processQuery(token.text);
-        const terms = token.text.split(' ');
+        const terms = token.text.split(/\s+/);
 
         return this.tokenizer.tokenizeMatches(terms, path, this.tokenFactory);
     }
@@ -87,7 +87,7 @@ export class PatternRecognizer<T extends Item> implements Recognizer {
         const terms = new Set<string>();
         for (const [pid, item] of this.items) {
             for (const alias of item.aliases) {
-                const words = alias.split(' ');
+                const words = alias.split(/\s+/);
                 for (const word of words) {
                     terms.add(word);
                 }

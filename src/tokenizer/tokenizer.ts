@@ -176,7 +176,7 @@ export class Tokenizer {
         this.pids.push(pid);
 
         // Split input string into individual terms.
-        const terms = text.split(' ');
+        const terms = text.split(/\s+/);
 
         const stemmed = terms.map(this.stemTerm);
         this.stemmedItems.push(stemmed.join(' '));
@@ -317,7 +317,7 @@ export class Tokenizer {
     // TODO: pass formatters here?
     // TODO: return terms and path, instead of strings?
     processQuery(query: string): Edge[] {
-        const terms = query.split(' ');
+        const terms = query.split(/\s+/);
         const stemmed = terms.map(this.stemTerm);
         const hashed = stemmed.map(this.hashTerm);
 
