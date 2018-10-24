@@ -1,1 +1,1 @@
-export {AggregatedResults, RelevanceSuite, TestCase} from './relevance_test';
+export {AggregatedResults, RelevanceSuite, TestCase} from './relevance_suite';

@@ -1,6 +1,6 @@
 import * as yaml from 'js-yaml';
-import { Recognizer, Token, UNKNOWN } from '../../src/tokenizer';
-import { copyScalar } from '../../src/utilities';
+import { Recognizer, Token, UNKNOWN } from '../tokenizer';
+import { copyScalar } from '../utilities';
 
 export type TokenToString = (token: Token) => string;
 
