@@ -37,8 +37,8 @@ describe('Alias Generation', () => {
         assert.throws(f, TypeError);
     });
 
-    it('should work for more complex examples', () => {
-        const pattern = '[very small,medium] (red,green) marble [rolling]';
+    it('should remove extra whitespace', () => {
+        const pattern = '[ very small , medium ] ( red, green )  marble [ rolling ]';
 
         const expected = [
             "very small red marble rolling",

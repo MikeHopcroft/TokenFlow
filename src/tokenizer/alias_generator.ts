@@ -38,11 +38,11 @@ export function* generateAliases(query:string) {
         const options = matches.map(match => {
             if (match.startsWith('[')) {
                 // Selects an option or leaves blank
-                return [...match.slice(1, -1).split(','), ''];
+                return [...match.slice(1, -1).split(','), ''].map(x => x.trim());
             }
             else if (match.startsWith('(')) {
                 // Must select from one of the options
-                return match.slice(1, -1).split(',');
+                return match.slice(1, -1).split(',').map(x => x.trim());
             }
             else {
                 return [match.trim()];
