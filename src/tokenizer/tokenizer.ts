@@ -59,9 +59,28 @@ export class Tokenizer {
         return Tokenizer.snowballStemmer.stem(term.toLowerCase());
     }
 
+    static minNumberHash = Math.pow(2, 32);
+
+    static isNumberHash(hash: HASH) {
+        return hash >= Tokenizer.minNumberHash;
+    }
+
     // Arrow function to allow use in map.
     hashTerm = (term: string): number => {
-        return v3(term, this.seed);
+        // DESIGN NOTE: murmurhash returns 32-bit hashes.
+        // Encode natural numbers x as x + 2^32.
+        // This allows a simple test to determine whether a hash
+        // is the hash of a number.
+        if (/^\d+$/.test(term)) {
+            return Number(term) + Tokenizer.minNumberHash;
+        }
+        else {
+            const hash = v3(term, this.seed);
+            if (hash >= Tokenizer.minNumberHash) {
+                throw TypeError(`hashTerm: murmurhash returned value greater than ${Tokenizer.minNumberHash - 1}`);
+            }
+            return hash;
+        }
     }
 
     // Arrow function to allow use in map.
@@ -214,8 +233,12 @@ export class Tokenizer {
         return new Set([...commonTerms].filter(x => this.hashedBadWordsSet.has(x)));
     }
 
+    isContributedTerm = (hash: HASH) => {
+        return Tokenizer.isNumberHash(hash) || this.hashedBadWordsSet.has(hash);
+    }
+
     score(query: number[], prefix: number[]) {
-        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.hashedBadWordsSet);
+        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isContributedTerm);
 
         // Ratio of match length to match length + edit distance.
         const matchFactor = match.length / (match.length + cost);

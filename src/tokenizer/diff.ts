@@ -63,6 +63,7 @@ class Vertex {
     }
 }
 
+export type ContributedTermPredicate<T> = (a: T) => boolean;
 export type EqualityPredicate<T> = (a: T, b: T) => boolean;
 
 function GenericEquality<T>(a: T, b: T): boolean {
@@ -84,7 +85,7 @@ class DiffMatrix<T> {
     // The shorter, prefix sequence.
     b: T[];
 
-    contributedTerms: Set<T>;
+    isContributedTerm: ContributedTermPredicate<T>;
 
     predicate: EqualityPredicate<T>;
 
@@ -108,12 +109,12 @@ class DiffMatrix<T> {
     constructor(
         a: T[],
         b: T[],
-        contributedTerms: Set<T>,
+        isContributedTerm: ContributedTermPredicate<T>,
         predicate: EqualityPredicate<T> = GenericEquality
     ) {
         this.a = a;
         this.b = b;
-        this.contributedTerms = contributedTerms;
+        this.isContributedTerm = isContributedTerm;
         this.predicate = predicate;
 
         this.aLen = a.length;
@@ -223,7 +224,7 @@ class DiffMatrix<T> {
                         //      and can continue trimming contributing terms
                         //   2. this term is not a contributing term.
                         //
-                        if (path.length > 0 || !this.contributedTerms.has(term)) {
+                        if (path.length > 0 || !this.isContributedTerm(term)) {
                             path.push(term);
                             // TODO: Do we want to decrease the cost if we don't take the term?
                             if (rightmostA < 0) {
@@ -254,7 +255,7 @@ class DiffMatrix<T> {
                         //      meaning we will stop trimming contributing terms.
                         //   3. this term is not a contributing term.
                         //
-                        if (path.length > 0 || bi === this.bLen || !this.contributedTerms.has(term)) {
+                        if (path.length > 0 || bi === this.bLen || !this.isContributedTerm(term)) {
                             path.push(term);
                             if (rightmostA < 0) {
                                 rightmostA = ai - 1;
@@ -290,18 +291,18 @@ class DiffMatrix<T> {
 export function diff<T>(
     query: T[],
     prefix: T[],
-    contributedTerms: Set<T>,
+    isContributedTerm: ContributedTermPredicate<T>,
     predicate: EqualityPredicate<T> = GenericEquality
 ): DiffResults<T> {
-    const d = new DiffMatrix<T>(query, prefix, contributedTerms, predicate);
+    const d = new DiffMatrix<T>(query, prefix, isContributedTerm, predicate);
     return d.result;
 }
 
 // String diff.
-export function diffString(query: string, prefix: string, contributedTerms: Set<string>) {
+export function diffString(query: string, prefix: string, isContributedTerm: ContributedTermPredicate<string>) {
     const a = [...query];
     const b = [...prefix];
-    const d = new DiffMatrix(a, b, contributedTerms);
+    const d = new DiffMatrix(a, b, isContributedTerm);
     const { match, ...rest } = d.result;
     return { match: match.join(''), ...rest };
 }

@@ -3,6 +3,14 @@ import 'mocha';
 
 import {diff, diffString} from '../../src/tokenizer/diff';
 
+function isContributedTerm(term: string) {
+    return false;
+}
+
+function isContributedTermHash(hash: number) {
+    return false;
+}
+
 describe('Diff', () => {
     describe('#general', () => {
         it('should correctly match the prefix to the query string.', () => {
@@ -30,7 +38,7 @@ describe('Diff', () => {
                 const expectedCommon = item[1][4];
 
                 const {match, cost, leftmostA, rightmostA, common} =
-                    diffString(query, prefix, new Set<string>());
+                    diffString(query, prefix, isContributedTerm);
 
                 console.log(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
 
@@ -61,7 +69,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2, 3];
             const expectedCost = 0;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix, new Set<number>(), predicate);
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isContributedTermHash, predicate);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -76,7 +84,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2];
             const expectedCost = 1;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix, new Set<number>());
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isContributedTermHash);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
