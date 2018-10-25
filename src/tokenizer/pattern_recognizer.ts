@@ -1,4 +1,5 @@
 import * as yaml from 'js-yaml';
+import * as AJV from 'ajv';
 import { generateAliases, PID, Recognizer, StemmerFunction, Token, TokenFactory, Tokenizer } from '.';
 import { copyArray, copyScalar } from '../utilities';
 
@@ -8,36 +9,67 @@ export interface Item {
     aliases: string[];
 }
 
-// tslint:disable-next-line:no-any
-function itemFromYamlItem(item: any): Item {
-    return {
-        pid: copyScalar<number>(item, 'pid', 'number'),
-        name: copyScalar<string>(item, 'name', 'string'),
-        aliases: copyArray<string>(item, 'aliases', 'string'),
-    };
+export interface ItemCollection {
+    items: Item[];
 }
 
+// Schema from https://www.npmjs.com/package/typescript-json-schema
+const schemaForItemCollection = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "Item": {
+            "properties": {
+                "aliases": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pid": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "aliases",
+                "name",
+                "pid"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "items": {
+            "items": {
+                "$ref": "#/definitions/Item"
+            },
+            "type": "array"
+        }
+    },
+    "required": [
+        "items"
+    ],
+    "type": "object"
+};
+
+const ajv = new AJV();
+const validator = ajv.compile(schemaForItemCollection);
+
 export function itemMapFromYamlString(yamlText: string): Map<PID, Item> {
-    // tslint:disable-next-line:no-any
-    const yamlRoot: any = yaml.safeLoad(yamlText);
+    const yamlRoot = yaml.safeLoad(yamlText) as ItemCollection;
 
-    if (typeof (yamlRoot) !== 'object') {
-        throw TypeError('itemsFromYamlString: expected a top-level object with items array.');
+    if (!validator(yamlRoot)) {
+        const message = 'itemMapFromYamlString: yaml data does not conform to schema.';
+        console.log(message);
+        console.log(validator.errors);
+        throw TypeError(message);
     }
-
-    const yamlItems = yamlRoot['items'] as Item[];
-    if (yamlItems === undefined || !Array.isArray(yamlRoot.items)) {
-        throw TypeError('itemsFromYamlString: expected items array.');
-    }
-
+    
     const map = new Map<PID, Item>();
-    for (const item of yamlItems) {
-        if (map.has(item.pid)) {
-            throw TypeError(`itemsFromYamlString: found duplicate pid in item ${item}`);
-        }
-        else {
-            map.set(item.pid, item);
-        }
+    for (const item of yamlRoot.items) {
+        map.set(item.pid, item);
     }
 
     return map;

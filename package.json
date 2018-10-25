@@ -21,7 +21,7 @@
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "postcompile": "copyfiles samples/data/**/*.yaml build"
+    "postcompile": "copyfiles \"samples/data/**/*.yaml\" build"
   },
   "devDependencies": {
     "@types/chai": "^4.1.6",
@@ -40,12 +40,12 @@
     "typescript": "~2.8.0"
   },
   "dependencies": {
+    "ajv": "^6.5.4",
     "js-yaml": "^3.12.0",
     "murmurhash": "0.0.2",
     "number-to-words": "^1.2.4",
     "readline-sync": "^1.4.9",
     "snowball-stemmers": "^0.6.0",
-    "type-safe-json-decoder": "^0.2.0",
     "words-to-numbers": "^1.5.1"
   }
 }
