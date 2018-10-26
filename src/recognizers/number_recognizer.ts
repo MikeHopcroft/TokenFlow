@@ -91,10 +91,21 @@ export class NumberRecognizer implements Recognizer {
         return /^\d+$/.test(term);
     }
 
-    apply = (token: Token) => {
-        const text = token.text;
-        const terms = text.split(/\s+/);
-        return this.parseSequence(new PeekableSequence(terms[Symbol.iterator]()));
+    apply = (tokens: Token[]) => {
+        const result: Token[] = [];
+        for (const token of tokens) {
+            if (token.type === UNKNOWN) {
+                const text = token.text;
+                const terms = text.split(/\s+/);
+                const numbers = this.parseSequence(
+                    new PeekableSequence(terms[Symbol.iterator]()));
+                result.push(...numbers);
+            }
+            else {
+                result.push(token);
+            }
+        }
+        return result;
     }
 
     terms = () => {

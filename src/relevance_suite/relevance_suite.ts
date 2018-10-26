@@ -132,7 +132,7 @@ export class TestCase {
     }
 
     run(recognizer: Recognizer, tokenToString: TokenToString) {
-        const input = { type: UNKNOWN, text: this.input };
+        const input = [ { type: UNKNOWN, text: this.input } ];
         const tokens = recognizer.apply(input);
 
         const observed = tokens.map(tokenToString).join(' ');

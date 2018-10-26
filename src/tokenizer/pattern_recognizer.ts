@@ -1,6 +1,6 @@
 import * as yaml from 'js-yaml';
 import * as AJV from 'ajv';
-import { generateAliases, PID, Recognizer, StemmerFunction, Token, TokenFactory, Tokenizer } from '.';
+import { generateAliases, PID, Recognizer, StemmerFunction, Token, TokenFactory, Tokenizer, UNKNOWN } from '.';
 
 export interface Item {
     pid: PID;
@@ -107,11 +107,21 @@ export class PatternRecognizer<T extends Item> implements Recognizer {
         console.log(`${this.items.size} items contributed ${aliasCount} aliases.`);
     }
 
-    apply = (token: Token) => {
-        const path = this.tokenizer.processQuery(token.text);
-        const terms = token.text.split(/\s+/);
-
-        return this.tokenizer.tokenizeMatches(terms, path, this.tokenFactory);
+    apply = (tokens: Token[]) => {
+        const result: Token[] = [];
+        for (const token of tokens) {
+            if (token.type === UNKNOWN) {
+                const path = this.tokenizer.processQuery(token.text);
+                const terms = token.text.split(/\s+/);
+        
+                const matches = this.tokenizer.tokenizeMatches(terms, path, this.tokenFactory);
+                result.push(...matches);
+            }
+            else {
+                result.push(token);
+            }
+        }
+        return result;
     }
 
     terms = () => {

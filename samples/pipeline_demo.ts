@@ -17,4 +17,5 @@ function pipelineDemo(query: string, debugMode = false) {
     printTokens(tokens);
 }
 
-pipelineDemo('can I have a station wagon');
+pipelineDemo("I'll have four tires one of them white wall");
+// pipelineDemo('can I have a station wagon');

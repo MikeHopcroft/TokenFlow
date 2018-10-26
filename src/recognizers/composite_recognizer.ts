@@ -22,17 +22,17 @@ export class CompositeRecognizer implements Recognizer {
         this.debugMode = debugMode;
     }
 
-    apply = (token: Token) => {
-        let result = [token];
+    apply = (tokens: Token[]) => {
+        let result = tokens;
 
         if (this.debugMode) {
             console.log('Input:');
-            console.log(token);
+            console.log(tokens);
             console.log();
         }
 
         this.recognizers.forEach((processor, index) => {
-            result = applyProcessor(processor.apply, result);
+            result = processor.apply(result);
 
             if (this.debugMode) {
                 console.log(`=== PASS ${index} ===`);

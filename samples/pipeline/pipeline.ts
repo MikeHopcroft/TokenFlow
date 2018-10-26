@@ -3,6 +3,7 @@ import { Recognizer, StemmerFunction, Token, Tokenizer, UnknownToken, UNKNOWN } 
 
 import { ATTRIBUTE, AttributeToken, CreateAttributeRecognizer } from '../recognizers';
 import { ENTITY, CreateEntityRecognizer, EntityToken } from '../recognizers';
+import { FixupRecognizer } from '../recognizers';
 import { INTENT, CreateIntentRecognizer, IntentToken } from '../recognizers';
 import { QUANTITY, CreateQuantityRecognizer, QuantityToken } from '../recognizers';
 import { CreateNumberRecognizer } from '../recognizers';
@@ -66,6 +67,7 @@ export function printTokens(tokens: Token[]) {
 export class Pipeline {
     attributeRecognizer: Recognizer;
     entityRecognizer: Recognizer;
+    fixupRecognizer: Recognizer;
     intentRecognizer: Recognizer;
     numberRecognizer: Recognizer;
     quantityRecognizer: Recognizer;
@@ -85,6 +87,8 @@ export class Pipeline {
             new Set(),
             stemmer,
             debugMode);
+
+        this.fixupRecognizer = new FixupRecognizer();
 
         this.quantityRecognizer = CreateQuantityRecognizer(
             quantifierFile,
@@ -123,6 +127,7 @@ export class Pipeline {
                 this.entityRecognizer,
                 this.attributeRecognizer,
                 this.numberRecognizer,
+                this.fixupRecognizer,
                 this.quantityRecognizer,
                 this.intentRecognizer
             ],
@@ -131,7 +136,7 @@ export class Pipeline {
     }
 
     processOneQuery(query: string, debugMode = false) {
-        const input = { type: UNKNOWN, text: query };
+        const input = [ { type: UNKNOWN, text: query } ];
         const tokens = this.compositeRecognizer.apply(input);
         return tokens;
     }
