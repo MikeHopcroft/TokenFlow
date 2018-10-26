@@ -1,7 +1,6 @@
 import * as yaml from 'js-yaml';
 import * as AJV from 'ajv';
 import { generateAliases, PID, Recognizer, StemmerFunction, Token, TokenFactory, Tokenizer } from '.';
-import { copyArray, copyScalar } from '../utilities';
 
 export interface Item {
     pid: PID;

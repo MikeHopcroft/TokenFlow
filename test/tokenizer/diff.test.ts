@@ -3,11 +3,11 @@ import 'mocha';
 
 import {diff, diffString} from '../../src/tokenizer/diff';
 
-function isContributedTerm(term: string) {
+function isDownstreamTerm(term: string) {
     return false;
 }
 
-function isContributedTermHash(hash: number) {
+function isDownstreamTermHash(hash: number) {
     return false;
 }
 
@@ -38,7 +38,7 @@ describe('Diff', () => {
                 const expectedCommon = item[1][4];
 
                 const {match, cost, leftmostA, rightmostA, common} =
-                    diffString(query, prefix, isContributedTerm);
+                    diffString(query, prefix, isDownstreamTerm);
 
                 console.log(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
 
@@ -69,7 +69,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2, 3];
             const expectedCost = 0;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix, isContributedTermHash, predicate);
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash, predicate);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -84,7 +84,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2];
             const expectedCost = 1;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix, isContributedTermHash);
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);

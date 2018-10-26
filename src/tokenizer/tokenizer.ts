@@ -233,12 +233,12 @@ export class Tokenizer {
         return new Set([...commonTerms].filter(x => this.hashedBadWordsSet.has(x)));
     }
 
-    isContributedTerm = (hash: HASH) => {
+    isDownstreamTerm = (hash: HASH) => {
         return Tokenizer.isNumberHash(hash) || this.hashedBadWordsSet.has(hash);
     }
 
     score(query: number[], prefix: number[]) {
-        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isContributedTerm);
+        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isDownstreamTerm);
 
         // Ratio of match length to match length + edit distance.
         const matchFactor = match.length / (match.length + cost);

@@ -63,7 +63,7 @@ class Vertex {
     }
 }
 
-export type ContributedTermPredicate<T> = (a: T) => boolean;
+export type DownstreamTermPredicate<T> = (a: T) => boolean;
 export type EqualityPredicate<T> = (a: T, b: T) => boolean;
 
 function GenericEquality<T>(a: T, b: T): boolean {
@@ -85,7 +85,7 @@ class DiffMatrix<T> {
     // The shorter, prefix sequence.
     b: T[];
 
-    isContributedTerm: ContributedTermPredicate<T>;
+    isDownstreamTerm: DownstreamTermPredicate<T>;
 
     predicate: EqualityPredicate<T>;
 
@@ -109,12 +109,12 @@ class DiffMatrix<T> {
     constructor(
         a: T[],
         b: T[],
-        isContributedTerm: ContributedTermPredicate<T>,
+        isDownstreamTerm: DownstreamTermPredicate<T>,
         predicate: EqualityPredicate<T> = GenericEquality
     ) {
         this.a = a;
         this.b = b;
-        this.isContributedTerm = isContributedTerm;
+        this.isDownstreamTerm = isDownstreamTerm;
         this.predicate = predicate;
 
         this.aLen = a.length;
@@ -213,7 +213,7 @@ class DiffMatrix<T> {
                         // that matches the wildcard specifier.
                         const term = this.a[ai - 1];
 
-                        // Don't match a trailing contributed terms in the suffix.
+                        // Don't match a trailing downstream terms in the suffix.
                         // For example, suppose the query is "rack and trailer hitch"
                         // and the prefix is "rack and pinion". We don't want to
                         // generate a match of "rack and".
@@ -224,7 +224,7 @@ class DiffMatrix<T> {
                         //      and can continue trimming contributing terms
                         //   2. this term is not a contributing term.
                         //
-                        if (path.length > 0 || !this.isContributedTerm(term)) {
+                        if (path.length > 0 || !this.isDownstreamTerm(term)) {
                             path.push(term);
                             // TODO: Do we want to decrease the cost if we don't take the term?
                             if (rightmostA < 0) {
@@ -255,7 +255,7 @@ class DiffMatrix<T> {
                         //      meaning we will stop trimming contributing terms.
                         //   3. this term is not a contributing term.
                         //
-                        if (path.length > 0 || bi === this.bLen || !this.isContributedTerm(term)) {
+                        if (path.length > 0 || bi === this.bLen || !this.isDownstreamTerm(term)) {
                             path.push(term);
                             if (rightmostA < 0) {
                                 rightmostA = ai - 1;
@@ -291,18 +291,18 @@ class DiffMatrix<T> {
 export function diff<T>(
     query: T[],
     prefix: T[],
-    isContributedTerm: ContributedTermPredicate<T>,
+    isDownstreamTerm: DownstreamTermPredicate<T>,
     predicate: EqualityPredicate<T> = GenericEquality
 ): DiffResults<T> {
-    const d = new DiffMatrix<T>(query, prefix, isContributedTerm, predicate);
+    const d = new DiffMatrix<T>(query, prefix, isDownstreamTerm, predicate);
     return d.result;
 }
 
 // String diff.
-export function diffString(query: string, prefix: string, isContributedTerm: ContributedTermPredicate<string>) {
+export function diffString(query: string, prefix: string, isDownstreamTerm: DownstreamTermPredicate<string>) {
     const a = [...query];
     const b = [...prefix];
-    const d = new DiffMatrix(a, b, isContributedTerm);
+    const d = new DiffMatrix(a, b, isDownstreamTerm);
     const { match, ...rest } = d.result;
     return { match: match.join(''), ...rest };
 }
