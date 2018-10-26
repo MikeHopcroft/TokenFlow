@@ -15,7 +15,7 @@ export type QuantityRecognizer = PatternRecognizer<Item>;
 
 export function CreateQuantityRecognizer(
     quantityFile: string,
-    badWords: Set<string>,
+    downstreamWords: Set<string>,
     stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
     debugMode = false
 ): QuantityRecognizer {
@@ -31,5 +31,5 @@ export function CreateQuantityRecognizer(
         return { type: QUANTITY, text, value: Number(value) };
     };
 
-    return new PatternRecognizer(items, tokenFactory, badWords, stemmer, debugMode);
+    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, debugMode);
 }

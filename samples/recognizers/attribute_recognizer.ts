@@ -16,7 +16,7 @@ export type AttributeRecognizer = PatternRecognizer<Item>;
 
 export function CreateAttributeRecognizer(
     attributeFile: string,
-    badWords: Set<string>,
+    downstreamWords: Set<string>,
     stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
     debugMode = false
 ): AttributeRecognizer {
@@ -32,5 +32,5 @@ export function CreateAttributeRecognizer(
         return { type: ATTRIBUTE, id, name, text };
     };
 
-    return new PatternRecognizer(items, tokenFactory, badWords, stemmer, debugMode);
+    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, debugMode);
 }

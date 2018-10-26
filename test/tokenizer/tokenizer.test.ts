@@ -6,8 +6,8 @@ import { PID, Tokenizer } from '../../src/tokenizer';
 describe('Tokenizer', () => {
     describe('#addItem', () => {
         it('should add item text to `this.items` and PIDs to `this.pids`', () => {
-            const badWords = new Set([]);
-            const tokenizer = new Tokenizer(badWords);
+            const downstreamWords = new Set([]);
+            const tokenizer = new Tokenizer(downstreamWords);
             const items:Array<[PID, string]> = [
                 [1, 'one'],
                 [2, 'two'],
@@ -24,8 +24,8 @@ describe('Tokenizer', () => {
         });
 
         it('should apply MurmurHash3 with seed value of 0.', () => {
-            const badWords = new Set([]);
-            const tokenizer = new Tokenizer(badWords);
+            const downstreamWords = new Set([]);
+            const tokenizer = new Tokenizer(downstreamWords);
             const input = 'small unsweeten ice tea';
             tokenizer.addItem(1, input);
             const observed = tokenizer.hashedItems[0];
@@ -34,8 +34,8 @@ describe('Tokenizer', () => {
         });
 
         it('should build posting lists.', () => {
-            const badWords = new Set([]);
-            const tokenizer = new Tokenizer(badWords);
+            const downstreamWords = new Set([]);
+            const tokenizer = new Tokenizer(downstreamWords);
 
             // DESIGN NOTE: the terms 'a'..'f' are known to stem to themselves.
             const items = ['a b c', 'b c d', 'd e f'];
@@ -82,8 +82,8 @@ describe('Tokenizer', () => {
 
     describe('#stemTerm', () => {
         it('should apply the Snowball English Stemmer', () => {
-            const badWords = new Set([]);
-            const tokenizer = new Tokenizer(badWords);
+            const downstreamWords = new Set([]);
+            const tokenizer = new Tokenizer(downstreamWords);
             const input = 'red convertible sedan rims tires knobby spinners slicks turbo charger';
             const terms = input.split(/\s+/);
             const stemmed = terms.map((term) => tokenizer.stemTerm(term));

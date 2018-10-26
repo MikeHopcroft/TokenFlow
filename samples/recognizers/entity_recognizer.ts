@@ -15,7 +15,7 @@ export type EntityRecognizer = PatternRecognizer<Item>;
 
 export function CreateEntityRecognizer(
     entityFile: string,
-    badWords: Set<string>,
+    downstreamWords: Set<string>,
     stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
     debugMode = false) {
     const items = itemMapFromYamlString(fs.readFileSync(entityFile, 'utf8'));
@@ -30,5 +30,5 @@ export function CreateEntityRecognizer(
         return { type: ENTITY, pid: id, name, text };
     };
 
-    return new PatternRecognizer(items, tokenFactory, badWords, stemmer, debugMode);
+    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, debugMode);
 }

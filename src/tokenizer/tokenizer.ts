@@ -29,20 +29,20 @@ export class Tokenizer {
 
     postings: { [hash: number]: ID[] } = {};
 
-    badWords: Set<string> = new Set<string>();
+    downstreamWords: Set<string> = new Set<string>();
 
-    hashedBadWordsSet = new Set<HASH>();
+    hashedDownstreamWordsSet = new Set<HASH>();
 
     constructor(
-        badWords: Set<string>,
+        downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         debugMode = false
     ) {
-        this.badWords = badWords;
+        this.downstreamWords = downstreamWords;
         this.stemTerm = stemmer;
-        this.badWords.forEach((term) => {
+        this.downstreamWords.forEach((term) => {
             const hash = this.hashTerm(this.stemTerm(term));
-            this.hashedBadWordsSet.add(hash);
+            this.hashedDownstreamWordsSet.add(hash);
         });
 
         this.debugMode = debugMode;
@@ -108,7 +108,7 @@ export class Tokenizer {
             if (edge.label < 0) {
                 rewritten.push(terms[termIndex++]);
             }
-            // TODO: EXPERIMENT 1: filter out badwords.
+            // TODO: EXPERIMENT 1: filter out downstream words.
             else {
                 const text = `[${terms.slice(termIndex, termIndex + edge.length).join(" ")}]`;
                 rewritten.push(text);
@@ -125,7 +125,7 @@ export class Tokenizer {
             if (edge.label < 0) {
                 rewritten.push(terms[termIndex++]);
             }
-            // TODO: EXPERIMENT 1: filter out badwords.
+            // TODO: EXPERIMENT 1: filter out downstream words.
             else {
                 // TODO: Where does toUpperCase and replacing spaces with underscores go?
                 const name = pidToName(this.pids[edge.label]);
@@ -229,12 +229,12 @@ export class Tokenizer {
         return new Set([...a].filter(x => b.has(x)));
     }
 
-    commonBadWords(commonTerms: Set<HASH>) {
-        return new Set([...commonTerms].filter(x => this.hashedBadWordsSet.has(x)));
+    commonDownstreamWords(commonTerms: Set<HASH>) {
+        return new Set([...commonTerms].filter(x => this.hashedDownstreamWordsSet.has(x)));
     }
 
     isDownstreamTerm = (hash: HASH) => {
-        return Tokenizer.isNumberHash(hash) || this.hashedBadWordsSet.has(hash);
+        return Tokenizer.isNumberHash(hash) || this.hashedDownstreamWordsSet.has(hash);
     }
 
     score(query: number[], prefix: number[]) {
@@ -254,38 +254,38 @@ export class Tokenizer {
         const lengthFactor = rightmostA + 1;
 
         // This approach doesn't work because the match can contain trailing garbage.
-        // Really need to count common terms that are not badwords.
+        // Really need to count common terms that are not downstream words.
         // TODO: fix matcher to not return trailing garbage. Example:
         //   query: 'give me eight and add fog lights'
         //   prefix: 'eight track;
         //   match: 'eight and' instead of 'eight'
         // 
-        // const nonBadWordCount = match.reduce((count, term) => {
-        //     if (this.hashedBadWordsSet.has(term)) {
+        // const nonDownstreamWordCount = match.reduce((count, term) => {
+        //     if (this.hashedDownstreamWordsSet.has(term)) {
         //         return count;
         //     }
         //     else {
         //         return count + 1;
         //     }
         // }, 0);
-        // const badWordFactor = nonBadWordCount / match.length;
+        // const downstreamWordFactor = nonDownstreamWordCount / match.length;
         // TODO: Should this be terms common with match, instead of prefix?
         const commonTerms = this.commonTerms(query, prefix);
-        const commonBadWords = this.commonBadWords(commonTerms);
+        const commonDownstreamWords = this.commonDownstreamWords(commonTerms);
 
         let score = matchFactor * commonFactor * positionFactor * lengthFactor;
-        // if (nonBadWordCount === 0) {
+        // if (nonDownstreamWordCount === 0) {
         //     score = -1;
         // }
 
-        // Exclude matches that are all badwords, except those that match every
-        // word in the prefix. This exception is important because the stemming
-        // process cause an attribute word to collide with a different entity
-        // word. In this cases, the entity should still be allowed to match, if
-        // the match is perfect. Note that using a lemmatizer instead of a
-        // stemmer could also help here.
-        const badWordFactor = (commonTerms.size - commonBadWords.size) / commonTerms.size;
-        if (commonTerms.size === commonBadWords.size && commonTerms.size !== prefix.length) {
+        // Exclude matches that are all downstream words, except those that
+        // match every word in the prefix. This exception is important because
+        // the stemming process cause an attribute word to collide with a
+        // different entity word. In this cases, the entity should still be
+        // allowed to match, if the match is perfect. Note that using a
+        // lemmatizer instead of a stemmer could also help here.
+        const downstreamWordFactor = (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
+        if (commonTerms.size === commonDownstreamWords.size && commonTerms.size !== prefix.length) {
             score = -1;
         }
 
@@ -300,7 +300,7 @@ export class Tokenizer {
             const queryText = query.map(this.decodeTerm).join(' ');
             const prefixText = prefix.map(this.decodeTerm).join(' ');
             const matchText = match.map(this.decodeTerm).join(' ');
-            console.log(`      score=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, ff=${badWordFactor}`);
+            console.log(`      score=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
             console.log(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}`);
             console.log(`      query="${queryText}"`);
             console.log(`      prefix="${prefixText}"`);

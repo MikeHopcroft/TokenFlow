@@ -16,7 +16,7 @@ export type IntentRecognizer = PatternRecognizer<Item>;
 
 export function CreateIntentRecognizer(
     intentFile: string,
-    badWords: Set<string>,
+    downstreamWords: Set<string>,
     stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
     debugMode = false
 ): IntentRecognizer {
@@ -32,5 +32,5 @@ export function CreateIntentRecognizer(
         return { type: INTENT, id, name, text };
     };
 
-    return new PatternRecognizer(items, tokenFactory, badWords, stemmer, debugMode);
+    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, debugMode);
 }

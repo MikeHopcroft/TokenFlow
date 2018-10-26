@@ -94,18 +94,18 @@ export class Pipeline {
 
         this.numberRecognizer = CreateNumberRecognizer();
 
-        const attributeBadWords = new Set([
+        const attributeDownstreamWords = new Set([
             ...this.quantityRecognizer.terms(),
             ...this.numberRecognizer.terms()
         ]);
 
         this.attributeRecognizer = CreateAttributeRecognizer(
             attributesFile,
-            attributeBadWords,
+            attributeDownstreamWords,
             stemmer,
             debugMode);
 
-        const entityBadWords = new Set([
+        const entityDownstreamWords = new Set([
             ...this.intentRecognizer.terms(),
             ...this.quantityRecognizer.terms(),
             ...this.numberRecognizer.terms(),
@@ -114,7 +114,7 @@ export class Pipeline {
 
         this.entityRecognizer = CreateEntityRecognizer(
             entityFile,
-            entityBadWords,
+            entityDownstreamWords,
             stemmer,
             debugMode);
 

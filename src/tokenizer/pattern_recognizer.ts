@@ -83,12 +83,12 @@ export class PatternRecognizer<T extends Item> implements Recognizer {
     constructor(
         items: Map<PID, T>,
         tokenFactory: TokenFactory<Token>,
-        badWords: Set<string>,
+        downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         debugMode = false
     ) {
         this.items = items;
-        this.tokenizer = new Tokenizer(badWords, stemmer, debugMode);
+        this.tokenizer = new Tokenizer(downstreamWords, stemmer, debugMode);
         this.stemmer = this.tokenizer.stemTerm;
         this.tokenFactory = tokenFactory;
 
