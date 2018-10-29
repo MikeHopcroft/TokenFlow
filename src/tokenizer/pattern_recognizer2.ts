@@ -2,23 +2,24 @@ import {
     generateAliases,
     Item,
     PID,
-    Recognizer,
+    Recognizer2,
     StemmerFunction,
-    Token,
-    TokenFactory,
+    Token2,
+    TokenFactory2,
     Tokenizer,
-    UNKNOWN
+    WORD,
+    WordToken
 } from '.';
 
-export class PatternRecognizer<T extends Item> implements Recognizer {
-    items: Map<PID, T>;
+export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
+    items: Map<PID, ITEM>;
     tokenizer: Tokenizer;
-    tokenFactory: TokenFactory<Token>;
+    tokenFactory: TokenFactory2;
     stemmer: (word: string) => string;
 
     constructor(
-        items: Map<PID, T>,
-        tokenFactory: TokenFactory<Token>,
+        items: Map<PID, ITEM>,
+        tokenFactory: TokenFactory2,
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         debugMode = false
@@ -43,21 +44,24 @@ export class PatternRecognizer<T extends Item> implements Recognizer {
         console.log(`${this.items.size} items contributed ${aliasCount} aliases.`);
     }
 
-    apply = (tokens: Token[]) => {
-        const result: Token[] = [];
-        for (const token of tokens) {
-            if (token.type === UNKNOWN) {
-                const path = this.tokenizer.processQuery(token.text);
-                const terms = token.text.split(/\s+/);
-
-                const matches = this.tokenizer.tokenizeMatches(terms, path, this.tokenFactory);
-                result.push(...matches);
+    apply = (tokens: Token2[]) => {
+        const terms = tokens.map( token => {
+            if (token.type === WORD) {
+                // TODO: Would be nice not to type assert WordToken here.
+                // Need to do it because there could be multiple Token2 with
+                // type equal to WORD.
+                return (token as WordToken).text;
             }
             else {
-                result.push(token);
+                // Generate name for token from its symbol.
+                // TODO: document that names cannot contain spaces, special chars, etc.
+                // Parens, square brackets, commas.
+                return `@${token.type.toString().slice(1,-1)}`;
             }
-        }
-        return result;
+        });
+        const path = this.tokenizer.processQuery2(terms);
+        const matches = this.tokenizer.tokenizeMatches2(tokens, path, this.tokenFactory);
+        return matches;
     }
 
     terms = () => {

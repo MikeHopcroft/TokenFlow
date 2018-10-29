@@ -1,7 +1,7 @@
 import { diff } from './diff';
 import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
-import { Token, TokenFactory, UNKNOWN } from './tokens';
+import { Token, Token2, TokenFactory, TokenFactory2, UNKNOWN } from './tokens';
 import { HASH, ID, PID } from './types';
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 
@@ -157,6 +157,22 @@ export class Tokenizer {
             }
         });
         return tokens;
+    }
+
+    tokenizeMatches2 = (input: Token2[], path: Edge[], tokenFactory: TokenFactory2) => {       
+        let termIndex = 0;
+        const output: Token2[] = [];
+        path.forEach((edge, index) => {
+            if (edge.label < 0) {
+                output.push(input[termIndex++]);
+            }
+            else {
+                const children = input.slice(termIndex, termIndex + edge.length);
+                output.push(tokenFactory(this.pids[edge.label], children));
+                termIndex += edge.length;
+            }
+        });
+        return output;
     }
 
     // TODO: printFrequencies()
@@ -318,6 +334,10 @@ export class Tokenizer {
     // TODO: return terms and path, instead of strings?
     processQuery(query: string): Edge[] {
         const terms = query.split(/\s+/);
+        return this.processQuery2(terms);
+    }
+
+    processQuery2(terms: string[]): Edge[] {
         const stemmed = terms.map(this.stemTerm);
         const hashed = stemmed.map(this.hashTerm);
 
