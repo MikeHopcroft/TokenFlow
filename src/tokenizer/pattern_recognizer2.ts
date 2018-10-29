@@ -16,6 +16,7 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
     tokenizer: Tokenizer;
     tokenFactory: TokenFactory2;
     stemmer: (word: string) => string;
+    ownTerms = new Set<string>();
 
     constructor(
         items: Map<PID, ITEM>,
@@ -35,6 +36,7 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
             for (const aliasPattern of item.aliases) {
                 for (const alias of generateAliases(aliasPattern)) {
                     this.tokenizer.addItem(item.pid, alias);
+                    this.ownTerms.add(alias);
                     aliasCount++;
                 }
             }
@@ -66,15 +68,6 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
     }
 
     terms = () => {
-        const terms = new Set<string>();
-        for (const [pid, item] of this.items) {
-            for (const alias of item.aliases) {
-                const words = alias.split(/\s+/);
-                for (const word of words) {
-                    terms.add(word);
-                }
-            }
-        }
-        return terms;
+        return this.ownTerms;
     }
 }
