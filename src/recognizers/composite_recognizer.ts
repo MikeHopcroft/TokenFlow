@@ -1,28 +1,15 @@
-import { Recognizer, Token, UNKNOWN } from '../tokenizer';
+import { Recognizer2, Token2 } from '../tokenizer';
 
-function applyProcessor(processor: (token: Token) => Token[], tokens:Token[]) {
-    const unflattened = tokens.map( (token) => {
-        if (token.type === UNKNOWN) {
-            return processor(token);
-        }
-        else {
-            return [token];
-        }
-    });
-    const flattened = ([] as Token[]).concat(...unflattened);
-    return flattened;
-}
-
-export class CompositeRecognizer implements Recognizer {
-    recognizers: Recognizer[] = [];
+export class CompositeRecognizer implements Recognizer2 {
+    recognizers: Recognizer2[] = [];
     debugMode: boolean;
 
-    constructor(recognizers: Recognizer[], debugMode = false) {
+    constructor(recognizers: Recognizer2[], debugMode = false) {
         this.recognizers = recognizers;
         this.debugMode = debugMode;
     }
 
-    apply = (tokens: Token[]) => {
+    apply = (tokens: Token2[]) => {
         let result = tokens;
 
         if (this.debugMode) {

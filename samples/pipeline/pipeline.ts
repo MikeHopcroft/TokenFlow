@@ -1,17 +1,22 @@
-import { CompositeRecognizer, NumberRecognizer } from '../../src/recognizers';
-import { Recognizer, StemmerFunction, Token, Tokenizer, UnknownToken, UNKNOWN } from '../../src/tokenizer';
+import { CompositeRecognizer } from '../../src/recognizers';
+import { Recognizer2, StemmerFunction, Token2, Tokenizer, WordToken, WORD, CompositeToken } from '../../src/tokenizer';
 
 import { ATTRIBUTE, AttributeToken, CreateAttributeRecognizer } from '../recognizers';
 import { ENTITY, CreateEntityRecognizer, EntityToken } from '../recognizers';
-import { FixupRecognizer } from '../recognizers';
+// import { FixupRecognizer } from '../recognizers';
 import { INTENT, CreateIntentRecognizer, IntentToken } from '../recognizers';
 import { QUANTITY, CreateQuantityRecognizer, QuantityToken } from '../recognizers';
 import { CreateNumberRecognizer } from '../recognizers';
 
 
-type AnyToken = UnknownToken | AttributeToken | EntityToken | IntentToken | QuantityToken;
+type AnyToken =
+    AttributeToken |
+    EntityToken |
+    IntentToken |
+    QuantityToken |
+    WordToken;
 
-export function tokenToString(t: Token) {
+export function tokenToString(t: Token2) {
     const token = t as AnyToken;
     let name: string;
     switch (token.type) {
@@ -29,48 +34,69 @@ export function tokenToString(t: Token) {
         case QUANTITY:
             name = `[QUANTITY:${token.value}]`;
             break;
+        case WORD:
+            name = `[WORD:${token.text}]`;
+            break;
         default:
-            name = `[UNKNOWN:${token.text}]`;
+            name = `[UNKNOWN]:${t.type.toString()}`;
     }
     return name;
 }
 
-export function printToken(t: Token) {
-    const token = t as AnyToken;
-    let name: string;
-    switch (token.type) {
-        case ATTRIBUTE:
-            const attribute = token.name.replace(/\s/g, '_').toUpperCase();
-            name = `ATTRIBUTE: ${attribute}(${token.id})`;
-            break;
-        case ENTITY:
-            const entity = token.name.replace(/\s/g, '_').toUpperCase();
-            name = `ENTITY: ${entity}(${token.pid})`;
-            break;
-        case INTENT:
-            name = `INTENT: ${token.name}`;
-            break;
-        case QUANTITY:
-            name = `QUANTITY: ${token.value}`;
-            break;
-        default:
-            name = 'UNKNOWN';
+export function printToken(token: Token2, indent = 0) {
+    const spaces = new Array(2* indent + 1).join(' ');
+    if (token.type === WORD) {
+        console.log(`${spaces}WORD: "${(token as WordToken).text}"`);
     }
-    console.log(`${name}: "${token.text}"`);
+    else {
+        // const symbol = token.type.toString();
+        // const name = symbol.substring(7, symbol.length -1);
+        // console.log(`${spaces}${name}`);
+        console.log(`${spaces}${tokenToString(token)}`);
+        for (const child of (token as CompositeToken).children) {
+            printToken(child, indent + 1);
+        }
+    }
 }
 
-export function printTokens(tokens: Token[]) {
-    tokens.forEach(printToken);
+// export function printToken(t: Token2) {
+//     const token = t as AnyToken;
+//     let name: string;
+//     switch (token.type) {
+//         case ATTRIBUTE:
+//             const attribute = token.name.replace(/\s/g, '_').toUpperCase();
+//             name = `ATTRIBUTE: ${attribute}(${token.id})`;
+//             break;
+//         case ENTITY:
+//             const entity = token.name.replace(/\s/g, '_').toUpperCase();
+//             name = `ENTITY: ${entity}(${token.pid})`;
+//             break;
+//         case INTENT:
+//             name = `INTENT: ${token.name}`;
+//             break;
+//         case QUANTITY:
+//             name = `QUANTITY: ${token.value}`;
+//             break;
+//         default:
+//             name = 'UNKNOWN';
+//     }
+//     console.log(`${name}: "${token.text}"`);
+// }
+
+export function printTokens(tokens: Token2[]) {
+    for (const token of tokens) {
+        printToken(token);
+    }
     console.log();
 }
 
 export class Pipeline {
-    attributeRecognizer: Recognizer;
-    entityRecognizer: Recognizer;
-    fixupRecognizer: Recognizer;
-    intentRecognizer: Recognizer;
-    numberRecognizer: Recognizer;
-    quantityRecognizer: Recognizer;
+    attributeRecognizer: Recognizer2;
+    entityRecognizer: Recognizer2;
+    // fixupRecognizer: Recognizer2;
+    intentRecognizer: Recognizer2;
+    numberRecognizer: Recognizer2;
+    quantityRecognizer: Recognizer2;
 
     compositeRecognizer: CompositeRecognizer;
 
@@ -88,7 +114,7 @@ export class Pipeline {
             stemmer,
             debugMode);
 
-        this.fixupRecognizer = new FixupRecognizer();
+        // this.fixupRecognizer = new FixupRecognizer();
 
         this.quantityRecognizer = CreateQuantityRecognizer(
             quantifierFile,
@@ -127,16 +153,16 @@ export class Pipeline {
                 this.entityRecognizer,
                 this.attributeRecognizer,
                 this.numberRecognizer,
-                this.fixupRecognizer,
+                // this.fixupRecognizer,
                 this.quantityRecognizer,
-                this.intentRecognizer
+                // this.intentRecognizer
             ],
             debugMode
         );
     }
 
-    processOneQuery(query: string, debugMode = false) {
-        const input = [ { type: UNKNOWN, text: query } ];
+    processOneQuery(query: string, debugMode = true) {
+        const input = query.split(/\s+/).map( term => ({ type: WORD, text: term }));
         const tokens = this.compositeRecognizer.apply(input);
         return tokens;
     }

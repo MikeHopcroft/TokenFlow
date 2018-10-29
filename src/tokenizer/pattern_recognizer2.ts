@@ -56,7 +56,8 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
                 // Generate name for token from its symbol.
                 // TODO: document that names cannot contain spaces, special chars, etc.
                 // Parens, square brackets, commas.
-                return `@${token.type.toString().slice(1,-1)}`;
+                const symbol = token.type.toString();
+                return `@${symbol.slice(7, symbol.length - 1)}`;
             }
         });
         const path = this.tokenizer.processQuery2(terms);

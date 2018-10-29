@@ -1,7 +1,7 @@
 import { diff } from './diff';
 import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
-import { Token, Token2, TokenFactory, TokenFactory2, UNKNOWN } from './tokens';
+import { Token, Token2, TokenFactory, TokenFactory2, WORD } from './tokens';
 import { HASH, ID, PID } from './types';
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 
@@ -56,7 +56,12 @@ export class Tokenizer {
 
     // Arrow function to allow use in map.
     static defaultStemTerm = (term: string): string => {
-        return Tokenizer.snowballStemmer.stem(term.toLowerCase());
+        if (term.startsWith('@')) {
+            return term;
+        }
+        else {
+            return Tokenizer.snowballStemmer.stem(term.toLowerCase());
+        }
     }
 
     static minNumberHash = Math.pow(2, 32);
@@ -137,27 +142,27 @@ export class Tokenizer {
         return rewritten.join(' ');
     }
 
-    tokenizeMatches = <T extends Token>(terms: string[], path: Edge[], tokenFactory: TokenFactory<T>) => {
-        let termIndex = 0;
-        const tokens: Token[] = [];
-        path.forEach((edge, index) => {
-            if (edge.label < 0) {
-                if (tokens.length === 0 || tokens[tokens.length - 1].type !== UNKNOWN) {
-                    tokens.push({ type: UNKNOWN, text: terms[termIndex++] });
-                }
-                else {
-                    const text = `${tokens[tokens.length - 1].text} ${terms[termIndex++]}`;
-                    tokens[tokens.length - 1] = { type: UNKNOWN, text };
-                }
-            }
-            else {
-                const text = terms.slice(termIndex, termIndex + edge.length).join(' ');
-                tokens.push(tokenFactory(this.pids[edge.label], text));
-                termIndex += edge.length;
-            }
-        });
-        return tokens;
-    }
+    // tokenizeMatches = <T extends Token>(terms: string[], path: Edge[], tokenFactory: TokenFactory<T>) => {
+    //     let termIndex = 0;
+    //     const tokens: Token[] = [];
+    //     path.forEach((edge, index) => {
+    //         if (edge.label < 0) {
+    //             if (tokens.length === 0 || tokens[tokens.length - 1].type !== UNKNOWN) {
+    //                 tokens.push({ type: UNKNOWN, text: terms[termIndex++] });
+    //             }
+    //             else {
+    //                 const text = `${tokens[tokens.length - 1].text} ${terms[termIndex++]}`;
+    //                 tokens[tokens.length - 1] = { type: UNKNOWN, text };
+    //             }
+    //         }
+    //         else {
+    //             const text = terms.slice(termIndex, termIndex + edge.length).join(' ');
+    //             tokens.push(tokenFactory(this.pids[edge.label], text));
+    //             termIndex += edge.length;
+    //         }
+    //     });
+    //     return tokens;
+    // }
 
     tokenizeMatches2 = (input: Token2[], path: Edge[], tokenFactory: TokenFactory2) => {       
         let termIndex = 0;

@@ -1,17 +1,17 @@
 import * as fs from 'fs';
-import { itemMapFromYamlString, Item, PatternRecognizer, PID, StemmerFunction, Token, Tokenizer } from '../../src/tokenizer';
+import { CompositeToken, itemMapFromYamlString, Item, PatternRecognizer2, PID, StemmerFunction, Token2, Tokenizer } from '../../src/tokenizer';
 
 export const ENTITY: unique symbol = Symbol('ENTITY');
 export type ENTITY = typeof ENTITY;
 
-export interface EntityToken extends Token {
+export interface EntityToken extends CompositeToken {
     type: ENTITY;
-    text: string;
+    children: Token2[];
     pid: PID;
     name: string;
 }
 
-export type EntityRecognizer = PatternRecognizer<Item>;
+export type EntityRecognizer = PatternRecognizer2<Item>;
 
 export function CreateEntityRecognizer(
     entityFile: string,
@@ -20,15 +20,15 @@ export function CreateEntityRecognizer(
     debugMode = false) {
     const items = itemMapFromYamlString(fs.readFileSync(entityFile, 'utf8'));
 
-    const tokenFactory = (id: PID, text: string): EntityToken => {
+    const tokenFactory = (id: PID, children: Token2[]): EntityToken => {
         const item = items.get(id);
 
         let name = "UNKNOWN";
         if (item) {
             name = item.name;
         }
-        return { type: ENTITY, pid: id, name, text };
+        return { type: ENTITY, pid: id, name, children };
     };
 
-    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, debugMode);
+    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, debugMode);
 }

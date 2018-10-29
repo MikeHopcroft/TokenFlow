@@ -1,18 +1,18 @@
 import * as fs from 'fs';
-import { itemMapFromYamlString, Item, PatternRecognizer } from '../../src/tokenizer';
-import { PID, StemmerFunction, Token, Tokenizer } from '../../src/tokenizer';
+import { itemMapFromYamlString, Item, PatternRecognizer2 } from '../../src/tokenizer';
+import { CompositeToken, PID, StemmerFunction, Token2, Tokenizer } from '../../src/tokenizer';
 
 export const ATTRIBUTE: unique symbol = Symbol('ATTRIBUTE');
 export type ATTRIBUTE = typeof ATTRIBUTE;
 
-export interface AttributeToken extends Token {
+export interface AttributeToken extends CompositeToken {
     type: ATTRIBUTE;
-    text: string;
+    children: Token2[];
     id: PID;
     name: string;
 }
 
-export type AttributeRecognizer = PatternRecognizer<Item>;
+export type AttributeRecognizer = PatternRecognizer2<Item>;
 
 export function CreateAttributeRecognizer(
     attributeFile: string,
@@ -22,15 +22,15 @@ export function CreateAttributeRecognizer(
 ): AttributeRecognizer {
     const items = itemMapFromYamlString(fs.readFileSync(attributeFile, 'utf8'));
 
-    const tokenFactory = (id: PID, text: string): AttributeToken => {
+    const tokenFactory = (id: PID, children: Token2[]): AttributeToken => {
         const item = items.get(id);
 
         let name = "UNKNOWN";
         if (item) {
             name = item.name;
         }
-        return { type: ATTRIBUTE, id, name, text };
+        return { type: ATTRIBUTE, id, name, children };
     };
 
-    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, debugMode);
+    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, debugMode);
 }

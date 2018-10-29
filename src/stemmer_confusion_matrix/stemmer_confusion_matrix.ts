@@ -1,7 +1,7 @@
-import { Recognizer, StemmerFunction } from '../tokenizer';
+import { Recognizer2, StemmerFunction } from '../tokenizer';
 
 
-export function stemmerConfusionMatrix(recognizer: Recognizer, stemmer: StemmerFunction) {
+export function stemmerConfusionMatrix(recognizer: Recognizer2, stemmer: StemmerFunction) {
     const matrix: {[term:string]:Set<string>} = {};
 
     recognizer.terms().forEach( term => {

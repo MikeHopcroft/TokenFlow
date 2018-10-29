@@ -12,5 +12,5 @@ function relevanceDemoCars(showPassedCases = false) {
     return suite;    
 }
 
-relevanceDemoCars(true);
+relevanceDemoCars(false);
 

@@ -1,8 +1,8 @@
 import * as yaml from 'js-yaml';
-import { Recognizer, Token, UNKNOWN } from '../tokenizer';
+import { Recognizer2, Token2, WORD } from '../tokenizer';
 import { copyScalar } from '../utilities';
 
-export type TokenToString = (token: Token) => string;
+export type TokenToString = (token: Token2) => string;
 
 export class Result {
     test: TestCase;
@@ -131,8 +131,9 @@ export class TestCase {
         this.expected = expected;
     }
 
-    run(recognizer: Recognizer, tokenToString: TokenToString) {
-        const input = [ { type: UNKNOWN, text: this.input } ];
+    run(recognizer: Recognizer2, tokenToString: TokenToString) {
+        const input = this.input.split(/\s+/).map( term => ({ type: WORD, text: term }));
+
         const tokens = recognizer.apply(input);
 
         const observed = tokens.map(tokenToString).join(' ');
@@ -171,7 +172,7 @@ export class RelevanceSuite {
         this.tests = tests;
     }
 
-    run(recognizer: Recognizer, tokenToString: TokenToString, showPassedCases = false) {
+    run(recognizer: Recognizer2, tokenToString: TokenToString, showPassedCases = false) {
         const aggregator = new AggregatedResults();
 
         this.tests.forEach((test) => {
