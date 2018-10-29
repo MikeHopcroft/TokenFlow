@@ -63,6 +63,7 @@ class Vertex {
     }
 }
 
+export type TokenPredicate<T> = (a: T) => boolean;
 export type DownstreamTermPredicate<T> = (a: T) => boolean;
 export type EqualityPredicate<T> = (a: T, b: T) => boolean;
 
@@ -86,6 +87,7 @@ class DiffMatrix<T> {
     b: T[];
 
     isDownstreamTerm: DownstreamTermPredicate<T>;
+    isToken: TokenPredicate<T>;
 
     predicate: EqualityPredicate<T>;
 
@@ -110,11 +112,13 @@ class DiffMatrix<T> {
         a: T[],
         b: T[],
         isDownstreamTerm: DownstreamTermPredicate<T>,
+        isToken: TokenPredicate<T>,
         predicate: EqualityPredicate<T> = GenericEquality
     ) {
         this.a = a;
         this.b = b;
         this.isDownstreamTerm = isDownstreamTerm;
+        this.isToken = isToken;
         this.predicate = predicate;
 
         this.aLen = a.length;
@@ -133,8 +137,10 @@ class DiffMatrix<T> {
         for (let j = 0; j <= this.bLen; ++j) {
             if (j === 0) {
                 const row = new Array(this.aLen + 1);
-                for (let i = 0; i <= this.aLen; ++i) {
-                    row[i] = new Vertex(i);
+                row[0] = new Vertex(0);
+                for (let i = 1; i <= this.aLen; ++i) {
+                    const cost = (this.isToken(this.a[i - 1])) ? DiffMatrix.tokenReplaceCost : 1;
+                    row[i] = new Vertex(cost + row[i - 1].cost);
                 }
                 this.matrix[j] = row;
             }
@@ -149,13 +155,27 @@ class DiffMatrix<T> {
         }
     }
 
+    // DESIGN NOTE: Would like to use infinity for the cost of deleting or
+    // replacing a token, but this would prevent tracing out a minimum cost
+    // paths, since any path with a token deletion or replacement in the
+    // suffix would result in an infinite cost. Using a large integer allows
+    // the algorithm to differentiate between a variety of paths that
+    // include a token deletion or replacement.
+    static tokenReplaceCost = Math.pow(2, 32);
+
     // Dynamic programming algorithm fills in best edits and corresponding
     // Levenshtein distances at each vertex.
     findBestPath(): void {
         for (let j = 1; j <= this.bLen; ++j) {
             for (let i = 1; i <= this.aLen; ++i) {
                 // Delete from A
-                this.matrix[j][i].update(Edit.DELETE_A, this.matrix[j][i - 1].cost + 1);
+                if (this.isToken(this.a[i - 1])) {
+                    // We're never allowed to delete tokens from the query.
+                    this.matrix[j][i].update(Edit.DELETE_A, DiffMatrix.tokenReplaceCost);
+                }
+                else {
+                    this.matrix[j][i].update(Edit.DELETE_A, this.matrix[j][i - 1].cost + 1);
+                }
 
                 // Delete from B
                 this.matrix[j][i].update(Edit.DELETE_B, this.matrix[j - 1][i].cost + 1);
@@ -166,7 +186,14 @@ class DiffMatrix<T> {
                 }
                 else {
                     // Replace
-                    this.matrix[j][i].update(Edit.REPLACE, this.matrix[j - 1][i - 1].cost + 1);
+                    if (this.isToken(this.a[i - 1]))
+                    {
+                        // We're never allowed to replace tokens from the query.
+                        this.matrix[j][i].update(Edit.REPLACE, DiffMatrix.tokenReplaceCost);
+                    }
+                    else {
+                        this.matrix[j][i].update(Edit.REPLACE, this.matrix[j - 1][i - 1].cost + 1);
+                    }
                 }
             }
         }
@@ -195,7 +222,8 @@ class DiffMatrix<T> {
             switch (current.edit) {
                 case Edit.DELETE_A:
                     if (inSuffix) {
-                        cost--;
+                        cost = this.matrix[bi][ai - 1].cost;
+//                        cost--;
                     }
                     ai--;
                     leftmostA = ai;
@@ -279,7 +307,7 @@ class DiffMatrix<T> {
 
         this.result = {
             match: path.reverse(),
-            cost,
+            cost: Math.min(cost, Infinity),
             leftmostA,
             rightmostA,
             common
@@ -292,17 +320,23 @@ export function diff<T>(
     query: T[],
     prefix: T[],
     isDownstreamTerm: DownstreamTermPredicate<T>,
+    isToken: TokenPredicate<T>,
     predicate: EqualityPredicate<T> = GenericEquality
 ): DiffResults<T> {
-    const d = new DiffMatrix<T>(query, prefix, isDownstreamTerm, predicate);
+    const d = new DiffMatrix<T>(query, prefix, isDownstreamTerm, isToken, predicate);
     return d.result;
 }
 
 // String diff.
-export function diffString(query: string, prefix: string, isDownstreamTerm: DownstreamTermPredicate<string>) {
+export function diffString(
+    query: string,
+    prefix: string,
+    isDownstreamTerm: DownstreamTermPredicate<string>,
+    isToken: TokenPredicate<string>
+) {
     const a = [...query];
     const b = [...prefix];
-    const d = new DiffMatrix(a, b, isDownstreamTerm);
+    const d = new DiffMatrix(a, b, isDownstreamTerm, isToken);
     const { match, ...rest } = d.result;
     return { match: match.join(''), ...rest };
 }

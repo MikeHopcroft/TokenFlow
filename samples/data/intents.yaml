@@ -33,6 +33,8 @@ items:
       - could I please get
       - could I get
       - can I just get
+      - can I have
+      - can I please have
       - may I get
       - may I please get
       - may I have
@@ -118,7 +120,7 @@ items:
       - make both of them
       - make all of them
       - the other
-      - one of them
+      - (one,@QUANTITY) of them
 
   - pid: 100011
     name: CANCEL_ORDER

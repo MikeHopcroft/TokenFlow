@@ -7,8 +7,16 @@ function isDownstreamTerm(term: string) {
     return false;
 }
 
+function isTokenTerm(term: string) {
+    return false;
+}
+
 function isDownstreamTermHash(hash: number) {
     return false;
+}
+
+function isTokenTermHash(hash: number) {
+    return hash >= 2 * Math.pow(2, 32);
 }
 
 describe('Diff', () => {
@@ -38,7 +46,7 @@ describe('Diff', () => {
                 const expectedCommon = item[1][4];
 
                 const {match, cost, leftmostA, rightmostA, common} =
-                    diffString(query, prefix, isDownstreamTerm);
+                    diffString(query, prefix, isDownstreamTerm, isTokenTerm);
 
                 console.log(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
 
@@ -69,7 +77,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2, 3];
             const expectedCost = 0;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash, predicate);
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash, predicate);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -84,9 +92,41 @@ describe('Diff', () => {
             const expectedMatch = [1, 2];
             const expectedCost = 1;
 
-            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash);
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
 
             assert.deepEqual(match, expectedMatch);
+            assert.equal(cost, expectedCost);
+        });
+    });
+
+    describe('#tokens', () => {
+        it('should not produce delete or replace a token.', () => {
+            const query = [2641553256,9915785936,2779594451,1009084850];
+            const prefix = [2641553256,455026286];
+
+            // Match stops after query first term because second query term is
+            // a token which doesn't match.
+            const expectedMatch = [2641553256];
+            const expectedCost = 1;
+
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+
+            // assert.deepEqual(match, expectedMatch);
+            assert.equal(cost, expectedCost);
+        });
+
+        it('should be able to match tokens.', () => {
+            const query = [2641553256,9915785936,2779594451,1009084850];
+            const prefix = [2641553256,9915785936];
+
+            // Match stops after query first term because second query term is
+            // a token which doesn't match.
+            const expectedMatch = [2641553256, 9915785936];
+            const expectedCost = 0;
+
+            const {match, cost, rightmostA} = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+
+            // assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
         });
     });

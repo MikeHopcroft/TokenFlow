@@ -64,19 +64,30 @@ export class Tokenizer {
         }
     }
 
-    static minNumberHash = Math.pow(2, 32);
+    static lowOrderBits = Math.pow(2, 32);
+    static minNumberHash = 1 * Tokenizer.lowOrderBits;
+    static minTokenHash = 2 * Tokenizer.lowOrderBits;
 
     static isNumberHash(hash: HASH) {
-        return hash >= Tokenizer.minNumberHash;
+        return hash >= Tokenizer.minNumberHash && hash < Tokenizer.minTokenHash;
+    }
+
+    static isTokenHash(hash: HASH) {
+        return hash >= Tokenizer.minTokenHash;
     }
 
     // Arrow function to allow use in map.
     hashTerm = (term: string): number => {
         // DESIGN NOTE: murmurhash returns 32-bit hashes.
-        // Encode natural numbers x as x + 2^32.
+        // Encode natural numbers x as x + (1 * 2^32).
+        // Encode tokens as hash(token) + (2 * 2^32)
         // This allows a simple test to determine whether a hash
-        // is the hash of a number.
-        if (/^\d+$/.test(term)) {
+        // is the hash of a number, the hash of a token, or the
+        // hash of a term.
+        if (term.startsWith('@')) {
+            return v3(term, this.seed) + Tokenizer.minTokenHash;
+        }
+        else if (/^\d+$/.test(term)) {
             return Number(term) + Tokenizer.minNumberHash;
         }
         else {
@@ -189,6 +200,9 @@ export class Tokenizer {
     //
     ///////////////////////////////////////////////////////////////////////////
     addItem(pid: PID, text: string): void {
+        if (text.startsWith('@')) {
+            console.log(text);
+        }
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
         // share a pid, but have different ids.
@@ -259,7 +273,7 @@ export class Tokenizer {
     }
 
     score(query: number[], prefix: number[]) {
-        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isDownstreamTerm);
+        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
 
         // Ratio of match length to match length + edit distance.
         const matchFactor = match.length / (match.length + cost);

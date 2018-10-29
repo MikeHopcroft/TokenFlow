@@ -155,7 +155,7 @@ export class Pipeline {
                 this.numberRecognizer,
                 // this.fixupRecognizer,
                 this.quantityRecognizer,
-                // this.intentRecognizer
+                this.intentRecognizer
             ],
             debugMode
         );
