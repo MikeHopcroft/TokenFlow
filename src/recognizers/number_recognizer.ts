@@ -69,26 +69,6 @@ export class NumberRecognizer implements Recognizer2 {
         return this.tokenFactory(value, [token]);
     }
 
-    // private parseTextSequence(sequence: PeekableSequence<Token2>): Token2 {
-    //     const tokens: Token2[] = [];
-    //     while (!sequence.atEOF()) {
-    //         const token = sequence.peek() as WordToken;
-    //         if (token.type !== WORD || !NumberRecognizer.isNumberTerm(token.text)) {
-    //             tokens.push(token);
-    //             sequence.get();
-    //         }
-    //         else {
-    //             break;
-    //         }
-    //     }
-
-    //     if (tokens.length === 0) {
-    //         throw TypeError('parseTextSequence: expected a word.');
-    //     }
-
-    //     return tokens;
-    // }
-
     private static isNumberTerm(term: string) {
         return NumberRecognizer.lexicon.has(term)
             || NumberRecognizer.isArabicNumberalSequence(term);
@@ -99,20 +79,6 @@ export class NumberRecognizer implements Recognizer2 {
     }
 
     apply = (tokens: Token2[]) => {
-        // const result: Token2[] = [];
-        // for (const token of tokens) {
-        //     if (token.type === UNKNOWN) {
-        //         const text = token.text;
-        //         const terms = text.split(/\s+/);
-        //         const numbers = this.parseSequence(
-        //             new PeekableSequence(terms[Symbol.iterator]()));
-        //         result.push(...numbers);
-        //     }
-        //     else {
-        //         result.push(token);
-        //     }
-        // }
-        // return result;
         return this.parseSequence(new PeekableSequence(tokens[Symbol.iterator]()));
 
     }

@@ -223,7 +223,6 @@ class DiffMatrix<T> {
                 case Edit.DELETE_A:
                     if (inSuffix) {
                         cost = this.matrix[bi][ai - 1].cost;
-//                        cost--;
                     }
                     ai--;
                     leftmostA = ai;

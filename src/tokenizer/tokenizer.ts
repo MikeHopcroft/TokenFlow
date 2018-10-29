@@ -1,7 +1,7 @@
 import { diff } from './diff';
 import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
-import { Token, Token2, TokenFactory, TokenFactory2, WORD } from './tokens';
+import { Token2, TokenFactory2 } from './tokens';
 import { HASH, ID, PID } from './types';
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 
@@ -41,7 +41,7 @@ export class Tokenizer {
         this.downstreamWords = downstreamWords;
         this.stemTerm = stemmer;
         this.downstreamWords.forEach((term) => {
-            const hash = this.hashTerm(this.stemTerm(term));
+            const hash = this.hashTerm(this.stemTermInternal(term));
             this.hashedDownstreamWordsSet.add(hash);
         });
 
@@ -64,9 +64,9 @@ export class Tokenizer {
         }
     }
 
-    static lowOrderBits = Math.pow(2, 32);
-    static minNumberHash = 1 * Tokenizer.lowOrderBits;
-    static minTokenHash = 2 * Tokenizer.lowOrderBits;
+    static lower32 = Math.pow(2, 32);
+    static minNumberHash = 1 * Tokenizer.lower32;
+    static minTokenHash = 2 * Tokenizer.lower32;
 
     static isNumberHash(hash: HASH) {
         return hash >= Tokenizer.minNumberHash && hash < Tokenizer.minTokenHash;
@@ -74,6 +74,17 @@ export class Tokenizer {
 
     static isTokenHash(hash: HASH) {
         return hash >= Tokenizer.minTokenHash;
+    }
+
+    stemTermInternal = (term: string): string => {
+        if (term.startsWith('@')) {
+            // This term is a token reference. Do not lowercase or stem.
+            return term;
+        }
+        else {
+            // This is a regular term. Lowercase then stem.
+            return this.stemTerm(term.toLowerCase());
+        }
     }
 
     // Arrow function to allow use in map.
@@ -85,12 +96,15 @@ export class Tokenizer {
         // is the hash of a number, the hash of a token, or the
         // hash of a term.
         if (term.startsWith('@')) {
+            // This is a token reference. Hash, then set high order DWORD to 2.
             return v3(term, this.seed) + Tokenizer.minTokenHash;
         }
         else if (/^\d+$/.test(term)) {
+            // This is a number. Hash is just number with high order DWORD = 1.
             return Number(term) + Tokenizer.minNumberHash;
         }
         else {
+            // This is a regular term. Just hash to produce a non-negative 32-bit value.
             const hash = v3(term, this.seed);
             if (hash >= Tokenizer.minNumberHash) {
                 throw TypeError(`hashTerm: murmurhash returned value greater than ${Tokenizer.minNumberHash - 1}`);
@@ -153,41 +167,19 @@ export class Tokenizer {
         return rewritten.join(' ');
     }
 
-    // tokenizeMatches = <T extends Token>(terms: string[], path: Edge[], tokenFactory: TokenFactory<T>) => {
-    //     let termIndex = 0;
-    //     const tokens: Token[] = [];
-    //     path.forEach((edge, index) => {
-    //         if (edge.label < 0) {
-    //             if (tokens.length === 0 || tokens[tokens.length - 1].type !== UNKNOWN) {
-    //                 tokens.push({ type: UNKNOWN, text: terms[termIndex++] });
-    //             }
-    //             else {
-    //                 const text = `${tokens[tokens.length - 1].text} ${terms[termIndex++]}`;
-    //                 tokens[tokens.length - 1] = { type: UNKNOWN, text };
-    //             }
-    //         }
-    //         else {
-    //             const text = terms.slice(termIndex, termIndex + edge.length).join(' ');
-    //             tokens.push(tokenFactory(this.pids[edge.label], text));
-    //             termIndex += edge.length;
-    //         }
-    //     });
-    //     return tokens;
-    // }
-
-    tokenizeMatches2 = (input: Token2[], path: Edge[], tokenFactory: TokenFactory2) => {       
+    tokenizeMatches2 = (tokens: Token2[], path: Edge[], tokenFactory: TokenFactory2) => {       
         let termIndex = 0;
         const output: Token2[] = [];
-        path.forEach((edge, index) => {
+        for (const edge of path) {
             if (edge.label < 0) {
-                output.push(input[termIndex++]);
+                output.push(tokens[termIndex++]);
             }
             else {
-                const children = input.slice(termIndex, termIndex + edge.length);
+                const children = tokens.slice(termIndex, termIndex + edge.length);
                 output.push(tokenFactory(this.pids[edge.label], children));
                 termIndex += edge.length;
             }
-        });
+        }
         return output;
     }
 
@@ -213,7 +205,7 @@ export class Tokenizer {
         // Split input string into individual terms.
         const terms = text.split(/\s+/);
 
-        const stemmed = terms.map(this.stemTerm);
+        const stemmed = terms.map(this.stemTermInternal);
         this.stemmedItems.push(stemmed.join(' '));
 
         const hashed = stemmed.map(this.hashTerm);

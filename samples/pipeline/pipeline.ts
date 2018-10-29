@@ -3,7 +3,6 @@ import { Recognizer2, StemmerFunction, Token2, Tokenizer, WordToken, WORD, Compo
 
 import { ATTRIBUTE, AttributeToken, CreateAttributeRecognizer } from '../recognizers';
 import { ENTITY, CreateEntityRecognizer, EntityToken } from '../recognizers';
-// import { FixupRecognizer } from '../recognizers';
 import { INTENT, CreateIntentRecognizer, IntentToken } from '../recognizers';
 import { QUANTITY, CreateQuantityRecognizer, QuantityToken } from '../recognizers';
 import { CreateNumberRecognizer } from '../recognizers';
@@ -49,39 +48,12 @@ export function printToken(token: Token2, indent = 0) {
         console.log(`${spaces}WORD: "${(token as WordToken).text}"`);
     }
     else {
-        // const symbol = token.type.toString();
-        // const name = symbol.substring(7, symbol.length -1);
-        // console.log(`${spaces}${name}`);
         console.log(`${spaces}${tokenToString(token)}`);
         for (const child of (token as CompositeToken).children) {
             printToken(child, indent + 1);
         }
     }
 }
-
-// export function printToken(t: Token2) {
-//     const token = t as AnyToken;
-//     let name: string;
-//     switch (token.type) {
-//         case ATTRIBUTE:
-//             const attribute = token.name.replace(/\s/g, '_').toUpperCase();
-//             name = `ATTRIBUTE: ${attribute}(${token.id})`;
-//             break;
-//         case ENTITY:
-//             const entity = token.name.replace(/\s/g, '_').toUpperCase();
-//             name = `ENTITY: ${entity}(${token.pid})`;
-//             break;
-//         case INTENT:
-//             name = `INTENT: ${token.name}`;
-//             break;
-//         case QUANTITY:
-//             name = `QUANTITY: ${token.value}`;
-//             break;
-//         default:
-//             name = 'UNKNOWN';
-//     }
-//     console.log(`${name}: "${token.text}"`);
-// }
 
 export function printTokens(tokens: Token2[]) {
     for (const token of tokens) {
@@ -93,7 +65,6 @@ export function printTokens(tokens: Token2[]) {
 export class Pipeline {
     attributeRecognizer: Recognizer2;
     entityRecognizer: Recognizer2;
-    // fixupRecognizer: Recognizer2;
     intentRecognizer: Recognizer2;
     numberRecognizer: Recognizer2;
     quantityRecognizer: Recognizer2;
@@ -108,13 +79,16 @@ export class Pipeline {
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         debugMode = false
     ) {
+        // DESIGN NOTE: The intents file includes patterns that reference the
+        // @QUANTITY token. Treat this token as a downstream term so that we
+        // won't get partial matching consisting solely of the @QUANTITY
+        // token.
+        const intentDownstreamWords = new Set(['@QUANTITY']);
         this.intentRecognizer = CreateIntentRecognizer(
             intentsFile,
-            new Set(),
+            intentDownstreamWords,
             stemmer,
             debugMode);
-
-        // this.fixupRecognizer = new FixupRecognizer();
 
         this.quantityRecognizer = CreateQuantityRecognizer(
             quantifierFile,
@@ -153,7 +127,6 @@ export class Pipeline {
                 this.entityRecognizer,
                 this.attributeRecognizer,
                 this.numberRecognizer,
-                // this.fixupRecognizer,
                 this.quantityRecognizer,
                 this.intentRecognizer
             ],

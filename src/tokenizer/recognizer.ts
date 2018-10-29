@@ -1,10 +1,4 @@
-import { Token, Token2 } from '.';
-
-// export interface Recognizer {
-//     apply: (tokens: Token[]) => Token[];
-//     stemmer: (term: string) => string;
-//     terms: () => Set<string>;
-// }
+import { Token2 } from '.';
 
 export interface Recognizer2 {
     apply: (tokens: Token2[]) => Token2[];
