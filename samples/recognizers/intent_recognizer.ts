@@ -32,5 +32,8 @@ export function CreateIntentRecognizer(
         return { type: INTENT, id, name, children };
     };
 
-    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, debugMode);
+    // DESIGN NOTE: The intents aliases include references to the @QUANTITY token.
+    // Pass addTokensToDownstream as true so that we won't get partial matches to
+    // the @QUANTITY token.
+    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, true, debugMode);
 }

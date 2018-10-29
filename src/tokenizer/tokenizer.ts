@@ -38,12 +38,11 @@ export class Tokenizer {
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         debugMode = false
     ) {
-        this.downstreamWords = downstreamWords;
+        this.downstreamWords = new Set(downstreamWords);
         this.stemTerm = stemmer;
-        this.downstreamWords.forEach((term) => {
-            const hash = this.hashTerm(this.stemTermInternal(term));
-            this.hashedDownstreamWordsSet.add(hash);
-        });
+        for (const term of downstreamWords) {
+            this.addHashedDownstreamTerm(term);
+        }
 
         this.debugMode = debugMode;
     }
@@ -74,6 +73,11 @@ export class Tokenizer {
 
     static isTokenHash(hash: HASH) {
         return hash >= Tokenizer.minTokenHash;
+    }
+
+    addHashedDownstreamTerm(term: string) {
+        const hash = this.hashTerm(this.stemTermInternal(term));
+        this.hashedDownstreamWordsSet.add(hash);
     }
 
     stemTermInternal = (term: string): string => {
@@ -191,7 +195,7 @@ export class Tokenizer {
     // Indexing a phrase
     //
     ///////////////////////////////////////////////////////////////////////////
-    addItem(pid: PID, text: string): void {
+    addItem(pid: PID, text: string, addTokensToDownstream: boolean): void {
         if (text.startsWith('@')) {
             console.log(text);
         }
@@ -235,6 +239,15 @@ export class Tokenizer {
                 this.postings[hash] = [id];
             }
         });
+
+        if (addTokensToDownstream) {
+            for (const term of terms) {
+                if (term.startsWith('@')) {
+                    this.downstreamWords.add(term);
+                    this.addHashedDownstreamTerm(term);
+                }
+            }
+        }
 
         // TODO: Add tuples.
     }

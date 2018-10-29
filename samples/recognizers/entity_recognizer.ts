@@ -30,5 +30,5 @@ export function CreateEntityRecognizer(
         return { type: ENTITY, pid: id, name, children };
     };
 
-    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, debugMode);
+    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, false, debugMode);
 }

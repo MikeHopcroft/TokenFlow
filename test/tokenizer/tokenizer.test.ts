@@ -16,7 +16,7 @@ describe('Tokenizer', () => {
             items.forEach((item, index) => {
                 const pid = item[0];
                 const text = item[1];
-                tokenizer.addItem(pid, text);
+                tokenizer.addItem(pid, text, false);
                 assert.equal(tokenizer.items.length, index + 1);
                 assert.equal(tokenizer.items[index], text);
                 assert.equal(tokenizer.pids[index], pid);
@@ -27,7 +27,7 @@ describe('Tokenizer', () => {
             const downstreamWords = new Set([]);
             const tokenizer = new Tokenizer(downstreamWords);
             const input = 'small unsweeten ice tea';
-            tokenizer.addItem(1, input);
+            tokenizer.addItem(1, input, false);
             const observed = tokenizer.hashedItems[0];
             const expected:number[] = [2557986934, 1506511588, 4077993285, 1955911164];
             assert.deepEqual(observed, expected);
@@ -41,7 +41,7 @@ describe('Tokenizer', () => {
             const items = ['a b c', 'b c d', 'd e f'];
 
             items.forEach((item, index) => {
-                tokenizer.addItem(index, item);
+                tokenizer.addItem(index, item, false);
             });
     
             // Verify that item text and stemmed item text are recorded.
@@ -78,6 +78,8 @@ describe('Tokenizer', () => {
                 tokenizer.hashToFrequency[tokenizer.hashTerm(term)]);
             assert.deepEqual(observedFrequencies, expectedFrequencies);
         });
+
+        // it should add tokens to downstream terms
     });
 
     describe('#stemTerm', () => {

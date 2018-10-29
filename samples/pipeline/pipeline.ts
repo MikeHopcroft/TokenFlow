@@ -79,14 +79,9 @@ export class Pipeline {
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         debugMode = false
     ) {
-        // DESIGN NOTE: The intents file includes patterns that reference the
-        // @QUANTITY token. Treat this token as a downstream term so that we
-        // won't get partial matching consisting solely of the @QUANTITY
-        // token.
-        const intentDownstreamWords = new Set(['@QUANTITY']);
         this.intentRecognizer = CreateIntentRecognizer(
             intentsFile,
-            intentDownstreamWords,
+            new Set<string>(),
             stemmer,
             debugMode);
 

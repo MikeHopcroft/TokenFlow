@@ -23,6 +23,7 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
         tokenFactory: TokenFactory2,
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
+        addTokensToDownstream: boolean,
         debugMode = false
     ) {
         this.items = items;
@@ -35,7 +36,7 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
         for (const [pid, item] of this.items) {
             for (const aliasPattern of item.aliases) {
                 for (const alias of generateAliases(aliasPattern)) {
-                    this.tokenizer.addItem(item.pid, alias);
+                    this.tokenizer.addItem(item.pid, alias, addTokensToDownstream);
                     this.ownTerms.add(alias);
                     aliasCount++;
                 }

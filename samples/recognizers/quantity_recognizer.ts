@@ -31,5 +31,5 @@ export function CreateQuantityRecognizer(
         return { type: QUANTITY, children, value: Number(value) };
     };
 
-    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, debugMode);
+    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, false, debugMode);
 }

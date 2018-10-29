@@ -32,5 +32,5 @@ export function CreateAttributeRecognizer(
         return { type: ATTRIBUTE, id, name, children };
     };
 
-    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, debugMode);
+    return new PatternRecognizer2(items, tokenFactory, downstreamWords, stemmer, false, debugMode);
 }
