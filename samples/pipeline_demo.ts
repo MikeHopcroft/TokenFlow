@@ -17,8 +17,9 @@ function pipelineDemo(query: string, debugMode = false) {
     printTokens(tokens);
 }
 
-pipelineDemo("Can I have a silver four door sedan", true);
+// pipelineDemo("I'll take the school bus actually make that the dump truck", true);
+// pipelineDemo("Can I have a silver four door sedan", true);
 // pipelineDemo("with leather interior and a", true);
 // pipelineDemo("Can I have a silver four door sedan with leather interior and a dump truck");
-// pipelineDemo("I'll have four tires one of them white wall", true);
+pipelineDemo("I'll have four tires one of them white wall", true);
 // pipelineDemo('can I have a station wagon');

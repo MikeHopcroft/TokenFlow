@@ -6,6 +6,7 @@ import { ENTITY, CreateEntityRecognizer, EntityToken } from '../recognizers';
 import { INTENT, CreateIntentRecognizer, IntentToken } from '../recognizers';
 import { QUANTITY, CreateQuantityRecognizer, QuantityToken } from '../recognizers';
 import { CreateNumberRecognizer } from '../recognizers';
+import { FixupRecognizer } from '../recognizers';
 
 
 type AnyToken =
@@ -65,6 +66,7 @@ export function printTokens(tokens: Token2[]) {
 export class Pipeline {
     attributeRecognizer: Recognizer2;
     entityRecognizer: Recognizer2;
+    // fixupRecognizer: Recognizer2;
     intentRecognizer: Recognizer2;
     numberRecognizer: Recognizer2;
     quantityRecognizer: Recognizer2;
@@ -79,6 +81,8 @@ export class Pipeline {
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         debugMode = false
     ) {
+        // this.fixupRecognizer = new FixupRecognizer();
+
         this.intentRecognizer = CreateIntentRecognizer(
             intentsFile,
             new Set<string>(),
@@ -123,6 +127,7 @@ export class Pipeline {
                 this.attributeRecognizer,
                 this.numberRecognizer,
                 this.quantityRecognizer,
+                // this.fixupRecognizer,
                 this.intentRecognizer
             ],
             debugMode

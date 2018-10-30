@@ -57,7 +57,7 @@ export class NumberRecognizer implements Recognizer2 {
         const text = tokens.map(token => token.text).join(' ');
         const value = wordsToNumbers(text);
         if (typeof (value) !== 'number') {
-            // TODO: consider logging an error and then returning the unknown token.
+            // TODO: consider logging an error and then returning a WORD token.
             throw TypeError('parseNumberSequence: expected a number.');
         }
         return this.tokenFactory(value, tokens);

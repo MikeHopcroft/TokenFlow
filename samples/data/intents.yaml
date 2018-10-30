@@ -4,9 +4,9 @@ items:
     name: SALUTATION
     aliases:
       - greetings
-      - hi [there]
+      - "hi [there]"
       - hello
-      - hey [there]
+      - "hey [there]"
 
   - pid: 100001
     name: ADD_TO_ORDER
@@ -15,9 +15,9 @@ items:
       - (I'll,I will) (do,get,have,take)
       - I (need,wanna,want)
       - (get,give) me
-      - (can,could,may) I [just,please] (do,get,have)
-      - [please] set me up with
-      - [please] hook me up with
+      - "(can,could,may) I [just,please] (do,get,have)"
+      - "[please] set me up with"
+      - "[please] hook me up with"
       - we need
       - we want
       - (we'd,we would) like
@@ -26,7 +26,7 @@ items:
   - pid: 100002
     name: CONJUNCTION
     aliases:
-      - and [then]
+      - "and [then]"
       - also
       - with
 
@@ -82,9 +82,11 @@ items:
   - pid: 100010
     name: PREPOSITIONS
     aliases:
-      - make (all,both,one,@QUANTITY) [of them]
-      - the other
+      - "make (all,both,one,@QUANTITY) [of them]"
+      # - "make (all,both,one) [of them]"
+      - (the,@QUANTITY) other
       - (one,@QUANTITY) of them
+      # - one of them
 
   - pid: 100011
     name: CANCEL_ORDER
@@ -101,7 +103,7 @@ items:
       - (hang,hold) on
       - (a,one) (minute,moment,sec,second)
       - (give me,give us,just,need) (a,one) (minute,moment,sec,second)
-      - [need] more time
+      - "[need] more time"
 
   # ISSUE: not sure about "okay". Also, okay is an AFFIRMATIVE_ANSWER
   - pid: 100013
@@ -126,7 +128,7 @@ items:
       - yup
       - ok        # ISSUE: don't know if speech-to-text returns 'ok' or 'okay'
       - okay
-      - [that's,that is] alright
+      - "[that's,that is] alright"
       - you (betcha,got it,gotcha)
       - affirmative
       - super

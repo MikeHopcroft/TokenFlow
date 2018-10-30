@@ -310,7 +310,9 @@ export class Tokenizer {
         // }, 0);
         // const downstreamWordFactor = nonDownstreamWordCount / match.length;
         // TODO: Should this be terms common with match, instead of prefix?
-        const commonTerms = this.commonTerms(query, prefix);
+        // const commonTerms = this.commonTerms(query, prefix);
+        // const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), match);
+        const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), prefix.slice(0, match.length));
         const commonDownstreamWords = this.commonDownstreamWords(commonTerms);
 
         let score = matchFactor * commonFactor * positionFactor * lengthFactor;
