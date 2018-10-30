@@ -33,7 +33,7 @@ items:
   # ISSUE: "yeah" is a separator and also an affirmative answer.
   # ISSUE: not sure about "I don't know" and "one more".
   - pid: 100003
-    name: SEPERATORS
+    name: SEPERATOR
     aliases:
       - yeah
       - um
@@ -80,7 +80,7 @@ items:
   # ISSUE: these patterns that start with 'make' collide with the restate
   # patterns. Perhaps we want to key off of the 'one of them' part.
   - pid: 100010
-    name: PREPOSITIONS
+    name: PREPOSITION
     aliases:
       - "make (all,both,one,@QUANTITY) [of them]"
       # - "make (all,both,one) [of them]"
@@ -101,8 +101,9 @@ items:
     aliases:
       - wait
       - (hang,hold) on
-      - (a,one) (minute,moment,sec,second)
-      - (give me,give us,just,need) (a,one) (minute,moment,sec,second)
+      - "[just,need] (a,one,@QUANTITY) (minute,moment,sec,second)"
+      # ISSUE: Next line collides with ADD_TO_ORDER intent "give me"
+      # - (give me,give us,just,need) (a,one,@QUANTITY) (minute,moment,sec,second)
       - "[need] more time"
 
   # ISSUE: not sure about "okay". Also, okay is an AFFIRMATIVE_ANSWER

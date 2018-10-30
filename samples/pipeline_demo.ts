@@ -17,7 +17,8 @@ function pipelineDemo(query: string, debugMode = false) {
     printTokens(tokens);
 }
 
-pipelineDemo("i'd like a red convertable jacked with slicks");
+pipelineDemo("Hi Can I get a school bus just a sec and a station wagon that's all", true);
+// pipelineDemo("i'd like a red convertable jacked with slicks");
 // "i'd like a red convertable jacked with slicks actually make that a blue one" - "one" at end
 // pipelineDemo("red convertable jacked with slicks");
 // pipelineDemo("I'll take the school bus actually make that the dump truck", true);

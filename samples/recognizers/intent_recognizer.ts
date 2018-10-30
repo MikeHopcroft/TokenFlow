@@ -22,14 +22,15 @@ export function CreateIntentRecognizer(
 ): IntentRecognizer {
     const items = itemMapFromYamlString(fs.readFileSync(intentFile, 'utf8'));
 
-    const tokenFactory = (id: PID, children: Token[]): IntentToken => {
+    const tokenFactory = (id: PID, children: Token[]): CompositeToken => {
         const item = items.get(id);
 
         let name = "UNKNOWN";
         if (item) {
             name = item.name;
         }
-        return { type: INTENT, id, name, children };
+        const symbol = Symbol.for(name);
+        return { type: symbol, children };
     };
 
     // DESIGN NOTE: The intents aliases include references to the @QUANTITY token.

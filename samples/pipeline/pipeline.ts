@@ -38,7 +38,10 @@ export function tokenToString(t: Token) {
             name = `[WORD:${token.text}]`;
             break;
         default:
-            name = `[UNKNOWN]:${t.type.toString()}`;
+            {
+                const symbol = t.type.toString();
+                name = `[${symbol.slice(7, symbol.length - 1)}]`;
+            }
     }
     return name;
 }

@@ -14,7 +14,8 @@ items:
     aliases:
       - "[with] (a,an,extra,more,some,the)"
       - add
-      - just a
+      # NOTE: "just a" collides with "just a sec"
+      # - just a
       - with
 
   - pid: 2
