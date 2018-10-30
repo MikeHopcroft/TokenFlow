@@ -183,7 +183,7 @@ items:
   - pid: 1000
     name: alloy rims
     aliases:
-      - alloy rims
+      - "alloy (rims,wheels)"
 
   - pid: 1001
     name: white wall tires

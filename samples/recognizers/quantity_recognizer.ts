@@ -25,5 +25,5 @@ export function CreateQuantityRecognizer(
         return { type: QUANTITY, children, value: id };
     };
 
-    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, false, debugMode);
+    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, false, true, debugMode);
 }

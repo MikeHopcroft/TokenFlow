@@ -33,15 +33,25 @@ export class Tokenizer {
 
     hashedDownstreamWordsSet = new Set<HASH>();
 
+    score: (query: number[], prefix: number[]) => {score: number, length: number };
+
     constructor(
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
-        debugMode = false
+        relaxedMatching: boolean,
+        debugMode: boolean
     ) {
         this.downstreamWords = new Set(downstreamWords);
         this.stemTerm = stemmer;
         for (const term of downstreamWords) {
             this.addHashedDownstreamTerm(term);
+        }
+
+        if (relaxedMatching) {
+            this.score = this.relaxedMatchScore;
+        }
+        else {
+            this.score = this.exactMatchScore;
         }
 
         this.debugMode = debugMode;
@@ -274,7 +284,23 @@ export class Tokenizer {
         return Tokenizer.isNumberHash(hash) || this.hashedDownstreamWordsSet.has(hash);
     }
 
-    score(query: number[], prefix: number[]) {
+    exactMatchScore(query: number[], prefix: number[]) {
+        let index = 0;
+
+        if (prefix.length <= query.length) {
+            for (index = 0; index < prefix.length; ++index) {
+                if (query[index] !== prefix[index]) {
+                    return { score: 0, length: 0 };
+                }
+            }
+            return { score: prefix.length, length: prefix.length };
+        }
+        else {
+            return { score: 0, length: 0 };
+        }
+    }
+
+    relaxedMatchScore(query: number[], prefix: number[]) {
         const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
 
         // Ratio of match length to match length + edit distance.

@@ -24,10 +24,11 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         addTokensToDownstream: boolean,
-        debugMode = false
+        relaxedMatching: boolean,
+        debugMode: boolean
     ) {
         this.items = items;
-        this.tokenizer = new Tokenizer(downstreamWords, stemmer, debugMode);
+        this.tokenizer = new Tokenizer(downstreamWords, stemmer, relaxedMatching, debugMode);
         this.stemmer = this.tokenizer.stemTerm;
         this.tokenFactory = tokenFactory;
 

@@ -3,7 +3,7 @@ items:
   - pid: 0
     name: "0"
     aliases:
-      - no
+      - "no"
       - without
       - with (no,zero)
       - (drop,hold,lose,remove,skip) the
