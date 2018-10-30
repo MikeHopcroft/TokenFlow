@@ -22,13 +22,7 @@ export function CreateQuantityRecognizer(
     const items = itemMapFromYamlString(fs.readFileSync(quantityFile, 'utf8'));
 
     const tokenFactory = (id: PID, children: Token[]): QuantityToken => {
-        const item = items.get(id);
-
-        let value = "UNKNOWN";
-        if (item) {
-            value = item.name;
-        }
-        return { type: QUANTITY, children, value: Number(value) };
+        return { type: QUANTITY, children, value: id };
     };
 
     return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, false, debugMode);

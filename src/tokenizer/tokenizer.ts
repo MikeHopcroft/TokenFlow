@@ -196,9 +196,6 @@ export class Tokenizer {
     //
     ///////////////////////////////////////////////////////////////////////////
     addItem(pid: PID, text: string, addTokensToDownstream: boolean): void {
-        if (text.startsWith('@')) {
-            console.log(text);
-        }
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
         // share a pid, but have different ids.
