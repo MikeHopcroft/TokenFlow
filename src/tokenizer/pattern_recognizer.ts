@@ -2,25 +2,25 @@ import {
     generateAliases,
     Item,
     PID,
-    Recognizer2,
+    Recognizer,
     StemmerFunction,
-    Token2,
-    TokenFactory2,
+    Token,
+    TokenFactory,
     Tokenizer,
     WORD,
     WordToken
 } from '.';
 
-export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
+export class PatternRecognizer<ITEM extends Item> implements Recognizer {
     items: Map<PID, ITEM>;
     tokenizer: Tokenizer;
-    tokenFactory: TokenFactory2;
+    tokenFactory: TokenFactory;
     stemmer: (word: string) => string;
     ownTerms = new Set<string>();
 
     constructor(
         items: Map<PID, ITEM>,
-        tokenFactory: TokenFactory2,
+        tokenFactory: TokenFactory,
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         addTokensToDownstream: boolean,
@@ -47,7 +47,7 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
         console.log(`${this.items.size} items contributed ${aliasCount} aliases.`);
     }
 
-    apply = (tokens: Token2[]) => {
+    apply = (tokens: Token[]) => {
         const terms = tokens.map( token => {
             if (token.type === WORD) {
                 // TODO: Would be nice not to type assert WordToken here.
@@ -63,8 +63,8 @@ export class PatternRecognizer2<ITEM extends Item> implements Recognizer2 {
                 return `@${symbol.slice(7, symbol.length - 1)}`;
             }
         });
-        const path = this.tokenizer.processQuery2(terms);
-        const matches = this.tokenizer.tokenizeMatches2(tokens, path, this.tokenFactory);
+        const path = this.tokenizer.processQuery(terms);
+        const matches = this.tokenizer.tokenizeMatches(tokens, path, this.tokenFactory);
         return matches;
     }
 

@@ -57,7 +57,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch REPL",
-            "program": "${workspaceFolder}/build/samples/repl.js",
+            "program": "${workspaceFolder}/build/samples/repl_demo.js",
             "outputCapture": "std"
         },
         {

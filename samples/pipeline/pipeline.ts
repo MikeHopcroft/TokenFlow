@@ -1,5 +1,5 @@
 import { CompositeRecognizer } from '../../src/recognizers';
-import { Recognizer2, StemmerFunction, Token2, Tokenizer, WordToken, WORD, CompositeToken } from '../../src/tokenizer';
+import { Recognizer, StemmerFunction, Token, Tokenizer, WordToken, WORD, CompositeToken } from '../../src/tokenizer';
 
 import { ATTRIBUTE, AttributeToken, CreateAttributeRecognizer } from '../recognizers';
 import { ENTITY, CreateEntityRecognizer, EntityToken } from '../recognizers';
@@ -16,7 +16,7 @@ type AnyToken =
     QuantityToken |
     WordToken;
 
-export function tokenToString(t: Token2) {
+export function tokenToString(t: Token) {
     const token = t as AnyToken;
     let name: string;
     switch (token.type) {
@@ -43,7 +43,7 @@ export function tokenToString(t: Token2) {
     return name;
 }
 
-export function printToken(token: Token2, indent = 0) {
+export function printToken(token: Token, indent = 0) {
     const spaces = new Array(2* indent + 1).join(' ');
     if (token.type === WORD) {
         console.log(`${spaces}WORD: "${(token as WordToken).text}"`);
@@ -56,7 +56,7 @@ export function printToken(token: Token2, indent = 0) {
     }
 }
 
-export function printTokens(tokens: Token2[]) {
+export function printTokens(tokens: Token[]) {
     for (const token of tokens) {
         printToken(token);
     }
@@ -64,12 +64,12 @@ export function printTokens(tokens: Token2[]) {
 }
 
 export class Pipeline {
-    attributeRecognizer: Recognizer2;
-    entityRecognizer: Recognizer2;
+    attributeRecognizer: Recognizer;
+    entityRecognizer: Recognizer;
     // fixupRecognizer: Recognizer2;
-    intentRecognizer: Recognizer2;
-    numberRecognizer: Recognizer2;
-    quantityRecognizer: Recognizer2;
+    intentRecognizer: Recognizer;
+    numberRecognizer: Recognizer;
+    quantityRecognizer: Recognizer;
 
     compositeRecognizer: CompositeRecognizer;
 

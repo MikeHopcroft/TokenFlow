@@ -1,15 +1,15 @@
-import { Recognizer2, Token2 } from '../tokenizer';
+import { Recognizer, Token } from '../tokenizer';
 
-export class CompositeRecognizer implements Recognizer2 {
-    recognizers: Recognizer2[] = [];
+export class CompositeRecognizer implements Recognizer {
+    recognizers: Recognizer[] = [];
     debugMode: boolean;
 
-    constructor(recognizers: Recognizer2[], debugMode = false) {
+    constructor(recognizers: Recognizer[], debugMode = false) {
         this.recognizers = recognizers;
         this.debugMode = debugMode;
     }
 
-    apply = (tokens: Token2[]) => {
+    apply = (tokens: Token[]) => {
         let result = tokens;
 
         if (this.debugMode) {

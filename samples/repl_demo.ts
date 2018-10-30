@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Pipeline, printToken, tokenToString } from './pipeline';
+import { Pipeline, printTokens } from './pipeline';
 import * as readlineSync from 'readline-sync';
 import {speechToTextFilter} from './speech_to_text_filter';
 
@@ -37,7 +37,7 @@ export function repl(
         }
 
         const tokens = pipeline.processOneQuery(text);
-        tokens.forEach(printToken);
+        printTokens(tokens);
 
         console.log();
     }

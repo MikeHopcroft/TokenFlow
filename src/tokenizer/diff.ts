@@ -248,8 +248,8 @@ class DiffMatrix<T> {
                         // Take the matched term if either of the following is true
                         //   1. we haven't taken any terms yet,
                         //      meaning that we've been in the suffix
-                        //      and can continue trimming contributing terms
-                        //   2. this term is not a contributing term.
+                        //      and can continue trimming downstream terms
+                        //   2. this term is not a downstream term.
                         //
                         if (path.length > 0 || !this.isDownstreamTerm(term)) {
                             path.push(term);
@@ -277,10 +277,10 @@ class DiffMatrix<T> {
                         // Take the matched term if any of the following are true
                         //   1. we haven't taken any terms yet,
                         //      meaning that we've been in the suffix
-                        //      and can continue trimming contributing terms
+                        //      and can continue trimming downstream terms
                         //   2. this terms matches the last term in b,
-                        //      meaning we will stop trimming contributing terms.
-                        //   3. this term is not a contributing term.
+                        //      meaning we will stop trimming downstream terms.
+                        //   3. this term is not a downstream term.
                         //
                         if (path.length > 0 || bi === this.bLen || !this.isDownstreamTerm(term)) {
                             path.push(term);

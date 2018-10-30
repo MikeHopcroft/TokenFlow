@@ -17,9 +17,12 @@ function pipelineDemo(query: string, debugMode = false) {
     printTokens(tokens);
 }
 
+pipelineDemo("i'd like a red convertable jacked with slicks");
+// "i'd like a red convertable jacked with slicks actually make that a blue one" - "one" at end
+// pipelineDemo("red convertable jacked with slicks");
 // pipelineDemo("I'll take the school bus actually make that the dump truck", true);
 // pipelineDemo("Can I have a silver four door sedan", true);
 // pipelineDemo("with leather interior and a", true);
 // pipelineDemo("Can I have a silver four door sedan with leather interior and a dump truck");
-pipelineDemo("I'll have four tires one of them white wall", true);
+// pipelineDemo("I'll have four tires one of them white wall", true);
 // pipelineDemo('can I have a station wagon');

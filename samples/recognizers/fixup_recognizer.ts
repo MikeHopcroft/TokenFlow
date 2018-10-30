@@ -1,4 +1,4 @@
-import { PID, Recognizer2, Token2, TokenFactory2, WORD, WordToken } from '../../src/tokenizer';
+import { PID, Recognizer, Token, TokenFactory, WORD, WordToken } from '../../src/tokenizer';
 import { PeekableSequence } from '../../src/utilities';
 
 import { INTENT, IntentToken } from './intent_recognizer';
@@ -18,15 +18,15 @@ import { QUANTITY, QuantityToken } from './quantity_recognizer';
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-export class FixupRecognizer implements Recognizer2 {
-    factory = (id: PID, children: Token2[]): IntentToken => {
+export class FixupRecognizer implements Recognizer {
+    factory = (id: PID, children: Token[]): IntentToken => {
         if (id !== 100010) {
             throw TypeError('FixupRecognizer: internal error.');
         }
         return { type: INTENT, id: 100010, name: 'PREPOSITIONS', children };
     };
 
-    apply = (tokens: Token2[]) => {
+    apply = (tokens: Token[]) => {
         return [...convertQuantityOfThem(tokens, this.factory)];
     }
 
@@ -40,8 +40,8 @@ export class FixupRecognizer implements Recognizer2 {
     }
 }
 
-function* convertQuantityOfThem(tokens: Token2[], factory: TokenFactory2) {
-    const sequence = new PeekableSequence<Token2>(tokens[Symbol.iterator]());
+function* convertQuantityOfThem(tokens: Token[], factory: TokenFactory) {
+    const sequence = new PeekableSequence<Token>(tokens[Symbol.iterator]());
     while (!sequence.atEOF()) {
         const token1 = sequence.get() as QuantityToken;
         if (sequence.atEOF() || token1.type !== QUANTITY) {

@@ -1,7 +1,7 @@
 import { diff } from './diff';
 import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
-import { Token2, TokenFactory2 } from './tokens';
+import { Token, TokenFactory } from './tokens';
 import { HASH, ID, PID } from './types';
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 
@@ -171,9 +171,9 @@ export class Tokenizer {
         return rewritten.join(' ');
     }
 
-    tokenizeMatches2 = (tokens: Token2[], path: Edge[], tokenFactory: TokenFactory2) => {       
+    tokenizeMatches = (tokens: Token[], path: Edge[], tokenFactory: TokenFactory) => {       
         let termIndex = 0;
-        const output: Token2[] = [];
+        const output: Token[] = [];
         for (const edge of path) {
             if (edge.label < 0) {
                 output.push(tokens[termIndex++]);
@@ -356,14 +356,7 @@ export class Tokenizer {
         return { score, length: rightmostA + 1 };
     }
 
-    // TODO: pass formatters here?
-    // TODO: return terms and path, instead of strings?
-    processQuery(query: string): Edge[] {
-        const terms = query.split(/\s+/);
-        return this.processQuery2(terms);
-    }
-
-    processQuery2(terms: string[]): Edge[] {
+    processQuery(terms: string[]): Edge[] {
         const stemmed = terms.map(this.stemTerm);
         const hashed = stemmed.map(this.hashTerm);
 

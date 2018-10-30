@@ -1,8 +1,8 @@
-import { Recognizer2, Token2, TokenFactory2, WORD, WordToken } from '../tokenizer';
+import { Recognizer, Token, TokenFactory, WORD, WordToken } from '../tokenizer';
 import { PeekableSequence } from '../utilities';
 import wordsToNumbers from 'words-to-numbers';
 
-export class NumberRecognizer implements Recognizer2 {
+export class NumberRecognizer implements Recognizer {
     static lexicon: Set<string> = new Set([
         'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
         'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen',
@@ -10,14 +10,14 @@ export class NumberRecognizer implements Recognizer2 {
         'hundred', 'thousand', 'million', 'trillion'
     ]);
 
-    tokenFactory: TokenFactory2;
+    tokenFactory: TokenFactory;
 
-    constructor(tokenFactory: TokenFactory2) {
+    constructor(tokenFactory: TokenFactory) {
         this.tokenFactory = tokenFactory;
     }
 
-    private parseSequence(sequence: PeekableSequence<Token2>): Token2[] {
-        const tokens: Token2[] = [];
+    private parseSequence(sequence: PeekableSequence<Token>): Token[] {
+        const tokens: Token[] = [];
         while (!sequence.atEOF()) {
             const token = sequence.peek() as WordToken;
 
@@ -37,7 +37,7 @@ export class NumberRecognizer implements Recognizer2 {
         return tokens;
     }
 
-    private parseNumberTermSequence(sequence: PeekableSequence<Token2>): Token2 {
+    private parseNumberTermSequence(sequence: PeekableSequence<Token>): Token {
         const tokens: WordToken[] = [];
         while (!sequence.atEOF()) {
             const token = sequence.peek() as WordToken;
@@ -63,7 +63,7 @@ export class NumberRecognizer implements Recognizer2 {
         return this.tokenFactory(value, tokens);
     }
 
-    private parseArabicNumeralSequence(sequence: PeekableSequence<Token2>): Token2 {
+    private parseArabicNumeralSequence(sequence: PeekableSequence<Token>): Token {
         const token = sequence.get() as WordToken;
         const value = Number(token.text);
         return this.tokenFactory(value, [token]);
@@ -78,7 +78,7 @@ export class NumberRecognizer implements Recognizer2 {
         return /^\d+$/.test(term);
     }
 
-    apply = (tokens: Token2[]) => {
+    apply = (tokens: Token[]) => {
         return this.parseSequence(new PeekableSequence(tokens[Symbol.iterator]()));
 
     }
