@@ -5,27 +5,17 @@ items:
     aliases:
       - no
       - without
-      - with no
+      - with (no,zero)
+      - (drop,hold,lose,remove,skip) the
       - zero
-      - with zero
-      - lose the
-      - remove the
-      - skip the
-      - drop the
-      - hold the
 
   - pid: 1
     name: "1"
     aliases:
-      - "[with] a"
-      - "[with] an"
+      - "[with] (a,an,extra,more,some,the)"
       - add
       - just a
-      - "[with] some"
-      - "[with] more"
-      - "[with] extra"
       - with
-      - "[with] the"
 
   - pid: 2
     name: "2"
