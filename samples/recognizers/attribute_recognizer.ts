@@ -46,7 +46,7 @@ export function CreateAttributeRecognizer(
 ): AttributeRecognizer {
     const input = itemMapFromYamlString(fs.readFileSync(attributeFile, 'utf8'));
 
-    const {items, categories} = categoryBuilder(input, pidAllocator);
+    const {items, categories} = categoryBuilder(input, stemmer, pidAllocator);
 
     const tokenFactory = (id: PID, children: Token[]): AttributeToken | MultipleAttributeToken => {
         const item = items.get(id);

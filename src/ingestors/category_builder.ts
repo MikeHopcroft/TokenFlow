@@ -1,4 +1,4 @@
-import { generateAliases, Item, PID } from '../tokenizer';
+import { generateAliases, Item, PID, StemmerFunction } from '..';
 
 export type PIDAllocator = () => PID;
 
@@ -13,6 +13,7 @@ export type PIDAllocator = () => PID;
 //
 export function categoryBuilder<ITEM extends Item>(
     items: Map<PID, ITEM>,
+    stemmer: StemmerFunction,
     pidAllocator: PIDAllocator
 ) {
     //
@@ -20,8 +21,14 @@ export function categoryBuilder<ITEM extends Item>(
     //
     const aliases = new Map<string, [PID]>();
     for (const [pid, item] of items) {
-        for (const aliasPattern of item.aliases) {
-            for (const alias of generateAliases(aliasPattern)) {
+        for (const rawAliasPattern of item.aliases) {
+            const aliasPattern = rawAliasPattern.toLowerCase();
+            for (const rawAlias of generateAliases(aliasPattern)) {
+// TODO: need to store unstemmed aliases as well, in case stemmer isn't idempotent.
+// If the stemmer isn't idempotent, then applying it a second time could change
+// alias. 
+//                const alias = rawAlias.split(/\s+/).map(stemmer).join(' ');
+                const alias = rawAlias;
                 const pids = aliases.get(alias);
                 if (pids !== undefined) {
                     // PIDs list for an alias should not contain
@@ -59,13 +66,14 @@ export function categoryBuilder<ITEM extends Item>(
         }
         else {
             // This alias resolves to multiple items.
+            const sortedPIDs = pids.sort((n1,n2) => n1 - n2);
             const categoryPID = pidAllocator();
-            const name = `MULTIPLE_${pids.join("_")}`;
-            console.log(`New category ${name},${categoryPID}: "${alias}": ${pids}`);
+            const name = `MULTIPLE_${sortedPIDs.join("_")}`;
+            console.log(`New category ${name},${categoryPID}: "${alias}": ${sortedPIDs}`);
             items2.set(
                 categoryPID,
                 {pid: categoryPID, name, aliases: [alias]});
-            categories.set(categoryPID, pids);
+            categories.set(categoryPID, sortedPIDs);
         }
     }
 
