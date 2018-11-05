@@ -6,7 +6,8 @@ items:
   - pid: 1
     name: COLOR(RED)
     aliases:
-      - red
+      - "[strawberry] red"
+      - strawberry
   - pid: 2
     name: COLOR(BLUE)
     aliases:
@@ -35,6 +36,10 @@ items:
     name: COLOR(GOLD)
     aliases:
       - "[metallic] gold"
+  - pid: 8
+    name: COLOR(EVERGREEN)
+    aliases:
+      - "evergreen"
 
   #
   # 100-199: Tire types

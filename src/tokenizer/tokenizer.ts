@@ -305,6 +305,7 @@ export class Tokenizer {
 
         // Ratio of match length to match length + edit distance.
         const matchFactor = match.length / (match.length + cost);
+        // EXPERIMENTAL ALTERNATIVE to above. const matchFactor = Math.max(0, match.length - cost) / match.length;
 
         // Ratio of match words common to query and prefix and length of match.
         const commonFactor = common / match.length;

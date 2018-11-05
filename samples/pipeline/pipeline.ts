@@ -2,6 +2,7 @@ import { CompositeRecognizer } from '../../src/recognizers';
 import { Recognizer, StemmerFunction, Token, Tokenizer, WordToken, WORD, CompositeToken } from '../../src/tokenizer';
 
 import { ATTRIBUTE, AttributeToken, CreateAttributeRecognizer } from '../recognizers';
+import { MULTIPLE_ATTRIBUTE, MultipleAttributeToken } from '../recognizers';
 import { ENTITY, CreateEntityRecognizer, EntityToken } from '../recognizers';
 import { INTENT, CreateIntentRecognizer, IntentToken } from '../recognizers';
 import { QUANTITY, CreateQuantityRecognizer, QuantityToken } from '../recognizers';
@@ -13,6 +14,7 @@ type AnyToken =
     AttributeToken |
     EntityToken |
     IntentToken |
+    MultipleAttributeToken |
     QuantityToken |
     WordToken;
 
@@ -23,6 +25,9 @@ export function tokenToString(t: Token) {
         case ATTRIBUTE:
             const attribute = token.name.replace(/\s/g, '_').toUpperCase();
             name = `[ATTRIBUTE:${attribute},${token.id}]`;
+            break;
+        case MULTIPLE_ATTRIBUTE:
+            name = `[ATTRIBUTE:MULTIPLE,${token.pids.join(',')}]`;
             break;
         case ENTITY:
             const entity = token.name.replace(/\s/g, '_').toUpperCase();
