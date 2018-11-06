@@ -304,8 +304,12 @@ export class Tokenizer {
         const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
 
         // Ratio of match length to match length + edit distance.
-        const matchFactor = match.length / (match.length + cost);
-        // EXPERIMENTAL ALTERNATIVE to above. const matchFactor = Math.max(0, match.length - cost) / match.length;
+        // const matchFactor = match.length / (match.length + cost);
+        // EXPERIMENTAL ALTERNATIVE to above.
+        let matchFactor = Math.max(0, match.length - cost) / match.length;
+        if (match.length === 1 && cost === 1 && common === 1) {
+            matchFactor = 0.5;
+        }
 
         // Ratio of match words common to query and prefix and length of match.
         const commonFactor = common / match.length;
