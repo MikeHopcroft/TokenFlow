@@ -49,8 +49,7 @@
   input: I'll take the school bus actually make that the dump truck
   expected: >-
     [ADD_TO_ORDER] [QUANTITY:1] [ENTITY:YELLOW_SCHOOL_BUS,32]
-    [CANCEL_LAST_ITEM] [PREPOSITION]
-    [ENTITY:GREY_DUMP_TRUCK,33]
+    [CANCEL_LAST_ITEM] [RESTATE] [QUANTITY:1] [ENTITY:GREY_DUMP_TRUCK,33]
 - priority: 1
   suites: general
   input: >-

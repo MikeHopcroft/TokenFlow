@@ -28,7 +28,10 @@ export class NumberRecognizer implements Recognizer {
                 tokens.push(this.parseArabicNumeralSequence(sequence));
             }
             else if (NumberRecognizer.lexicon.has(token.text)) {
-                tokens.push(this.parseNumberTermSequence(sequence));
+                const values = this.parseNumberTermSequence(sequence);
+                for (const value of values) {
+                    tokens.push(value);
+                }
             }
             else {
                 tokens.push(sequence.get());
@@ -37,7 +40,7 @@ export class NumberRecognizer implements Recognizer {
         return tokens;
     }
 
-    private parseNumberTermSequence(sequence: PeekableSequence<Token>): Token {
+    private parseNumberTermSequence(sequence: PeekableSequence<Token>): Token[] {
         const tokens: WordToken[] = [];
         while (!sequence.atEOF()) {
             const token = sequence.peek() as WordToken;
@@ -56,11 +59,33 @@ export class NumberRecognizer implements Recognizer {
 
         const text = tokens.map(token => token.text).join(' ');
         const value = wordsToNumbers(text);
-        if (typeof (value) !== 'number') {
-            // TODO: consider logging an error and then returning a WORD token.
-            throw TypeError('parseNumberSequence: expected a number.');
+
+        if (typeof (value) === 'number') {
+            // Sequence of tokens collapsed to a single numeric value.
+            return [this.tokenFactory(value, tokens)];
         }
-        return this.tokenFactory(value, tokens);
+        else {
+            // Sequence corresponds to multiple numeric values
+            if (value === null) {
+                throw TypeError('parseNumberSequence: encountered unexpected null value.');
+            }
+            else {
+                return value.split(' ').map( term => {
+                    const n = Number(term);
+                    if (isNaN(n)) {
+                        throw TypeError('parseNumberSequence: expected a number.');
+                    }
+                    else {
+                        // TODO: BUG: We construct a new word token here
+                        // because we no longer have the underlying token.
+                        // The sequence "a b c" could represent values
+                        // [a, bc] or [ab, c] or [a, b, c].
+                        const word: WordToken = { type: WORD, text: term };
+                        return this.tokenFactory(n, [word]);
+                    }
+                });    
+            }
+        }
     }
 
     private parseArabicNumeralSequence(sequence: PeekableSequence<Token>): Token {
