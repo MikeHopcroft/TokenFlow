@@ -171,7 +171,7 @@ class DiffMatrix<T> {
                 // Delete from A
                 if (this.isToken(this.a[i - 1])) {
                     // We're never allowed to delete tokens from the query.
-                    this.matrix[j][i].update(Edit.DELETE_A, DiffMatrix.tokenReplaceCost);
+                    this.matrix[j][i].update(Edit.DELETE_A, this.matrix[j][i - 1].cost + DiffMatrix.tokenReplaceCost);
                 }
                 else {
                     this.matrix[j][i].update(Edit.DELETE_A, this.matrix[j][i - 1].cost + 1);
@@ -206,6 +206,16 @@ class DiffMatrix<T> {
 
         let ai = this.aLen;
         let bi = this.bLen;
+
+        // We never allow token deletion or replacement in paths.
+        // Trim path suffix to exclude token deletions and replacements.
+        while (this.matrix[bi][ai].cost >= DiffMatrix.tokenReplaceCost) {
+            ai--;
+            if (ai === 0) {
+                break;
+            }
+        }
+
         let current = this.matrix[bi][ai];
         let cost = current.cost;
 
