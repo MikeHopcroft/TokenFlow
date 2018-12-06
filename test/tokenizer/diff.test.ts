@@ -147,5 +147,23 @@ describe('Diff', () => {
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
         });
+
+        it('regression introduced 12-6-18', () => {
+            const isDownstreamTermHash = (hash: number) => hash === 0x200000001;
+            const isTokenTermHash = (hash: number) => hash >= 0x200000000;
+
+            const query = [ 1, 0x200000001, 0x200000002 ];
+            const prefix= [ 1, 0x200000001, 0x200000003 ];
+            const expectedMatch = [ 1 ];
+            const expectedCost = 1; // REPLACE 0x200000002 <=> 0x200000003, then SKIP trailing downstream 0x200000001.
+            const expectedCommon = 1;
+
+            const { match, cost, common } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+
+            assert.deepEqual(match, expectedMatch);
+            assert.equal(cost, expectedCost);
+            assert.equal(common, expectedCommon);
+        });
+
     });
 });

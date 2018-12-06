@@ -93,7 +93,7 @@ export class Pipeline {
 
         this.intentRecognizer = CreateIntentRecognizer(
             intentsFile,
-            new Set<string>(),
+            new Set<string>('@QUANTITY'),
             stemmer,
             debugMode);
 

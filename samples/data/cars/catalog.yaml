@@ -402,6 +402,11 @@ items:
     aliases:
       - mud flaps
 
+  - pid: 1607
+    name: train horn
+    aliases:
+      - very loud train horn
+
   #
   # 1700-1799 Interiors
   #

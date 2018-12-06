@@ -77,6 +77,7 @@ export interface DiffResults<T> {
     leftmostA: number;
     rightmostA: number;
     common: number;
+    commonTerms: Set<T>;
 }
 
 class DiffMatrix<T> {
@@ -105,7 +106,8 @@ class DiffMatrix<T> {
         cost: 0,
         leftmostA: 0,
         rightmostA: 0,
-        common: 0
+        common: 0,
+        commonTerms: new Set<T>()
     };
 
     constructor(
@@ -227,6 +229,7 @@ class DiffMatrix<T> {
         let leftmostA = -1;
         let rightmostA = -1;
         let common = 0;
+        const commonTerms = new Set<T>();
 
         while (current.edit !== Edit.NONE) {
             switch (current.edit) {
@@ -297,11 +300,12 @@ class DiffMatrix<T> {
                             if (rightmostA < 0) {
                                 rightmostA = ai - 1;
                             }
+                            common++;
+                            commonTerms.add(term);
                         }
 
                         ai--;
                         bi--;
-                        common++;
                         inSuffix = false;
                         leftmostA = ai;
                     }
@@ -319,7 +323,8 @@ class DiffMatrix<T> {
             cost: Math.min(cost, Infinity),
             leftmostA,
             rightmostA,
-            common
+            common,
+            commonTerms
         };
     }
 }

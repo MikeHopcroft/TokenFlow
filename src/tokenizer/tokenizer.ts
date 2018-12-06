@@ -301,15 +301,31 @@ export class Tokenizer {
     }
 
     relaxedMatchScore(query: number[], prefix: number[]) {
-        const { match, cost, leftmostA, rightmostA, common } = diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
+        const { match, cost, leftmostA, rightmostA, common, commonTerms } = diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
 
         // Ratio of match length to match length + edit distance.
         // const matchFactor = match.length / (match.length + cost);
         // EXPERIMENTAL ALTERNATIVE to above.
-        let matchFactor = Math.max(0, match.length - cost) / match.length;
-        if (match.length === 1 && cost === 1 && common === 1) {
-            matchFactor = 0.5;
+
+        // let matchFactor = Math.max(0, match.length - cost) / match.length;
+        // if (match.length === 1 && cost === 1 && common === 1) {
+        //     matchFactor = 0.5;
+        // }
+        let matchFactor: number;
+        const l = rightmostA + 1;
+        if (l > cost) {
+            matchFactor = (l - cost) / l;
         }
+        else {
+            matchFactor = 1 / (l + cost);
+        }
+
+        // if (match.length > cost) {
+        //     matchFactor = (match.length - cost) / match.length;
+        // }
+        // else {
+        //     matchFactor = match.length / (match.length + cost);
+        // }
 
         // Ratio of match words common to query and prefix and length of match.
         const commonFactor = common / match.length;
@@ -319,7 +335,20 @@ export class Tokenizer {
 
         const positionFactor = Math.max(match.length - leftmostA, 0) / match.length;
 
-        const lengthFactor = rightmostA + 1;
+        // RATIONALE: don't want to boost the score for large values
+        // of rightmostA that represent skipping over the middle of 
+        // the query:
+        //    query = 'a b c d e f g h i j k'
+        //    prefix = 'a k'
+        //    match = 'a k'
+        // Similarly, don't want to reward skipping over the middle of the
+        // prefix:
+        //    query = 'a k'
+        //    prefix = 'a b c d e f g h i j k'
+        //    match = 'a k'
+        // const lengthFactor = rightmostA + 1;
+        // const lengthFactor = prefix.length;
+        const lengthFactor = match.length;
 
         // This approach doesn't work because the match can contain trailing garbage.
         // Really need to count common terms that are not downstream words.
@@ -340,7 +369,7 @@ export class Tokenizer {
         // TODO: Should this be terms common with match, instead of prefix?
         // const commonTerms = this.commonTerms(query, prefix);
         // const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), match);
-        const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), prefix.slice(0, match.length));
+        // const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), prefix.slice(0, match.length));
         const commonDownstreamWords = this.commonDownstreamWords(commonTerms);
 
         let score = matchFactor * commonFactor * positionFactor * lengthFactor;
@@ -354,8 +383,18 @@ export class Tokenizer {
         // different entity word. In this cases, the entity should still be
         // allowed to match, if the match is perfect. Note that using a
         // lemmatizer instead of a stemmer could also help here.
-        const downstreamWordFactor = (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
-        if (commonTerms.size === commonDownstreamWords.size && commonTerms.size !== prefix.length) {
+        // const downstreamWordFactor = (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
+        // if (commonTerms.size === commonDownstreamWords.size && commonTerms.size !== prefix.length) {
+        //     score = -1;
+        // }
+        const downstreamWordFactor = (common - commonDownstreamWords.size) / common;
+        // NOTE: BUG BUG: The test, (common !== prefix.length), assumes that
+        // the prefix does not have duplicated terms. Example: query = "a b",
+        // and prefix = "a b b". Then commonTerms={a,b}, so common === 2,
+        // even though prefix.length === 3. ACTUALLY: in diff.ts, common
+        // is the number of exact matches, while commonTerms is the set of
+        // exact matches (removing duplicates).
+        if (common > 0 && common === commonDownstreamWords.size && common !== prefix.length) {
             score = -1;
         }
 
@@ -370,8 +409,8 @@ export class Tokenizer {
             const queryText = query.map(this.decodeTerm).join(' ');
             const prefixText = prefix.map(this.decodeTerm).join(' ');
             const matchText = match.map(this.decodeTerm).join(' ');
-            console.log(`      score=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
-            console.log(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}`);
+            console.log(`      sssscore=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
+            console.log(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}, common=${common}`);
             console.log(`      query="${queryText}"`);
             console.log(`      prefix="${prefixText}"`);
             console.log(`      match="${matchText}"`);
@@ -380,7 +419,6 @@ export class Tokenizer {
             console.log(`      match="${match}"`);
             console.log();
         }
-
         return { score, length: rightmostA + 1 };
     }
 

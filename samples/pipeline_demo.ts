@@ -17,7 +17,10 @@ function pipelineDemo(query: string, debugMode = false) {
     printTokens(tokens);
 }
 
-pipelineDemo('convertible with tinted windows and fuzzy dice', true);
+// pipelineDemo('i want a dice', true);
+pipelineDemo('i want a horn', true);
+
+// pipelineDemo('convertible with tinted windows and fuzzy dice', true);
 // pipelineDemo('can I get four four cars');
 // pipelineDemo("Hi Can I get a school bus just a sec and a station wagon that's all", true);
 // pipelineDemo("i'd like a red convertable jacked with slicks");

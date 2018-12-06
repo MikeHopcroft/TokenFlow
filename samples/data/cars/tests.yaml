@@ -89,3 +89,20 @@
   expected: >-
     [ADD_TO_ORDER] [QUANTITY:1] [ATTRIBUTE:MULTIPLE,1,302] [ENTITY:RED_TWO_DOOR_CONVERTIBLE_SEDAN,1]
     [QUANTITY:1] [ATTRIBUTE:MULTIPLE,8,300] [ENTITY:PINE_SCENTED_AIR_FRESHENER,1601]
+- priority: 1
+  suites: bug
+  input: I'd like a horn
+  expected: >-
+    [ADD_TO_ORDER] [QUANTITY:1] [ENTITY:CUSTOM_ORGAN_HORN,2001]
+
+# Two challenges with the following. First, "on the" matches "four on the floor".
+# Second, "car" is not a word in the catalog. How would a bot know that "car"
+# refers to the convertible? Similar problem with category names like "flight" or "leg"
+# or "event" or "drink" or "toy" or "sandwich".
+- priority: 1
+  suites: bug
+  input: Can I get a convertible and a bus with no tires on the car
+  expected: >-
+    [ADD_TO_ORDER] [QUANTITY:1] [ENTITY:RED_TWO_DOOR_CONVERTIBLE_SEDAN,1] [CONJUNCTION] [QUANTITY:1]
+    [ENTITY:YELLOW_SCHOOL_BUS,32] [QUANTITY:0] [ENTITY:SNOW_TIRES,1002]
+    [INTENT:PREPOSITION] [WORD:CAR]
