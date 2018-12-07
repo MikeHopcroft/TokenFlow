@@ -11,6 +11,9 @@ import {
     WordToken
 } from '.';
 
+import * as Debug from 'debug';
+const debug = Debug('tf:pipeline');
+
 export class PatternRecognizer<ITEM extends Item> implements Recognizer {
     items: Map<PID, ITEM>;
     tokenizer: Tokenizer;
@@ -45,7 +48,7 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
         }
 
         // TODO: print name of tokenizer here?
-        console.log(`${this.items.size} items contributed ${aliasCount} aliases.`);
+        debug(`${this.items.size} items contributed ${aliasCount} aliases.`);
     }
 
     apply = (tokens: Token[]) => {
