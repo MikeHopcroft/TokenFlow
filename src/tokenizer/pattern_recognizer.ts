@@ -1,3 +1,6 @@
+import * as Debug from 'debug';
+const debug = Debug('tf:pattern');
+
 import {
     generateAliases,
     Item,
@@ -45,7 +48,7 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
         }
 
         // TODO: print name of tokenizer here?
-        console.log(`${this.items.size} items contributed ${aliasCount} aliases.`);
+        debug(`${this.items.size} items contributed ${aliasCount} aliases.`);
     }
 
     apply = (tokens: Token[]) => {

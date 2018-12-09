@@ -1,3 +1,5 @@
+import * as Debug from 'debug';
+const debug = Debug('tf:stemmer');
 import { Recognizer, StemmerFunction } from '../tokenizer';
 
 
@@ -16,7 +18,7 @@ export function stemmerConfusionMatrix(recognizer: Recognizer, stemmer: StemmerF
     Object.entries(matrix).forEach(([key, value]) => {
         if (value.size > 1) {
             const values = [...value].join(',');
-            console.log(`"${key}": [${values}]`);
+            debug(`"${key}": [${values}]`);
         }
     });
 }

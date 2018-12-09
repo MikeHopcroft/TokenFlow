@@ -1,3 +1,6 @@
+import * as Debug from 'debug';
+const debug = Debug('tf:categoryBuilder');
+
 import { generateAliases, Item, PID, StemmerFunction } from '..';
 
 export type PIDAllocator = () => PID;
@@ -69,7 +72,7 @@ export function categoryBuilder<ITEM extends Item>(
             const sortedPIDs = pids.sort((n1,n2) => n1 - n2);
             const categoryPID = pidAllocator();
             const name = `MULTIPLE_${sortedPIDs.join("_")}`;
-            console.log(`New category ${name},${categoryPID}: "${alias}": ${sortedPIDs}`);
+            debug(`New category ${name},${categoryPID}: "${alias}": ${sortedPIDs}`);
             items2.set(
                 categoryPID,
                 {pid: categoryPID, name, aliases: [alias]});

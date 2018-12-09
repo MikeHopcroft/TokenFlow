@@ -1,3 +1,5 @@
+import * as Debug from 'debug';
+const debug = Debug('tf:categoryRecognizer');
 import { Recognizer, Token } from '../tokenizer';
 
 export class CompositeRecognizer implements Recognizer {
@@ -13,18 +15,15 @@ export class CompositeRecognizer implements Recognizer {
         let result = tokens;
 
         if (this.debugMode) {
-            console.log('Input:');
-            console.log(tokens);
-            console.log();
+            debug('Input:\n%O\n', tokens);
         }
 
         this.recognizers.forEach((processor, index) => {
             result = processor.apply(result);
 
             if (this.debugMode) {
-                console.log(`=== PASS ${index} ===`);
-                console.log(result);
-                console.log();
+                debug(`=== PASS ${index} ===`);
+                debug('%O\n', result);
             }
         });
 

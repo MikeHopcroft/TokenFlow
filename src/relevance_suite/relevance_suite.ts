@@ -1,3 +1,6 @@
+import * as Debug from 'debug';
+const debug = Debug('tf:relevance');
+
 import * as yaml from 'js-yaml';
 import { Recognizer, Token, WORD } from '../tokenizer';
 import { copyScalar } from '../utilities';
@@ -62,11 +65,10 @@ export class AggregatedResults {
 
     print(showPassedCases = false) {
         if (this.results.find( result => !result.passed)) {
-            console.log('Failing tests:');
+            debug('Failing tests:');
         }
         else {
-            console.log('All tests passed.');
-            console.log();
+            debug('All tests passed.\n');
         }
 
 
@@ -74,27 +76,24 @@ export class AggregatedResults {
             if (!result.passed || showPassedCases) {
                 const suites = result.test.suites.join(' ');
                 const passFail = result.passed ? "PASSED" : "FAILED";
-                console.log(`${result.test.id} ${suites} - ${passFail}`);
-                console.log(`   input "${result.test.input}"`);
-                console.log(`  output "${result.observed}"`);
-                console.log(`expected "${result.test.expected}"`);
-                console.log();
+                debug(`${result.test.id} ${suites} - ${passFail}`);
+                debug(`   input "${result.test.input}"`);
+                debug(`  output "${result.observed}"`);
+                debug(`expected "${result.test.expected}"\n`);
             }
         }));
 
-        console.log('Suites:');
+        debug('Suites:');
         for (const [suite, counts] of Object.entries(this.suites)) {
-            console.log(`  ${suite}: ${counts.passCount}/${counts.runCount}`);
+            debug(`  ${suite}: ${counts.passCount}/${counts.runCount}`);
         }
-        console.log();
 
-        console.log('Priorities:');
+        debug('\nPriorities:');
         for (const [priority, counts] of Object.entries(this.priorities)) {
-            console.log(`  ${priority}: ${counts.passCount}/${counts.runCount}`);
+            debug(`  ${priority}: ${counts.passCount}/${counts.runCount}`);
         }
-        console.log();
 
-        console.log(`Overall: ${this.passCount}/${this.results.length}`);
+        debug(`\nOverall: ${this.passCount}/${this.results.length}`);
     }
 
     rebase() {

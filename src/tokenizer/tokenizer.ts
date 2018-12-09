@@ -1,3 +1,6 @@
+import * as Debug from 'debug';
+const debug = Debug('tf:tokenizer');
+
 import { diff } from './diff';
 import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
@@ -409,15 +412,14 @@ export class Tokenizer {
             const queryText = query.map(this.decodeTerm).join(' ');
             const prefixText = prefix.map(this.decodeTerm).join(' ');
             const matchText = match.map(this.decodeTerm).join(' ');
-            console.log(`      sssscore=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
-            console.log(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}, common=${common}`);
-            console.log(`      query="${queryText}"`);
-            console.log(`      prefix="${prefixText}"`);
-            console.log(`      match="${matchText}"`);
-            console.log(`      query="${query}"`);
-            console.log(`      prefix="${prefix}"`);
-            console.log(`      match="${match}"`);
-            console.log();
+            debug(`      sssscore=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
+            debug(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}, common=${common}`);
+            debug(`      query="${queryText}"`);
+            debug(`      prefix="${prefixText}"`);
+            debug(`      match="${matchText}"`);
+            debug(`      query="${query}"`);
+            debug(`      prefix="${prefix}"`);
+            debug(`      match="${match}"\n`);
         }
         return { score, length: rightmostA + 1 };
     }
@@ -436,7 +438,7 @@ export class Tokenizer {
                 // This query term is in at least one product term.
                 if (this.debugMode) {
                     const stemmedText = stemmed.slice(index).join(' ');
-                    console.log(`  "${stemmedText}" SCORING:`);
+                    debug(`  "${stemmedText}" SCORING:`);
                 }
 
                 // Get all of the items containing this query term.
@@ -456,7 +458,7 @@ export class Tokenizer {
             }
             else {
                 if (this.debugMode) {
-                    console.log(`  "${stemmed[index]}" UNKNOWN`);
+                    debug(`  "${stemmed[index]}" UNKNOWN`);
                 }
                 edgeLists.push([]);
             }
@@ -465,15 +467,15 @@ export class Tokenizer {
         const path = findBestPath(edgeLists);
 
         if (this.debugMode) {
-            console.log('edge list:');
+            debug('edge list:');
             edgeLists.forEach((edges) => {
                 const text = edges.map(this.decodeEdge).join(',');
                 // const text = edges.map((edge) => `Edge(s=${edge.score}, l=${edge.length})`).join(', ');
-                console.log(`    [${text}]`);
+                debug(`    [${text}]`);
             });
-            console.log('best path:');
+            debug('best path:');
             path.forEach((edge) => {
-                console.log(`    ${this.decodeEdge(edge)}`);
+                debug(`    ${this.decodeEdge(edge)}`);
             });
         }
 

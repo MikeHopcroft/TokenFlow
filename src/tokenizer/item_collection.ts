@@ -1,3 +1,5 @@
+import * as Debug from 'debug';
+const debug = Debug('tf:collection');
 import * as yaml from 'js-yaml';
 import * as AJV from 'ajv';
 import { PID } from '.';
@@ -61,8 +63,8 @@ export function itemMapFromYamlString(yamlText: string): Map<PID, Item> {
 
     if (!validator(yamlRoot)) {
         const message = 'itemMapFromYamlString: yaml data does not conform to schema.';
-        console.log(message);
-        console.log(validator.errors);
+        debug(message);
+        debug(validator.errors);
         throw TypeError(message);
     }
     
