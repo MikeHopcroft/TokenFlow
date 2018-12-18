@@ -45,7 +45,7 @@ describe('Diff', () => {
                 const expectedRightmostA = item[1][3];
                 const expectedCommon = item[1][4];
 
-                const { match, cost, leftmostA, rightmostA, common } =
+                const { match, cost, leftmostA, rightmostA, alignments } =
                     diffString(query, prefix, isDownstreamTerm, isTokenTerm);
 
                 // console.log(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
@@ -54,7 +54,7 @@ describe('Diff', () => {
                 assert.equal(cost, expectedCost);
                 assert.equal(leftmostA, expectedLeftmostA);
                 assert.equal(rightmostA, expectedRightmostA);
-                assert.equal(common, expectedCommon);
+                assert.equal(alignments, expectedCommon);
             });
         });
     });
@@ -158,11 +158,11 @@ describe('Diff', () => {
             const expectedCost = 1; // REPLACE 0x200000002 <=> 0x200000003, then SKIP trailing downstream 0x200000001.
             const expectedCommon = 1;
 
-            const { match, cost, common } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+            const { match, cost, alignments } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
-            assert.equal(common, expectedCommon);
+            assert.equal(alignments, expectedCommon);
         });
 
     });

@@ -14,7 +14,7 @@ export class Tokenizer {
     logger: Logger;
 
     static snowballStemmer = newStemmer('english');
-    
+
     // Function that stems a term.
     stemTerm: StemmerFunction;
 
@@ -36,7 +36,7 @@ export class Tokenizer {
 
     hashedDownstreamWordsSet = new Set<HASH>();
 
-    score: (query: number[], prefix: number[]) => {score: number, length: number };
+    score: (query: number[], prefix: number[]) => { score: number, length: number };
 
     constructor(
         downstreamWords: Set<string>,
@@ -186,7 +186,7 @@ export class Tokenizer {
         return rewritten.join(' ');
     }
 
-    tokenizeMatches = (tokens: Token[], path: Edge[], tokenFactory: TokenFactory) => {       
+    tokenizeMatches = (tokens: Token[], path: Edge[], tokenFactory: TokenFactory) => {
         let termIndex = 0;
         const output: Token[] = [];
         for (const edge of path) {
@@ -306,7 +306,8 @@ export class Tokenizer {
     }
 
     relaxedMatchScore(query: number[], prefix: number[]) {
-        const { match, cost, leftmostA, rightmostA, common, commonTerms } = diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
+        const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = 
+            diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
 
         // Ratio of match length to match length + edit distance.
         // const matchFactor = match.length / (match.length + cost);
@@ -333,7 +334,7 @@ export class Tokenizer {
         // }
 
         // Ratio of match words common to query and prefix and length of match.
-        const commonFactor = common / match.length;
+        const commonFactor = commonTerms.size / match.length;
         // EXPERIMENT: replace above line with one of the two following:
         // const commonFactor = common / (rightmostA + 1);
         // const commonFactor = common / rightmostA;
@@ -388,18 +389,23 @@ export class Tokenizer {
         // different entity word. In this cases, the entity should still be
         // allowed to match, if the match is perfect. Note that using a
         // lemmatizer instead of a stemmer could also help here.
-        // const downstreamWordFactor = (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
-        // if (commonTerms.size === commonDownstreamWords.size && commonTerms.size !== prefix.length) {
+        // const downstreamWordFactor = 
+        //     (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
+        // if (commonTerms.size === commonDownstreamWords.size &&
+        //     commonTerms.size !== prefix.length) {
         //     score = -1;
         // }
-        const downstreamWordFactor = (common - commonDownstreamWords.size) / common;
+        const downstreamWordFactor = 
+            (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
         // NOTE: BUG BUG: The test, (common !== prefix.length), assumes that
         // the prefix does not have duplicated terms. Example: query = "a b",
         // and prefix = "a b b". Then commonTerms={a,b}, so common === 2,
         // even though prefix.length === 3. ACTUALLY: in diff.ts, common
         // is the number of exact matches, while commonTerms is the set of
         // exact matches (removing duplicates).
-        if (common > 0 && common === commonDownstreamWords.size && common !== prefix.length) {
+        if (commonTerms.size > 0 &&
+            commonTerms.size === commonDownstreamWords.size &&
+            commonTerms.size !== prefix.length) {
             score = -1;
         }
 
@@ -415,7 +421,7 @@ export class Tokenizer {
             const prefixText = prefix.map(this.decodeTerm).join(' ');
             const matchText = match.map(this.decodeTerm).join(' ');
             this.logger.log(`      score=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
-            this.logger.log(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}, common=${common}`);
+            this.logger.log(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}, common=${commonTerms.size}`);
             this.logger.log(`      query="${queryText}"`);
             this.logger.log(`      prefix="${prefixText}"`);
             this.logger.log(`      match="${matchText}"`);

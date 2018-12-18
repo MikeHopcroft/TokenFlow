@@ -72,12 +72,21 @@ function GenericEquality<T>(a: T, b: T): boolean {
 }
 
 export interface DiffResults<T> {
-    match: T[];
-    cost: number;
-    leftmostA: number;
-    rightmostA: number;
-    common: number;
-    commonTerms: Set<T>;
+    match: T[];             // The sequence that represents the match that
+                            // minimizes Levenstein edit distance.
+    cost: number;           // The Levenstein edit distance for this match.
+    leftmostA: number;      // The position in sequence `a` the leftmost term
+                            // that aligns with a term in `b`.
+    rightmostA: number;     // The position in sequence `a` of the rightmost term
+                            // that aligns with a term in `b`.
+    alignments: number;     // The number of alignments where
+                            // no edit was performed. NOTE that `alignments`
+                            // will be greater than the cardinality of 
+                            // `commonTerms` whenever a term appears more than
+                            // once in `match`.
+    commonTerms: Set<T>;    // The set of terms in the match
+                            // corresponding to alignments between
+                            // sequences `a` and `b`.
 }
 
 class DiffMatrix<T> {
@@ -106,7 +115,7 @@ class DiffMatrix<T> {
         cost: 0,
         leftmostA: 0,
         rightmostA: 0,
-        common: 0,
+        alignments: 0,
         commonTerms: new Set<T>()
     };
 
@@ -228,7 +237,7 @@ class DiffMatrix<T> {
         let inSuffix = true;
         let leftmostA = -1;
         let rightmostA = -1;
-        let common = 0;
+        let alignments = 0;
         const commonTerms = new Set<T>();
 
         while (current.edit !== Edit.NONE) {
@@ -300,7 +309,7 @@ class DiffMatrix<T> {
                             if (rightmostA < 0) {
                                 rightmostA = ai - 1;
                             }
-                            common++;
+                            alignments++;
                             commonTerms.add(term);
                         }
 
@@ -323,7 +332,7 @@ class DiffMatrix<T> {
             cost: Math.min(cost, Infinity),
             leftmostA,
             rightmostA,
-            common,
+            alignments,
             commonTerms
         };
     }
@@ -354,6 +363,3 @@ export function diffString(
     const { match, ...rest } = d.result;
     return { match: match.join(''), ...rest };
 }
-
-
-
