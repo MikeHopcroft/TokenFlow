@@ -1,17 +1,17 @@
-import * as Debug from 'debug';
-const debug = Debug('tf:tokenizer');
+import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 
 import { diff } from './diff';
 import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
 import { Token, TokenFactory } from './tokens';
 import { HASH, ID, PID } from './types';
-import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
+import { Logger } from '../utilities';
 
 export type StemmerFunction = (term: string) => string;
 
 export class Tokenizer {
     debugMode = true;
+    logger: Logger;
 
     static snowballStemmer = newStemmer('english');
     
@@ -44,6 +44,8 @@ export class Tokenizer {
         relaxedMatching: boolean,
         debugMode: boolean
     ) {
+        this.logger = new Logger('tf:tokenizer');
+
         this.downstreamWords = new Set(downstreamWords);
         this.stemTerm = stemmer;
         for (const term of downstreamWords) {
@@ -412,14 +414,14 @@ export class Tokenizer {
             const queryText = query.map(this.decodeTerm).join(' ');
             const prefixText = prefix.map(this.decodeTerm).join(' ');
             const matchText = match.map(this.decodeTerm).join(' ');
-            debug(`      sssscore=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
-            debug(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}, common=${common}`);
-            debug(`      query="${queryText}"`);
-            debug(`      prefix="${prefixText}"`);
-            debug(`      match="${matchText}"`);
-            debug(`      query="${query}"`);
-            debug(`      prefix="${prefix}"`);
-            debug(`      match="${match}"\n`);
+            this.logger.log(`      score=${score} mf=${matchFactor}, cf=${commonFactor}, pf=${positionFactor}, lf=${lengthFactor}, df=${downstreamWordFactor}`);
+            this.logger.log(`      length=${match.length}, cost=${cost}, left=${leftmostA}, right=${rightmostA}, common=${common}`);
+            this.logger.log(`      query="${queryText}"`);
+            this.logger.log(`      prefix="${prefixText}"`);
+            this.logger.log(`      match="${matchText}"`);
+            this.logger.log(`      query="${query}"`);
+            this.logger.log(`      prefix="${prefix}"`);
+            this.logger.log(`      match="${match}"\n`);
         }
         return { score, length: rightmostA + 1 };
     }
@@ -438,7 +440,7 @@ export class Tokenizer {
                 // This query term is in at least one product term.
                 if (this.debugMode) {
                     const stemmedText = stemmed.slice(index).join(' ');
-                    debug(`  "${stemmedText}" SCORING:`);
+                    this.logger.log(`  "${stemmedText}" SCORING:`);
                 }
 
                 // Get all of the items containing this query term.
@@ -458,7 +460,7 @@ export class Tokenizer {
             }
             else {
                 if (this.debugMode) {
-                    debug(`  "${stemmed[index]}" UNKNOWN`);
+                    this.logger.log(`  "${stemmed[index]}" UNKNOWN`);
                 }
                 edgeLists.push([]);
             }
@@ -467,15 +469,15 @@ export class Tokenizer {
         const path = findBestPath(edgeLists);
 
         if (this.debugMode) {
-            debug('edge list:');
+            this.logger.log('edge list:');
             edgeLists.forEach((edges) => {
                 const text = edges.map(this.decodeEdge).join(',');
                 // const text = edges.map((edge) => `Edge(s=${edge.score}, l=${edge.length})`).join(', ');
-                debug(`    [${text}]`);
+                this.logger.log(`    [${text}]`);
             });
-            debug('best path:');
+            this.logger.log('best path:');
             path.forEach((edge) => {
-                debug(`    ${this.decodeEdge(edge)}`);
+                this.logger.log(`    ${this.decodeEdge(edge)}`);
             });
         }
 

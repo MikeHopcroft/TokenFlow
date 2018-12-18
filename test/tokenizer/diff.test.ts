@@ -1,6 +1,3 @@
-import * as Debug from 'debug';
-const debug = Debug('tf:tests');
-
 import { assert } from 'chai';
 import 'mocha';
 
@@ -51,7 +48,7 @@ describe('Diff', () => {
                 const { match, cost, leftmostA, rightmostA, common } =
                     diffString(query, prefix, isDownstreamTerm, isTokenTerm);
 
-                debug(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
+                // console.log(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
 
                 assert.equal(match, expectedMatch);
                 assert.equal(cost, expectedCost);

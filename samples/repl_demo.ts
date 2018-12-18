@@ -1,3 +1,4 @@
+import * as Debug from 'debug';
 import * as path from 'path';
 import { Pipeline, printTokens } from './pipeline';
 import * as readlineSync from 'readline-sync';
@@ -9,6 +10,10 @@ export function repl(
     attributesFile: string,
     quantifierFile: string
 ) {
+    // This is an interactive session, so use human-readable
+    // console logging to stdout.
+    Debug.enable('tf-interactive');
+
     console.log('Welcome to the token-flow REPL.');
     console.log('Type your order below.');
     console.log('A blank line exits.');

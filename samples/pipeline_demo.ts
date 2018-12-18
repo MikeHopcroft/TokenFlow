@@ -1,7 +1,13 @@
+import * as Debug from 'debug';
 import * as path from 'path';
 import { Pipeline, printTokens } from './pipeline';
 
 function pipelineDemo(query: string, debugMode = false) {
+    // pipelineDemo is intended to be a debugging tool invoked by a human
+    // from the console. Therefore use human-readable console logging to stdout.
+    // Also enable tf:* to see all alerts.
+    Debug.enable('tf-interactive,tf:*');
+
     const pipeline = new Pipeline(
         path.join(__dirname, './data/cars/catalog.yaml'),
         path.join(__dirname, './data/intents.yaml'),

@@ -1,7 +1,5 @@
-import * as Debug from 'debug';
-const debug = Debug('tf:categoryBuilder');
-
 import { generateAliases, Item, PID, StemmerFunction } from '..';
+import { Logger } from '../utilities';
 
 export type PIDAllocator = () => PID;
 
@@ -19,6 +17,7 @@ export function categoryBuilder<ITEM extends Item>(
     stemmer: StemmerFunction,
     pidAllocator: PIDAllocator
 ) {
+    const logger = new Logger('tf:categoryBuilder');
     //
     // First, find aliases shared by multiples PIDs.
     //
@@ -72,7 +71,7 @@ export function categoryBuilder<ITEM extends Item>(
             const sortedPIDs = pids.sort((n1,n2) => n1 - n2);
             const categoryPID = pidAllocator();
             const name = `MULTIPLE_${sortedPIDs.join("_")}`;
-            debug(`New category ${name},${categoryPID}: "${alias}": ${sortedPIDs}`);
+            logger.log(`New category ${name},${categoryPID}: "${alias}": ${sortedPIDs}`);
             items2.set(
                 categoryPID,
                 {pid: categoryPID, name, aliases: [alias]});

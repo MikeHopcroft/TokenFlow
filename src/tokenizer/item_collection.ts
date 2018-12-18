@@ -1,5 +1,5 @@
 import * as Debug from 'debug';
-const debug = Debug('tf:collection');
+const debug = Debug('tf:itemMapFromYamlString');
 import * as yaml from 'js-yaml';
 import * as AJV from 'ajv';
 import { PID } from '.';

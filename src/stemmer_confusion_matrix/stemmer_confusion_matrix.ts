@@ -1,9 +1,10 @@
-import * as Debug from 'debug';
-const debug = Debug('tf:stemmer');
+import { Logger } from '../utilities';
 import { Recognizer, StemmerFunction } from '../tokenizer';
 
 
 export function stemmerConfusionMatrix(recognizer: Recognizer, stemmer: StemmerFunction) {
+    const logger = new Logger('tf:stemmerConfusionMatrix');
+
     const matrix: {[term:string]:Set<string>} = {};
 
     recognizer.terms().forEach( term => {
@@ -18,7 +19,7 @@ export function stemmerConfusionMatrix(recognizer: Recognizer, stemmer: StemmerF
     Object.entries(matrix).forEach(([key, value]) => {
         if (value.size > 1) {
             const values = [...value].join(',');
-            debug(`"${key}": [${values}]`);
+            logger.log(`"${key}": [${values}]`);
         }
     });
 }

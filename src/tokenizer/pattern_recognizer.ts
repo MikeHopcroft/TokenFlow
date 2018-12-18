@@ -1,5 +1,4 @@
-import * as Debug from 'debug';
-const debug = Debug('tf:pattern');
+import { Logger } from '../utilities';
 
 import {
     generateAliases,
@@ -15,6 +14,7 @@ import {
 } from '.';
 
 export class PatternRecognizer<ITEM extends Item> implements Recognizer {
+    logger: Logger;
     items: Map<PID, ITEM>;
     tokenizer: Tokenizer;
     tokenFactory: TokenFactory;
@@ -30,6 +30,7 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
         relaxedMatching: boolean,
         debugMode: boolean
     ) {
+        this.logger = new Logger('tf:PatternRecognizer');
         this.items = items;
         this.tokenizer = new Tokenizer(downstreamWords, stemmer, relaxedMatching, debugMode);
         this.stemmer = this.tokenizer.stemTerm;
@@ -48,7 +49,7 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
         }
 
         // TODO: print name of tokenizer here?
-        debug(`${this.items.size} items contributed ${aliasCount} aliases.`);
+        this.logger.log(`${this.items.size} items contributed ${aliasCount} aliases.`);
     }
 
     apply = (tokens: Token[]) => {
