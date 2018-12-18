@@ -27,6 +27,14 @@
  * 
  ******************************************************************************/
 
+import { 
+    DiffResults,
+    DownstreamTermPredicate,
+    EqualityPredicate,
+    GenericEquality,
+    TokenPredicate
+} from './common';
+
 // Types of edits used in dynamic programming algorithm.
 enum Edit {
     NONE,       // First position in sequence. No preceding edits.
@@ -61,32 +69,6 @@ class Vertex {
             this.edit = edit;
         }
     }
-}
-
-export type TokenPredicate<T> = (a: T) => boolean;
-export type DownstreamTermPredicate<T> = (a: T) => boolean;
-export type EqualityPredicate<T> = (a: T, b: T) => boolean;
-
-function GenericEquality<T>(a: T, b: T): boolean {
-    return a === b;
-}
-
-export interface DiffResults<T> {
-    match: T[];             // The sequence that represents the match that
-                            // minimizes Levenstein edit distance.
-    cost: number;           // The Levenstein edit distance for this match.
-    leftmostA: number;      // The position in sequence `a` the leftmost term
-                            // that aligns with a term in `b`.
-    rightmostA: number;     // The position in sequence `a` of the rightmost term
-                            // that aligns with a term in `b`.
-    alignments: number;     // The number of alignments where
-                            // no edit was performed. NOTE that `alignments`
-                            // will be greater than the cardinality of 
-                            // `commonTerms` whenever a term appears more than
-                            // once in `match`.
-    commonTerms: Set<T>;    // The set of terms in the match
-                            // corresponding to alignments between
-                            // sequences `a` and `b`.
 }
 
 class DiffMatrix<T> {
@@ -339,7 +321,7 @@ class DiffMatrix<T> {
 }
 
 // Generic sequence diff.
-export function diff<T>(
+export function levenshtein<T>(
     query: T[],
     prefix: T[],
     isDownstreamTerm: DownstreamTermPredicate<T>,
@@ -351,7 +333,7 @@ export function diff<T>(
 }
 
 // String diff.
-export function diffString(
+export function levenshteinString(
     query: string,
     prefix: string,
     isDownstreamTerm: DownstreamTermPredicate<string>,

@@ -1,6 +1,6 @@
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 
-import { diff } from './diff';
+import { levenshtein } from '../matchers';
 import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
 import { Token, TokenFactory } from './tokens';
@@ -307,7 +307,7 @@ export class Tokenizer {
 
     relaxedMatchScore(query: number[], prefix: number[]) {
         const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = 
-            diff(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
+            levenshtein(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
 
         // Ratio of match length to match length + edit distance.
         // const matchFactor = match.length / (match.length + cost);

@@ -5,4 +5,3 @@ export * from './recognizer';
 export * from './tokenizer';
 export * from './tokens';
 export * from './types';
-export * from './diff';

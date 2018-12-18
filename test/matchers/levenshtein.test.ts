@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import 'mocha';
 
-import { diff, diffString } from '../../src/tokenizer/diff';
+import { levenshtein, levenshteinString } from '../../src/matchers';
 
 function isDownstreamTerm(term: string) {
     return false;
@@ -19,7 +19,7 @@ function isTokenTermHash(hash: number) {
     return hash >= 2 * Math.pow(2, 32);
 }
 
-describe('Diff', () => {
+describe('Levenshtein', () => {
     describe('#general', () => {
         it('should correctly match the prefix to the query string.', () => {
             const cases: Array<[[string, string], [string, number, number, number, number]]> = [
@@ -46,7 +46,7 @@ describe('Diff', () => {
                 const expectedCommon = item[1][4];
 
                 const { match, cost, leftmostA, rightmostA, alignments } =
-                    diffString(query, prefix, isDownstreamTerm, isTokenTerm);
+                    levenshteinString(query, prefix, isDownstreamTerm, isTokenTerm);
 
                 // console.log(`"${query}" x "${prefix}" => "${match}", cost=${cost}, leftmost=${leftmostA}, rightmost=${rightmostA}, common=${common}`);
 
@@ -77,7 +77,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2, 3];
             const expectedCost = 0;
 
-            const { match, cost, rightmostA } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash, predicate);
+            const { match, cost, rightmostA } = levenshtein<number>(query, prefix, isDownstreamTermHash, isTokenTermHash, predicate);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -92,7 +92,7 @@ describe('Diff', () => {
             const expectedMatch = [1, 2];
             const expectedCost = 1;
 
-            const { match, cost, rightmostA } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+            const { match, cost, rightmostA } = levenshtein<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -109,7 +109,7 @@ describe('Diff', () => {
             const expectedMatch = [2641553256];
             const expectedCost = 1;
 
-            const { match, cost, rightmostA } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+            const { match, cost, rightmostA } = levenshtein<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
 
             // assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -124,7 +124,7 @@ describe('Diff', () => {
             const expectedMatch = [2641553256, 9915785936];
             const expectedCost = 0;
 
-            const { match, cost, rightmostA } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+            const { match, cost, rightmostA } = levenshtein<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
 
             // assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -142,7 +142,7 @@ describe('Diff', () => {
             const expectedMatch = [ 1, 2, 3, 4, 5, 6 ];
             const expectedCost = 0;
 
-            const { match, cost, rightmostA } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+            const { match, cost, rightmostA } = levenshtein<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
@@ -158,7 +158,7 @@ describe('Diff', () => {
             const expectedCost = 1; // REPLACE 0x200000002 <=> 0x200000003, then SKIP trailing downstream 0x200000001.
             const expectedCommon = 1;
 
-            const { match, cost, alignments } = diff<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
+            const { match, cost, alignments } = levenshtein<number>(query, prefix, isDownstreamTermHash, isTokenTermHash);
 
             assert.deepEqual(match, expectedMatch);
             assert.equal(cost, expectedCost);
