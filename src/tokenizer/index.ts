@@ -1,4 +1,5 @@
 export * from './alias_generator';
+export * from './best_path';
 export * from './item_collection';
 export * from './pattern_recognizer';
 export * from './recognizer';

@@ -6,7 +6,7 @@ export interface Edge {
     discarded?: boolean;
 }
 
-class Vertex {
+export class Vertex {
     edges: Edge[];
     score = -Infinity;
     backtraceVertex: Vertex | null = null;
@@ -28,6 +28,10 @@ export class Graph {
     current = 0;
 
     constructor(edgeLists: Edge[][]) {
+        // TODO: ISSUE: should edgelists be sorted?
+        // Probably not necessary as we always pick the edge
+        // on the best scoring path.
+
         // TODO: clear the discarded property on each edge?
         // Or make a copy of edge lists? Don't really like
         // side-effecting caller's edges, but copying them
@@ -42,6 +46,8 @@ export class Graph {
         });
         this.vertices.push(new Vertex([], -Infinity));
 
+        // TODO: existing token-flow code will find the best
+        // path twice. Modify code below to return this.left.
         this.right = this.findPath2(0);
     }
 
@@ -154,10 +160,13 @@ export class Graph {
         // Initialize vertices and forward propagate paths.
         for (let index = start; index < this.vertices.length; ++index) {
             const vertex = this.vertices[index];
-            vertex.score = -Infinity;
+            vertex.score = index === start ? 0 : -Infinity;
             vertex.backtraceVertex = null;
             vertex.backtraceEdge = null;
+        }
 
+        for (let index = start; index < this.vertices.length; ++index) {
+            const vertex = this.vertices[index];
             for (const edge of vertex.edges) {
                 if (edge.discarded !== true) {
                     const targetIndex = index + edge.length;
