@@ -36,6 +36,7 @@ export class Graph {
         // Or make a copy of edge lists? Don't really like
         // side-effecting caller's edges, but copying them
         // seems wasteful.
+        // TODO: some method for user to clear discarded property?
         const vertexCount = edgeLists.length;
 
         // NOTE: using label value of -1 as sentinel for no label.
