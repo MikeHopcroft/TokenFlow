@@ -43,11 +43,11 @@ class Graph3 {
 
     constructor(graph: Edge[][]) {
         const defaultEdge = { score: 0, length: 1, label: -1 };
-        const augmented = graph.map( (edges: Edge[]) => [
+        const augmented = graph.map((edges: Edge[]) => [
             defaultEdge, ...edges
         ]);
         this.createPaths([], augmented);
-        this.paths.sort( (a, b) => b.score - a.score );
+        this.paths.sort((a, b) => b.score - a.score);
 
         for (const path of this.paths) {
             printPath(path.edges);
@@ -65,7 +65,7 @@ class Graph3 {
 
                 // TODO: consider case where edge extends beyond last vertex.
 
-                const edges = [ ...prefix, edge ];
+                const edges = [...prefix, edge];
                 let score = 0;
                 for (const e of edges) {
                     score += e.score;
@@ -97,7 +97,7 @@ class Graph3 {
 
 function printPath(path: Edge[]) {
     let score = 0;
-    const vertices = [ 0 ];
+    const vertices = [0];
     for (const edge of path) {
         vertices.push(vertices[vertices.length - 1] + edge.length);
         score += edge.score;
@@ -105,23 +105,27 @@ function printPath(path: Edge[]) {
     console.log(`  ${vertices.map(n => String.fromCharCode(97 + n)).join('')}: ${score}`);
 }
 
-function getPath(path: Edge[], current: number) {
-    const vertices = [ 0 ];
-    let text = (current === 0) ? 'a*': 'a';
+function getPath(g: Graph) {
+    const path = [ ...g.left, ...g.right ];
+    const current = g.current;
+    let score = 0;
+    const vertices = [0];
+    let text = (current === 0) ? 'a*' : 'a';
     for (const edge of path) {
         const vertex = vertices[vertices.length - 1] + edge.length;
         vertices.push(vertex);
         text = text.concat(String.fromCharCode(97 + vertex));
-        if (current ===  vertices[vertices.length - 1]) {
+        if (current === vertices[vertices.length - 1]) {
             text = text.concat('*');
         }
+        score += edge.score;
     }
-    return text;
+    return `${text}: ${score}`;
 }
 
 function scorePath(path: Edge[]): number {
     let score = 0;
-    const vertices = [ 0 ];
+    const vertices = [0];
     for (const edge of path) {
         score += edge.score;
     }
@@ -156,56 +160,108 @@ function check(g: Graph, g3: Graph3) {
 let level = 0;
 let counter = 0;
 
+
 function walk(g: Graph): string[] {
     let paths: string[] = [];
     ++level;
     const indent = ' '.repeat(level *2);
-    // console.log(`${indent}${level}`);
+
+    // Always succeeds because we never walk past a complete path.
     g.advance();
-    const p1 = getPath([ ...g.left, ...g.right ], g.current);
-    console.log(`${indent}advance() to ${p1}`);
+    console.log(`${indent}advance() to ${getPath(g)}`);
+
     while (true) {
-        const path = [ ...g.left, ...g.right ];
-        // console.log(`${indent}counter = ${counter}`);
-        // printPath(path);
-        if (g.left[g.left.length - 1] === g.defaultEdge) {
-            console.log(`${indent}defaultEdge`);
-            break;
-        }
         if (!g.complete()) {
             console.log(`${indent}walk()`);
             paths = paths.concat(walk(g));
         }
         else {
             ++counter;
-            console.log(`${indent}${counter}: ${getPath(path, g.current)}`);
-            paths.push(`${indent}${counter}: ${getPath(path, g.current)}`);
+            console.log(`${indent}${counter}: ${getPath(g)}`);
+            paths.push(`${indent}${counter}: ${getPath(g)}`);
         }
-        g.discard();
-        const p2 = getPath([ ...g.left, ...g.right ], g.current);
-        console.log(`${indent}discard() to ${p2}`);
+
+        if (!g.discard()) {
+            console.log(`${indent}discard() to defaultEdge ${getPath(g)}`);
+            break;
         }
+        else {
+            console.log(`${indent}discard() to ${getPath(g)}`);
+        }
+    }
+
     g.retreat(true);
-    const p3 = getPath([ ...g.left, ...g.right ], g.current);
-    console.log(`${indent}retreat() to ${p3}`);
-    // }
-    // else {
-    //     console.log('  complete');
-    // }
+    {
+        const x = getPath(g);
+        // if (x === 'ad*eg: 4.952') {
+        if (x === 'ade*fg: 2.992') {
+            console.log(`x = ${x}`);
+            console.log('stop');
+        }
+    }
+    console.log(`${indent}retreat() to ${getPath(g)}`);
+
     --level;
     return paths;
 }
+
+// function walk(g: Graph): string[] {
+//     let paths: string[] = [];
+//     ++level;
+//     const indent = ' '.repeat(level * 2);
+//     if (!g.advance()) {
+//         ++counter;
+//         const path = [...g.left, ...g.right];
+//         console.log(`${indent}${counter}: ${getPath(path, g.current)}`);
+//         paths.push(`${indent}${counter}: ${getPath(path, g.current)}`);
+//     } else {
+//         const p1 = getPath([...g.left, ...g.right], g.current);
+//         console.log(`${indent}advance() to ${p1}`);
+//         while (true) {
+//             const path = [...g.left, ...g.right];
+//             // if (g.left[g.left.length - 1] === g.defaultEdge) {
+//             //     console.log(`${indent}defaultEdge`);
+//             //     break;
+//             // }
+//             console.log(`${indent}walk()`);
+//             paths = paths.concat(walk(g));
+//             // if (!g.complete()) {
+//             //     console.log(`${indent}walk()`);
+//             //     paths = paths.concat(walk(g));
+//             // }
+//             // else {
+//             //     ++counter;
+//             //     console.log(`${indent}${counter}: ${getPath(path, g.current)}`);
+//             //     paths.push(`${indent}${counter}: ${getPath(path, g.current)}`);
+//             // }
+//             if (!g.discard()) {
+//                 const p2 = getPath([...g.left, ...g.right], g.current);
+//                 console.log(`${indent}discard() to defaultEdge ${p2}`);
+//                 break;
+//             }
+//             else {
+//                 const p2 = getPath([...g.left, ...g.right], g.current);
+//                 console.log(`${indent}discard() to ${p2}`);    
+//             }
+//         }
+//         g.retreat(true);
+//         const p3 = getPath([...g.left, ...g.right], g.current);
+//         console.log(`${indent}retreat() to ${p3}`);
+//     }
+//     --level;
+//     return paths;
+// }
 
 function go() {
     const edgeList: Edge[][] = [];
     for (let i = 0; i < 6; ++i) {
         const edges: Edge[] = [];
-        for (let j = 1; i + j <= 6; ++j) {
+        for (let j = 2; i + j <= 6; ++j) {
             const label = i * 10 + i + j;
             const length = j;
             const score = j - Math.pow(0.2, j);
-            // console.log(`label=${label}, length=${length}, score=${score} avg=${score/length}`);
-            edges.push({score, length, label});
+            console.log(`label=${label}, length=${length}, score=${score} avg=${score/length}`);
+            edges.push({ score, length, label });
         }
         edgeList.push(edges);
     }
@@ -214,13 +270,16 @@ function go() {
 
     console.log('======================');
     const paths = walk(graph);
+
+    console.log('xxx=================');
     for (const path of paths) {
         console.log(path);
     }
+    console.log('yyy================');
 
-    // const graph3 = new Graph3(edgeList);
+    const graph3 = new Graph3(edgeList);
 
-    // console.log('=================');
+    console.log('=================');
 
     // console.log('advance()');
     // graph.advance();

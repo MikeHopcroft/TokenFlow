@@ -44,6 +44,7 @@ export class Graph {
         this.vertices = edgeLists.map((edges, index) => {
             const score = index === 0 ? 0 : -Infinity;
             return new Vertex([this.defaultEdge, ...edges], score);
+            // return new Vertex([{ ...this.defaultEdge }, ...edges], score);
         });
         this.vertices.push(new Vertex([], -Infinity));
 
@@ -65,14 +66,16 @@ export class Graph {
     // but the path will not be extended. At all other vertices, advance() will
     // succeed in extending the path because of default edges which cannot be
     // discarded.
-    advance(): Edge[] {
+    advance(): boolean {
         // TODO: consider throwing if this.complete() === true.
         const edge = this.right.shift();
         if (edge !== undefined) {
             this.current += edge.length;
             this.left.push(edge);
+            return true;
         }
-        return this.left;
+        return false;
+        // return this.right.length !== 0;
     }
 
     // Attempt to move backwards one edge to the previous vertex. Before
@@ -114,7 +117,34 @@ export class Graph {
     //
     // NOTE: edges are not necessarily removed in order of decreasing score.
     // Need to mark edges as removed.
-    discard(): Edge[] {
+    // discard(): boolean {
+    //     if (this.left.length === 0) {
+    //         throw TypeError('Graph.discard(): attempt to discard from first vertex.');   
+    //     }
+    //     else {
+    //         const edge = this.left[this.left.length - 1];
+    //         if (edge.discarded) {
+    //             throw TypeError('Graph.discard(): edge already discarded.');   
+    //         }
+
+    //         edge.discarded = true;
+    //         this.retreat(false);
+    //         this.advance();
+    //         if (this.left[this.left.length - 1] === this.defaultEdge) {
+    //             console.log('HERE!');
+    //         }
+
+    //         return (!this.complete() && this.right.length === 0);
+
+
+    //         // return this.left[this.left.length - 1] !== this.defaultEdge;
+    //         // return true;
+    //         // }
+    //         // console.log('THERE THERE THERE!');
+    //         // return false;
+    //     }
+    // }
+    discard(): boolean {
         if (this.left.length === 0) {
             throw TypeError('Graph.discard(): attempt to discard from first vertex.');   
         }
@@ -124,18 +154,14 @@ export class Graph {
                 edge.discarded = true;
                 this.retreat(false);
                 this.advance();
-
-                // this.current -= edge.length;
-                // this.left.pop();
-                // this.right = this.findPath2(this.left.length);
-                // // TODO: BUGBUG: right might equal [].
-                // // This is probably ok because of point (1), above.
-                // const replacement = this.right[0];
-                // this.right.shift();
-                // this.current += replacement.length;
-                // this.left.push(replacement);
+                if (this.left[this.left.length - 1] === this.defaultEdge) {
+                    console.log('HERE!');
+                }
+                // return this.left[this.left.length - 1] !== this.defaultEdge;
+                return true;
             }
-            return this.left;
+            console.log('THERE THERE THERE!');
+            return false;
         }
     }
 
