@@ -54,7 +54,9 @@ export class Graph {
 
     // Returns true when the current path extends to the final vertex.
     complete(): boolean {
+        // return this.current === this.vertices.length;
         return this.current === this.vertices.length - 1;
+        // return this.right.length === 0;
     }
 
     // Attempt to extend the current path by advancing forward along the next
@@ -78,7 +80,8 @@ export class Graph {
     // true, reinstate edges discarded from the previous vertex.
     retreat(reset: boolean): Edge[] {
         this.retreatHelper(reset);
-        this.right = this.findPath2(this.left.length);
+        // this.right = this.findPath2(this.left.length);
+        this.right = this.findPath2(this.current);
         return this.left;
     }
     
@@ -89,9 +92,13 @@ export class Graph {
             throw TypeError('Graph.retreatHelper(): attempt to retreat from first vertex.');
         }
         else {
-            // TODO: implement reset. NOTE that reset needs to recompute path.
             this.vertices[this.current].checkpoint = false;
+            for (const e of this.vertices[this.current].edges) {
+                e.discarded = false;
+            }
             this.current -= edge.length;
+
+            // TODO: following line shouldn't be necessary.
             this.right.unshift(edge);
         }
     }
@@ -115,15 +122,18 @@ export class Graph {
             const edge = this.left[this.left.length - 1];
             if (edge !== this.defaultEdge) {
                 edge.discarded = true;
-                this.current -= edge.length;
-                this.left.pop();
-                this.right = this.findPath2(this.left.length);
-                // TODO: BUGBUG: right might equal [].
-                // This is probably ok because of point (1), above.
-                const replacement = this.right[0];
-                this.right.shift();
-                this.current += replacement.length;
-                this.left.push(replacement);
+                this.retreat(false);
+                this.advance();
+
+                // this.current -= edge.length;
+                // this.left.pop();
+                // this.right = this.findPath2(this.left.length);
+                // // TODO: BUGBUG: right might equal [].
+                // // This is probably ok because of point (1), above.
+                // const replacement = this.right[0];
+                // this.right.shift();
+                // this.current += replacement.length;
+                // this.left.push(replacement);
             }
             return this.left;
         }

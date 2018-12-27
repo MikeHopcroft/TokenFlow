@@ -1,11 +1,4 @@
 import { Edge, Graph } from '../src';
-import { start } from 'repl';
-
-interface Path {
-    vertices: string;
-    score: number;
-    discarded: boolean;
-}
 
 interface Path2 {
     edges: Edge[];
@@ -49,7 +42,11 @@ class Graph3 {
     paths: Path2[] = [];
 
     constructor(graph: Edge[][]) {
-        this.createPaths([], graph);
+        const defaultEdge = { score: 0, length: 1, label: -1 };
+        const augmented = graph.map( (edges: Edge[]) => [
+            defaultEdge, ...edges
+        ]);
+        this.createPaths([], augmented);
         this.paths.sort( (a, b) => b.score - a.score );
 
         for (const path of this.paths) {
@@ -86,7 +83,6 @@ class Graph3 {
     }
 
     nextBestPath(prefix: Edge[]): Path2 | null {
-        // Find `prefix` in this.paths.
         let index;
         for (index = 0; index < this.paths.length; ++index) {
             if (startsWith(this.paths[index].edges, prefix) &&
@@ -96,130 +92,7 @@ class Graph3 {
         }
 
         return null;
-
-        // // From there scan forward for paths
-        // //   With prefix `path`
-        // //   Without discarded edges.
-        // for (index = index + 1; index < this.paths.length; ++index) {
-        //     if (startsWith(this.paths[index].edges, prefix) &&
-        //         validPath(this.paths[index])) {
-        //         break;
-        //     }
-        // }
     }
-}
-
-class Graph2 {
-    edgeScore: { [label: string]: number } = {};
-    paths: Path[] = [];
-    left = 'a';
-    currentPath = 0;
-
-    constructor(edgeList: Edge[][]) {
-        // Index scores for all edges.
-        for (const [start, edges] of edgeList.entries()) {
-            for (const edge of edges) {
-                const path = 
-                    String.fromCharCode(97 + start) + 
-                    String.fromCharCode(97 + start + edge.length);
-                console.log(`${path}: ${edge.score}`);
-                this.edgeScore[path] = edge.score;
-            }
-        }
-        console.log();
-
-        //
-        // Index score for all legal paths.
-        //
-
-        // All paths start with vertex `a` and then pass through some combination
-        // of 2^(n-1) other vertices.
-        // Get number of vertex subsets.
-        const n = edgeList.length;
-        const pathCount = Math.pow(2, n - 1);
-        for (let i = 0; i < pathCount; ++i) {
-            const path = getPath(i, n);
-            const score = this.scorePath(path);
-            console.log(`graph2: ${i}: ${path}: ${score}`);
-            this.paths.push({ vertices: path, score, discarded: false });
-            // console.log(`graph2: ${i}: ${getPath(i, n)}`);
-        }
-        this.paths.sort( (a, b) => b.score - a.score);
-
-        console.log('=================');
-
-        for (const path of this.paths) {
-            console.log(`graph3: ${path.vertices}: ${path.score}`);
-        }
-    }
-
-    scorePath(path: string): number {
-        let total = 0;
-        for (let i = 1; i < path.length; ++i) {
-            const start = path[i - 1];
-            const end = path[i];
-            const score = this.edgeScore[start + end];
-            if (score) {
-                total += score;
-            }
-            else {
-                total = -Infinity;
-                break;
-            }
-        }
-        return total;
-    }
-
-    advance() {
-        const path = this.paths[this.currentPath].vertices;
-        if (this.left.length < path.length) {
-            this.left = path.slice(0, this.left.length + 1);
-        }
-        return this.left;
-    }
-
-    retreat() {
-        if (this.left.length > 0) {
-            this.left = this.left.slice(0, this.left.length - 1);
-        }
-        return this.left;
-    }
-
-    discard() {
-        const left = this.left;
-        const prefix = this.left.slice(0, -1);
-
-        for (const path of this.paths) {
-            if (path.vertices.startsWith(left)) {
-                path.discarded = true;
-            }
-        }
-        // const prefix = this.paths[this.currentPath].vertices.slice(0, this.left.length - 1);
-        for (let i = this.currentPath + 1; i < this.paths.length; ++i) {
-            const path = this.paths[i];
-            if (path.vertices.startsWith(prefix) &&
-                !path.discarded) {
-                this.currentPath = i;
-                this.left = path.vertices.slice(0, prefix.length + 1);
-                // this.left = this.paths[this.currentPath].vertices.slice(0, prefix.length + 1);
-                break;
-            }
-        }
-        return this.left;
-    }
-}
-
-function printBestPath(graph: Graph) {
-    const path = [...graph.left, ...graph.right];
-
-    let score = 0;
-    const vertices = [ 0 ];
-    for (const edge of path) {
-        vertices.push(vertices[vertices.length - 1] + edge.length);
-        score += edge.score;
-    }
-//    console.log(`${vertices.join('-')}: ${score}`);
-    console.log(`  graph: ${vertices.map(n => String.fromCharCode(97 + n)).join('')}: ${score}`);
 }
 
 function printPath(path: Edge[]) {
@@ -232,42 +105,30 @@ function printPath(path: Edge[]) {
     console.log(`  ${vertices.map(n => String.fromCharCode(97 + n)).join('')}: ${score}`);
 }
 
-
-function getPath(b: number, n: number) {
-    // All paths start at `a` (vertex 0).
-    let path = 'a';
-    
-    // Add remaining verties specified by bits in `b`.
-    // Lower order bit corresponds to vertex 1.
-    let vertex = 1;
-    let bits = b;
-    
-    while (bits !== 0) {
-        if (bits % 2 === 1) {
-            path += String.fromCharCode(97 + vertex);
+function getPath(path: Edge[], current: number) {
+    const vertices = [ 0 ];
+    let text = (current === 0) ? 'a*': 'a';
+    for (const edge of path) {
+        const vertex = vertices[vertices.length - 1] + edge.length;
+        vertices.push(vertex);
+        text = text.concat(String.fromCharCode(97 + vertex));
+        if (current ===  vertices[vertices.length - 1]) {
+            text = text.concat('*');
         }
-        bits = (bits >> 1);
-        ++vertex;
     }
-
-    // All paths end at same, final vertex.
-    path += String.fromCharCode(97 + n);
-
-    return path;
+    return text;
 }
 
-// function go2(n: number) {
-//     // Get number of vertex sets.
-//     // All paths start with vertex `a` and then pass through some combination
-//     // of 2^(n-1) other vertices.
-//     const pathCount = Math.pow(2, n - 1);
-//     for (let i = 0; i < pathCount; ++i) {
-//         console.log(`${i}: ${getPath(i, n)}`);
-//     }
-// }
+function scorePath(path: Edge[]): number {
+    let score = 0;
+    const vertices = [ 0 ];
+    for (const edge of path) {
+        score += edge.score;
+    }
+    return score;
+}
 
 function check(g: Graph, g3: Graph3) {
-//    printBestPath(g);
     const prefix = g.left.slice(0, -1);
     const path = [...g.left, ...g.right];
     const path3 = g3.nextBestPath(prefix);
@@ -279,12 +140,60 @@ function check(g: Graph, g3: Graph3) {
             console.log('  Paths equal');
         }
         else {
-            console.log('  Different paths');
+            if (scorePath(path) === path3.score) {
+                console.log('  Different paths - same scores');
+            }
+            else {
+                console.log('  Different paths - different scores');
+            }
         }
     }
     else {
         console.log('  Path is null');
     }
+}
+
+let level = 0;
+let counter = 0;
+
+function walk(g: Graph): string[] {
+    let paths: string[] = [];
+    ++level;
+    const indent = ' '.repeat(level *2);
+    // console.log(`${indent}${level}`);
+    g.advance();
+    const p1 = getPath([ ...g.left, ...g.right ], g.current);
+    console.log(`${indent}advance() to ${p1}`);
+    while (true) {
+        const path = [ ...g.left, ...g.right ];
+        // console.log(`${indent}counter = ${counter}`);
+        // printPath(path);
+        if (g.left[g.left.length - 1] === g.defaultEdge) {
+            console.log(`${indent}defaultEdge`);
+            break;
+        }
+        if (!g.complete()) {
+            console.log(`${indent}walk()`);
+            paths = paths.concat(walk(g));
+        }
+        else {
+            ++counter;
+            console.log(`${indent}${counter}: ${getPath(path, g.current)}`);
+            paths.push(`${indent}${counter}: ${getPath(path, g.current)}`);
+        }
+        g.discard();
+        const p2 = getPath([ ...g.left, ...g.right ], g.current);
+        console.log(`${indent}discard() to ${p2}`);
+        }
+    g.retreat(true);
+    const p3 = getPath([ ...g.left, ...g.right ], g.current);
+    console.log(`${indent}retreat() to ${p3}`);
+    // }
+    // else {
+    //     console.log('  complete');
+    // }
+    --level;
+    return paths;
 }
 
 function go() {
@@ -295,98 +204,53 @@ function go() {
             const label = i * 10 + i + j;
             const length = j;
             const score = j - Math.pow(0.2, j);
-            console.log(`label=${label}, length=${length}, score=${score} avg=${score/length}`);
+            // console.log(`label=${label}, length=${length}, score=${score} avg=${score/length}`);
             edges.push({score, length, label});
         }
         edgeList.push(edges);
     }
 
     const graph = new Graph(edgeList);
-    // const graph2 = new Graph2(edgeList);
-    const graph3 = new Graph3(edgeList);
 
-    printBestPath(graph);
+    console.log('======================');
+    const paths = walk(graph);
+    for (const path of paths) {
+        console.log(path);
+    }
 
-    console.log('=================');
+    // const graph3 = new Graph3(edgeList);
 
-//    let path = graph2.left;
-//    let path: Path2;
-    // let prefix: Edge[];
-    // let path: Path2 | null;
+    // console.log('=================');
 
-    console.log('advance()');
-    graph.advance();
-    check(graph, graph3);
-
-    console.log('discard()');
-    graph.discard();
-    check(graph, graph3);
-
-    console.log('discard()');
-    graph.discard();
-    check(graph, graph3);
-
-    console.log('discard()');
-    graph.discard();
-    check(graph, graph3);
-
-    console.log('discard()');
-    graph.discard();
-    check(graph, graph3);
-
-    console.log('discard()');
-    graph.discard();
-    check(graph, graph3);
-
-    console.log('discard()');
-    graph.discard();
-    check(graph, graph3);
-    // prefix = graph.advance().slice(0, -1);
-    // path = graph3.nextBestPath(prefix);
-    // if (path) {
-    //     console.log(`  graph3: ${path.score}`);
-    // }
-    // else {
-    //     console.log(`graph3: no path`);
-    // }
-    // printBestPath(graph);
-    // // path = graph2.advance();
+    // console.log('advance()');
+    // graph.advance();
+    // check(graph, graph3);
 
     // console.log('discard()');
-    // path = graph2.discard();
-    // console.log(`  graph2: ${path}`);
     // graph.discard();
-    // printBestPath(graph);
+    // check(graph, graph3);
 
     // console.log('discard()');
-    // path = graph2.discard();
-    // console.log(`  graph2: ${path}`);
     // graph.discard();
-    // printBestPath(graph);
+    // check(graph, graph3);
 
     // console.log('discard()');
-    // path = graph2.discard();
-    // console.log(`  graph2: ${path}`);
     // graph.discard();
-    // printBestPath(graph);
+    // check(graph, graph3);
 
     // console.log('discard()');
-    // path = graph2.discard();
-    // console.log(`  graph2: ${path}`);
     // graph.discard();
-    // printBestPath(graph);
+    // check(graph, graph3);
 
     // console.log('discard()');
-    // path = graph2.discard();
-    // console.log(`  graph2: ${path}`);
     // graph.discard();
-    // printBestPath(graph);
+    // check(graph, graph3);
 
     // console.log('discard()');
-    // path = graph2.discard();
-    // console.log(`  graph2: ${path}`);
     // graph.discard();
-    // printBestPath(graph);
+    // check(graph, graph3);
+
+
 
     // console.log('retreat(false)');
     // graph.retreat(false);
@@ -399,5 +263,4 @@ function go() {
     // printBestPath(graph);
 }
 
-// go2(6);
 go();
