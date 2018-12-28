@@ -36,7 +36,7 @@ export class Graph {
         // Or make a copy of edge lists? Don't really like
         // side-effecting caller's edges, but copying them
         // seems wasteful.
-        // TODO: some method for user to clear discarded property?
+        // TODO: provide a method for user to clear discarded property?
         const vertexCount = edgeLists.length;
 
         // NOTE: using label value of -1 as sentinel for no label.
@@ -44,7 +44,7 @@ export class Graph {
         this.vertices = edgeLists.map((edges, index) => {
             const score = index === 0 ? 0 : -Infinity;
             return new Vertex([{ ...this.defaultEdge}, ...edges], score);
-            // return new Vertex([{ ...this.defaultEdge }, ...edges], score);
+            // return new Vertex([this.defaultEdge, ...edges], score);
         });
         this.vertices.push(new Vertex([], -Infinity));
 
@@ -55,9 +55,7 @@ export class Graph {
 
     // Returns true when the current path extends to the final vertex.
     complete(): boolean {
-        // return this.current === this.vertices.length;
         return this.current === this.vertices.length - 1;
-        // return this.right.length === 0;
     }
 
     // Attempt to extend the current path by advancing forward along the next
@@ -75,7 +73,6 @@ export class Graph {
             return true;
         }
         return false;
-        // return this.right.length !== 0;
     }
 
     // Attempt to move backwards one edge to the previous vertex. Before
@@ -83,8 +80,7 @@ export class Graph {
     // true, reinstate edges discarded from the previous vertex.
     retreat(reset: boolean): Edge[] {
         this.retreatHelper(reset);
-        // this.right = this.findPath2(this.left.length);
-        this.right = this.findPath2(this.current);
+//        this.right = this.findPath2(this.current);
         return this.left;
     }
     
@@ -102,6 +98,7 @@ export class Graph {
             this.current -= edge.length;
 
             // TODO: following line shouldn't be necessary.
+            // FOLLOWUP: necessary now because retreat no longer recomputes path.
             this.right.unshift(edge);
         }
     }
@@ -117,56 +114,6 @@ export class Graph {
     //
     // NOTE: edges are not necessarily removed in order of decreasing score.
     // Need to mark edges as removed.
-    // discard(): boolean {
-    //     if (this.left.length === 0) {
-    //         throw TypeError('Graph.discard(): attempt to discard from first vertex.');   
-    //     }
-    //     else {
-    //         const edge = this.left[this.left.length - 1];
-    //         if (edge.discarded) {
-    //             throw TypeError('Graph.discard(): edge already discarded.');   
-    //         }
-
-    //         edge.discarded = true;
-    //         this.retreat(false);
-    //         this.advance();
-    //         if (this.left[this.left.length - 1] === this.defaultEdge) {
-    //             console.log('HERE!');
-    //         }
-
-    //         return (!this.complete() && this.right.length === 0);
-
-
-    //         // return this.left[this.left.length - 1] !== this.defaultEdge;
-    //         // return true;
-    //         // }
-    //         // console.log('THERE THERE THERE!');
-    //         // return false;
-    //     }
-    // }
-
-
-    // discard(): boolean {
-    //     if (this.left.length === 0) {
-    //         throw TypeError('Graph.discard(): attempt to discard from first vertex.');   
-    //     }
-    //     else {
-    //         const edge = this.left[this.left.length - 1];
-    //         if (edge !== this.defaultEdge) {
-    //             edge.discarded = true;
-    //             this.retreat(false);
-    //             this.advance();
-    //             if (this.left[this.left.length - 1] === this.defaultEdge) {
-    //                 console.log('HERE!');
-    //             }
-    //             // return this.left[this.left.length - 1] !== this.defaultEdge;
-    //             return true;
-    //         }
-    //         console.log('THERE THERE THERE!');
-    //         return false;
-    //     }
-    // }
-
     discard(): boolean {
         if (this.right.length === 0) {
             throw TypeError('Graph.discard(): attempt to discard from last vertex.');   
@@ -198,7 +145,7 @@ export class Graph {
                     break;
                 }
             }
-            this.right = this.findPath2(this.left.length);
+//            this.right = this.findPath2(this.left.length);
         }
         return this.left;
     }

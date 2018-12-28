@@ -41,6 +41,10 @@ function pathsEqual(a: Edge[], b: Edge[]): boolean {
 class Graph3 {
     paths: Path2[] = [];
 
+    left: Edge[] = [];
+    right: Edge[] = [];
+    current = 0;
+
     constructor(graph: Edge[][]) {
         const defaultEdge = { score: 0, length: 1, label: -1 };
         const augmented = graph.map((edges: Edge[]) => [
@@ -49,9 +53,18 @@ class Graph3 {
         this.createPaths([], augmented);
         this.paths.sort((a, b) => b.score - a.score);
 
+        const path = this.nextBestPath(this.left);
+        if (path === null) {
+            throw TypeError('Graph3.constructor(): cannot find initial path.');
+        }
+        this.right = path.edges;
+      
         for (const path of this.paths) {
             printPath(path.edges);
         }
+
+        console.log('----------------');
+        printPath(this.left);
     }
 
     createPaths(prefix: Edge[], graph: Edge[][]) {
@@ -93,6 +106,51 @@ class Graph3 {
 
         return null;
     }
+
+    // advance(): boolean {
+    //     const edge = this.right.shift();
+    //     if (edge !== undefined) {
+    //         this.current += edge.length;
+    //         this.left.push(edge);
+    //         return true;
+    //     }
+    //     return false;
+    // }
+
+    // retreat(reset: boolean) {
+    //     // Ignore `reset`.
+
+    //     const edge = this.left.pop();
+        
+    //     if (edge === undefined) {
+    //         throw TypeError('Graph3.retreat(): attempt to retreat from first vertex.');
+    //     }
+    //     else {
+    //         this.current -= edge.length;
+    //         this.right.unshift(edge);
+    //     }
+    // }
+
+    // discard(): boolean {
+    //     if (this.right.length === 0) {
+    //         throw TypeError('Graph3.discard(): attempt to discard from last vertex.');   
+    //     }
+
+    //     this.right[0].discarded = true;
+    //     this.right = this.findPath2(this.current);
+    //     return this.right.length > 0;
+
+
+    //     const path = this.nextBestPath(this.left);
+    //     if (path !== null) {
+    //         const edge = path.edges.shift();
+    //         if (edge) {
+    //             this.left.push(edge);
+    //         }
+    //         return true;
+    //     }
+    //     return false;
+    // }
 }
 
 function printPath(path: Edge[]) {

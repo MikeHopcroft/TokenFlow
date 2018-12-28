@@ -36,7 +36,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Graph Demo",
-            "program": "${workspaceFolder}/build/samples/graph_demo.js",
+            "program": "${workspaceFolder}/build/samples/graph_demo2.js",
             "outputCapture": "std"
         },
         {
