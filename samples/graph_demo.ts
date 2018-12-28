@@ -166,21 +166,31 @@ function walk(g: Graph): string[] {
     ++level;
     const indent = ' '.repeat(level *2);
 
-    // Always succeeds because we never walk past a complete path.
-    g.advance();
-    console.log(`${indent}advance() to ${getPath(g)}`);
-
     while (true) {
-        if (!g.complete()) {
+        g.advance();
+        console.log(`${indent}advance() to ${getPath(g)}`);
+
+        if (g.complete()) {
+            ++counter;
+            console.log(`${indent}############### ${counter}: ${getPath(g)}`);
+            paths.push(`${indent}${counter}: ${getPath(g)}`);
+        }
+        else {
             console.log(`${indent}walk()`);
             paths = paths.concat(walk(g));
         }
-        else {
-            ++counter;
-            console.log(`${indent}${counter}: ${getPath(g)}`);
-            paths.push(`${indent}${counter}: ${getPath(g)}`);
-        }
 
+        g.retreat(true);
+        {
+            const x = getPath(g);
+            if (x === 'ad*eg: 4.952') {
+            // if (x === 'ade*fg: 2.992') {
+                console.log(`x = ${x}`);
+                console.log('stop');
+            }
+        }
+        console.log(`${indent}retreat() to ${getPath(g)}`);
+    
         if (!g.discard()) {
             console.log(`${indent}discard() to defaultEdge ${getPath(g)}`);
             break;
@@ -190,67 +200,9 @@ function walk(g: Graph): string[] {
         }
     }
 
-    g.retreat(true);
-    {
-        const x = getPath(g);
-        // if (x === 'ad*eg: 4.952') {
-        if (x === 'ade*fg: 2.992') {
-            console.log(`x = ${x}`);
-            console.log('stop');
-        }
-    }
-    console.log(`${indent}retreat() to ${getPath(g)}`);
-
     --level;
     return paths;
 }
-
-// function walk(g: Graph): string[] {
-//     let paths: string[] = [];
-//     ++level;
-//     const indent = ' '.repeat(level * 2);
-//     if (!g.advance()) {
-//         ++counter;
-//         const path = [...g.left, ...g.right];
-//         console.log(`${indent}${counter}: ${getPath(path, g.current)}`);
-//         paths.push(`${indent}${counter}: ${getPath(path, g.current)}`);
-//     } else {
-//         const p1 = getPath([...g.left, ...g.right], g.current);
-//         console.log(`${indent}advance() to ${p1}`);
-//         while (true) {
-//             const path = [...g.left, ...g.right];
-//             // if (g.left[g.left.length - 1] === g.defaultEdge) {
-//             //     console.log(`${indent}defaultEdge`);
-//             //     break;
-//             // }
-//             console.log(`${indent}walk()`);
-//             paths = paths.concat(walk(g));
-//             // if (!g.complete()) {
-//             //     console.log(`${indent}walk()`);
-//             //     paths = paths.concat(walk(g));
-//             // }
-//             // else {
-//             //     ++counter;
-//             //     console.log(`${indent}${counter}: ${getPath(path, g.current)}`);
-//             //     paths.push(`${indent}${counter}: ${getPath(path, g.current)}`);
-//             // }
-//             if (!g.discard()) {
-//                 const p2 = getPath([...g.left, ...g.right], g.current);
-//                 console.log(`${indent}discard() to defaultEdge ${p2}`);
-//                 break;
-//             }
-//             else {
-//                 const p2 = getPath([...g.left, ...g.right], g.current);
-//                 console.log(`${indent}discard() to ${p2}`);    
-//             }
-//         }
-//         g.retreat(true);
-//         const p3 = getPath([...g.left, ...g.right], g.current);
-//         console.log(`${indent}retreat() to ${p3}`);
-//     }
-//     --level;
-//     return paths;
-// }
 
 function go() {
     const edgeList: Edge[][] = [];

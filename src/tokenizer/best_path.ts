@@ -43,7 +43,7 @@ export class Graph {
         this.defaultEdge = { score: 0, length: 1, label: -1 };
         this.vertices = edgeLists.map((edges, index) => {
             const score = index === 0 ? 0 : -Infinity;
-            return new Vertex([this.defaultEdge, ...edges], score);
+            return new Vertex([{ ...this.defaultEdge}, ...edges], score);
             // return new Vertex([{ ...this.defaultEdge }, ...edges], score);
         });
         this.vertices.push(new Vertex([], -Infinity));
@@ -144,26 +144,39 @@ export class Graph {
     //         // return false;
     //     }
     // }
+
+
+    // discard(): boolean {
+    //     if (this.left.length === 0) {
+    //         throw TypeError('Graph.discard(): attempt to discard from first vertex.');   
+    //     }
+    //     else {
+    //         const edge = this.left[this.left.length - 1];
+    //         if (edge !== this.defaultEdge) {
+    //             edge.discarded = true;
+    //             this.retreat(false);
+    //             this.advance();
+    //             if (this.left[this.left.length - 1] === this.defaultEdge) {
+    //                 console.log('HERE!');
+    //             }
+    //             // return this.left[this.left.length - 1] !== this.defaultEdge;
+    //             return true;
+    //         }
+    //         console.log('THERE THERE THERE!');
+    //         return false;
+    //     }
+    // }
+
     discard(): boolean {
-        if (this.left.length === 0) {
-            throw TypeError('Graph.discard(): attempt to discard from first vertex.');   
+        if (this.right.length === 0) {
+            throw TypeError('Graph.discard(): attempt to discard from last vertex.');   
         }
-        else {
-            const edge = this.left[this.left.length - 1];
-            if (edge !== this.defaultEdge) {
-                edge.discarded = true;
-                this.retreat(false);
-                this.advance();
-                if (this.left[this.left.length - 1] === this.defaultEdge) {
-                    console.log('HERE!');
-                }
-                // return this.left[this.left.length - 1] !== this.defaultEdge;
-                return true;
-            }
-            console.log('THERE THERE THERE!');
-            return false;
-        }
+
+        this.right[0].discarded = true;
+        this.right = this.findPath2(this.current);
+        return this.right.length > 0;
     }
+
 
     // Marks the current vertex as checkpointed for possible later use by the
     // restore() method.
