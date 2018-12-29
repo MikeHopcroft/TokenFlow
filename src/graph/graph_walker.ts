@@ -39,6 +39,7 @@ export class GraphWalker {
     advance(): boolean {
         const edge = this.right.shift();
         if (edge !== undefined) {
+            this.checkpoints.push(false);
             this.current += edge.length;
             this.left.push(edge);
             return true;
@@ -52,7 +53,8 @@ export class GraphWalker {
     retreat(reset: boolean) {
         this.retreatHelper(reset);
         if (reset) {
-            this.right = this.graph.findPath(this.left, this.current).slice(this.left.length);
+            const path = this.graph.findPath(this.left, this.current);
+            this.right = path; //path.slice(this.left.length);
         }
     }
     
@@ -94,7 +96,7 @@ export class GraphWalker {
         }
 
         this.right[0].discarded = true;
-        this.right = this.graph.findPath(this.left, this.current).slice(this.left.length);
+        this.right = this.graph.findPath(this.left, this.current); //.slice(this.left.length);
 
         // Since this.right.length was initially not zero, a length of 0 now
         // implies that we failed to find a path.
@@ -127,7 +129,7 @@ export class GraphWalker {
                 }
             }
             if (reset) {
-                this.right = this.graph.findPath(this.left, this.current).slice(this.left.length);
+                this.right = this.graph.findPath(this.left, this.current); //.slice(this.left.length);
             }
         }
         else {

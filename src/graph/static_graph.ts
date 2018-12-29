@@ -3,6 +3,7 @@ import { Edge, Graph } from './types';
 export interface Path2 {
     edges: Edge[];
     score: number;
+    text: string;
 }
 
 function printPath(path: Edge[]) {
@@ -33,22 +34,31 @@ export class StaticGraph implements Graph {
         // Add outgoing edges for final vertex.
         this.edgeLists.push([]);
 
-        this.createPaths([], this.edgeLists);
-        this.paths.sort((a, b) => b.score - a.score);
+        this.createPaths([], 'a', this.edgeLists);
+        this.paths.sort((a, b) => {
+            if (a.score === b.score) {
+                return a.text.localeCompare(b.text);
+            }
+            else {
+                return b.score - a.score;
+            }
+        });
 
         this.right = this.findPath(this.left, 0);
 
-        console.log('=== PATHS start ===');
-        for (const path of this.paths) {
-            printPath(path.edges);
-        }
-        console.log('=== PATHS end ===');
+        // console.log('=== PATHS start ===');
+        // for (const path of this.paths) {
+        //     printPath(path.edges);
+        //     // console.log(`  ${path.text}`);
+        //     // console.log();
+        // }
+        // console.log('=== PATHS end ===');
 
         // console.log('----------------');
         // printPath(this.left);
     }
 
-    createPaths(prefix: Edge[], graph: Edge[][]) {
+    createPaths(prefix: Edge[], prefixText: string, graph: Edge[][]) {
         let vertex = 0;
         for (const edge of prefix) {
             vertex += edge.length;
@@ -64,13 +74,14 @@ export class StaticGraph implements Graph {
                 for (const e of edges) {
                     score += e.score;
                 }
+                const text = prefixText.concat(String.fromCharCode(vertex + edge.length + 97));
 
                 // TODO: this is storing a path prefix. Limit to complete paths?
                 if (vertex + edge.length === graph.length - 1) {
-                    this.paths.push({ edges, score });
+                    this.paths.push({ edges, text, score });
                 }
                 else {
-                    this.createPaths(edges, graph);
+                    this.createPaths(edges, text, graph);
                 }
             }
         }
@@ -86,7 +97,7 @@ export class StaticGraph implements Graph {
         for (index = 0; index < this.paths.length; ++index) {
             if (StaticGraph.startsWith(this.paths[index].edges, prefix) &&
                 StaticGraph.validPath(this.paths[index].edges)) {
-                return this.paths[index].edges;
+                return this.paths[index].edges.slice(prefix.length);
             }
         }
 

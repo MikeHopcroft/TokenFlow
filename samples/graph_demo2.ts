@@ -1,8 +1,4 @@
 import { DynamicGraph, Edge, Graph, GraphWalker, StaticGraph } from '../src/graph';
-import { getRawInput } from 'readline-sync';
-
-let level = 0;
-let counter = 0;
 
 function getPath(g: GraphWalker) {
     const path = [ ...g.left, ...g.right ];
@@ -22,70 +18,115 @@ function getPath(g: GraphWalker) {
     return `${text}: ${score}`;
 }
 
+let level = 0;
+let counter = 0;
 
-function walk(g: GraphWalker): string[] {
-    let paths: string[] = [];
+function* walk(g: GraphWalker): IterableIterator<string> {
+    // let paths: string[] = [];
     ++level;
     const indent = ' '.repeat(level *2);
 
     while (true) {
         g.advance();
-        console.log(`${indent}advance() to ${getPath(g)}`);
+        // console.log(`${indent}advance() to ${getPath(g)}`);
 
         if (g.complete()) {
             ++counter;
-            console.log(`${indent}############### ${counter}: ${getPath(g)}`);
-            paths.push(`${indent}${counter}: ${getPath(g)}`);
+            // console.log(`${indent}############### ${counter}: ${getPath(g)}`);
+
+            // paths.push(`${indent}${counter}: ${getPath(g)}`);
+            // yield(`${indent}${counter}: ${getPath(g)}`);
+            yield(getPath(g));
         }
         else {
-            console.log(`${indent}walk()`);
-            paths = paths.concat(walk(g));
+            // console.log(`${indent}walk()`);
+
+            // paths = paths.concat(walk(g));
+            yield* walk(g);
         }
 
         g.retreat(true);
-        console.log(`${indent}retreat() to ${getPath(g)}`);
+        // console.log(`${indent}retreat() to ${getPath(g)}`);
     
         if (!g.discard()) {
-            console.log(`${indent}discard() to defaultEdge ${getPath(g)}`);
+            // console.log(`${indent}discard() to defaultEdge ${getPath(g)}`);
             break;
         }
         else {
-            console.log(`${indent}discard() to ${getPath(g)}`);
+            // console.log(`${indent}discard() to ${getPath(g)}`);
         }
     }
 
     --level;
-    return paths;
+    // return paths;
 }
 
-function go() {
+function makeEdgeList(vertexCount: number): Edge[][] {
     const edgeList: Edge[][] = [];
-    for (let i = 0; i < 6; ++i) {
+
+    for (let i = 0; i < vertexCount; ++i) {
         const edges: Edge[] = [];
-        for (let j = 2; i + j <= 6; ++j) {
+        for (let j = 2; i + j <= vertexCount; ++j) {
             const label = i * 10 + i + j;
             const length = j;
             const score = j - Math.pow(0.2, j);
-            console.log(`label=${label}, length=${length}, score=${score} avg=${score/length}`);
+            // console.log(`label=${label}, length=${length}, score=${score} avg=${score/length}`);
             edges.push({ score, length, label });
         }
         edgeList.push(edges);
     }
 
-    console.log('New code');
+    return edgeList;
+}
 
+function go() {
+    // console.log('Newer code');
+    
     // const graph = new DynamicGraph(edgeList);
-    const graph = new StaticGraph(edgeList);
-    const walker = new GraphWalker(graph);
+    const edgeList1: Edge[][] = makeEdgeList(6);
+    const graph1 = new StaticGraph(edgeList1);
+    const walker1 = new GraphWalker(graph1);
 
-    console.log('======================');
-    const paths = walk(walker);
+    const edgeList2: Edge[][] = makeEdgeList(6);
+    const graph2 = new DynamicGraph(edgeList2);
+    const walker2 = new GraphWalker(graph2);
 
-    console.log('xxx=================');
-    for (const path of paths) {
-        console.log(path);
+    const walk1 = walk(walker1);
+    const walk2 = walk(walker2);
+
+    while (true)
+    {
+        const step1 = walk1.next();
+        const step2 = walk2.next();
+
+        if (step1.done !== step2.done) {
+            console.log('Sequences have different lengths.');
+            break;
+        }
+
+        if (step1.done || step2.done) {
+            break;
+        }
+
+        if (step1.value === step2.value) {
+            console.log(`${step1.value} === ${step2.value}`);
+        }
+        else {
+            console.log(`${step1.value} !== ${step2.value}`);
+            break;
+        }
     }
-    console.log('yyy================');
+
+
+    // const paths = [...walk(walker1)];
+
+    // console.log('======================');
+
+    // console.log('xxx=================');
+    // for (const [index, path] of paths.entries()) {
+    //     console.log(`${index}: ${path}`);
+    // }
+    // console.log('yyy================');
 }
 
 go();
