@@ -1,4 +1,4 @@
-import { DynamicGraph, Edge, Graph, GraphWalker, StaticGraph } from '../src/graph';
+import { DynamicGraph, Edge, GraphWalker, StaticGraph } from '../src/graph';
 
 function getPath(g: GraphWalker) {
     const path = [ ...g.left, ...g.right ];
@@ -18,47 +18,23 @@ function getPath(g: GraphWalker) {
     return `${text}: ${score}`;
 }
 
-let level = 0;
-let counter = 0;
-
 function* walk(g: GraphWalker): IterableIterator<string> {
-    // let paths: string[] = [];
-    ++level;
-    const indent = ' '.repeat(level *2);
-
     while (true) {
         g.advance();
-        // console.log(`${indent}advance() to ${getPath(g)}`);
 
         if (g.complete()) {
-            ++counter;
-            // console.log(`${indent}############### ${counter}: ${getPath(g)}`);
-
-            // paths.push(`${indent}${counter}: ${getPath(g)}`);
-            // yield(`${indent}${counter}: ${getPath(g)}`);
             yield(getPath(g));
         }
         else {
-            // console.log(`${indent}walk()`);
-
-            // paths = paths.concat(walk(g));
             yield* walk(g);
         }
 
         g.retreat(true);
-        // console.log(`${indent}retreat() to ${getPath(g)}`);
     
         if (!g.discard()) {
-            // console.log(`${indent}discard() to defaultEdge ${getPath(g)}`);
             break;
         }
-        else {
-            // console.log(`${indent}discard() to ${getPath(g)}`);
-        }
     }
-
-    --level;
-    // return paths;
 }
 
 function makeEdgeList(vertexCount: number): Edge[][] {
@@ -70,7 +46,6 @@ function makeEdgeList(vertexCount: number): Edge[][] {
             const label = i * 10 + i + j;
             const length = j;
             const score = j - Math.pow(0.2, j);
-            // console.log(`label=${label}, length=${length}, score=${score} avg=${score/length}`);
             edges.push({ score, length, label });
         }
         edgeList.push(edges);
@@ -80,9 +55,6 @@ function makeEdgeList(vertexCount: number): Edge[][] {
 }
 
 function go() {
-    // console.log('Newer code');
-    
-    // const graph = new DynamicGraph(edgeList);
     const edgeList1: Edge[][] = makeEdgeList(6);
     const graph1 = new StaticGraph(edgeList1);
     const walker1 = new GraphWalker(graph1);
@@ -116,17 +88,18 @@ function go() {
             break;
         }
     }
-
-
-    // const paths = [...walk(walker1)];
-
-    // console.log('======================');
-
-    // console.log('xxx=================');
-    // for (const [index, path] of paths.entries()) {
-    //     console.log(`${index}: ${path}`);
-    // }
-    // console.log('yyy================');
 }
+
+// Tests
+//  *1. Both walks produce same results.
+//   2. Right number of paths.
+//   3. All paths different.
+//   4. Paths in correct order.
+//   5. Correct number of paths.
+//  *6. Exact sequence of paths.
+//
+// Checkpoint
+// Restore
+
 
 go();

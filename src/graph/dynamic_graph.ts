@@ -2,10 +2,9 @@ import { Edge, Graph } from './types';
 
 export class Vertex {
     edges: Edge[];
-    score = -Infinity;
+    score: number;
     backtraceVertex: Vertex | null = null;
     backtraceEdge: Edge | null = null;
-    checkpoint = false;
 
     constructor(edges: Edge[], score: number) {
         this.edges = edges;
@@ -19,10 +18,6 @@ export class DynamicGraph implements Graph {
     vertices: Vertex[];
 
     constructor(edgeLists: Edge[][]) {
-        // TODO: ISSUE: should edgelists be sorted?
-        // Probably not necessary as we always pick the edge
-        // on the best scoring path.
-
         // TODO: clear the discarded property on each edge?
         // Or make a copy of edge lists? Don't really like
         // side-effecting caller's edges, but copying them
@@ -30,7 +25,8 @@ export class DynamicGraph implements Graph {
         // TODO: provide a method for user to clear discarded property?
 
         // TODO: Reevaluate the design choice of the -1 sentinel.
-        // NOTE: using label value of -1 as sentinel for no label.
+        // Perhaps use `undefined`?
+        // NOTE: using label value of -1 as sentinel for edge with no label.
         this.edgeLists = edgeLists.map((edges: Edge[]) => [
             { score: 0, length: 1, label: -1 }, ...edges
         ]);
@@ -42,15 +38,19 @@ export class DynamicGraph implements Graph {
             const score = index === 0 ? 0 : -Infinity;
             return new Vertex(edges, score);
         });
-//        this.vertices.push(new Vertex([], -Infinity));
     }
 
+    // Returns the index of the last vertex in the graph.
     lastVertex() {
+        // NOTE that the constructor extends this.edgeLists to include an empty
+        // list of outgoing edges associated with a synthetic final vertex,
+        // which lies beyond the last vertex. This is why we subtract 1 in the
+        // following line.
         return this.edgeLists.length - 1;
     }
 
     // Finds the highest scoring path from this.vertices[start] that does
-    // not pass through a discarded edge.
+    // not pass through a discarded edge. Ignores `prefix`.
     findPath(ignorePrefix: Edge[], start: number): Edge[]
     {
         // Initialize vertices and forward propagate paths.
@@ -88,6 +88,7 @@ export class DynamicGraph implements Graph {
             current = current.backtraceVertex;
         }
 
+        // TODO: consider using `unshift()` instead of `push()/reverse()`.
         const forwardPath = reversePath.reverse();
 
         return forwardPath;

@@ -27,6 +27,9 @@ export class StaticGraph implements Graph {
     current = 0;
 
     constructor(edgeLists: Edge[][]) {
+        // TODO: Reevaluate the design choice of the -1 sentinel.
+        // Perhaps use `undefined`?
+        // NOTE: using label value of -1 as sentinel for edge with no label.
         this.edgeLists = edgeLists.map((edges: Edge[]) => [
             { score: 0, length: 1, label: -1 }, ...edges
         ]);
@@ -34,7 +37,19 @@ export class StaticGraph implements Graph {
         // Add outgoing edges for final vertex.
         this.edgeLists.push([]);
 
+        // TODO: enforce design limitation that verticies are associated with
+        // lowercase ascii characters.
         this.createPaths([], 'a', this.edgeLists);
+
+        // Sort paths in order they would be encountered by GraphWalker applied
+        // to an equivalent DynamicGraph. First sort by decreasing score, then
+        // lexigraphically by vertex.
+        //
+        // Using this sort simplifies comparing walks over a StaticGraph and
+        // its equivalent DynamicGraph.
+        //
+        // TODO: this ordering makes an assumption on how the edgeLists were
+        // constructed - namely that shorter edges appear before longer edges.
         this.paths.sort((a, b) => {
             if (a.score === b.score) {
                 return a.text.localeCompare(b.text);
@@ -45,17 +60,6 @@ export class StaticGraph implements Graph {
         });
 
         this.right = this.findPath(this.left, 0);
-
-        // console.log('=== PATHS start ===');
-        // for (const path of this.paths) {
-        //     printPath(path.edges);
-        //     // console.log(`  ${path.text}`);
-        //     // console.log();
-        // }
-        // console.log('=== PATHS end ===');
-
-        // console.log('----------------');
-        // printPath(this.left);
     }
 
     createPaths(prefix: Edge[], prefixText: string, graph: Edge[][]) {
@@ -66,17 +70,15 @@ export class StaticGraph implements Graph {
 
         if (vertex < graph.length) {
             for (const edge of graph[vertex]) {
-
-                // TODO: consider case where edge extends beyond last vertex.
-
                 const edges = [...prefix, edge];
                 let score = 0;
                 for (const e of edges) {
                     score += e.score;
                 }
                 const text = prefixText.concat(String.fromCharCode(vertex + edge.length + 97));
-
-                // TODO: this is storing a path prefix. Limit to complete paths?
+                
+                // TODO: consider case where edge extends beyond last vertex.
+                // Risk of infinite recursion.
                 if (vertex + edge.length === graph.length - 1) {
                     this.paths.push({ edges, text, score });
                 }
@@ -87,12 +89,21 @@ export class StaticGraph implements Graph {
         }
     }
 
+    // Returns the index of the last vertex in the graph.
     lastVertex() {
+        // NOTE that the constructor extends this.edgeLists to include an empty
+        // list of outgoing edges associated with a synthetic final vertex,
+        // which lies beyond the last vertex. This is why we subtract 1 in the
+        // following line.
         return this.edgeLists.length - 1;
-        // return this.edgeLists.length - 1;
     }
 
-    findPath(prefix: Edge[], start: number):Edge[] {
+    // Attempts to find the highest scoring path that passes through a `start`
+    // vertex that lies at the end of a path `prefix`. The path will not
+    // make use of discarded edges. Returns [] if no path exists.
+    // NOTE that this implementation ignores `start`. Instead it only relies
+    // on `prefix`.
+    findPath(prefix: Edge[], ignoredStart: number):Edge[] {
         let index;
         for (index = 0; index < this.paths.length; ++index) {
             if (StaticGraph.startsWith(this.paths[index].edges, prefix) &&

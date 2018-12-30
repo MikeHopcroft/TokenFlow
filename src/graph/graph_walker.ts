@@ -2,20 +2,34 @@ import { Edge, Graph } from './types';
 
 // DESIGN ISSUES
 //
-// this.current vs this.left.length
-// potential for this.current to get out of sync
-// meaning of this.right === []
+// error-prone: this.current vs this.left.length
+// error-prone: potential for this.current to get out of sync
+// consistent meaning of this.right === []
+//   complete path or no path possible?
 
 export class GraphWalker {
-    graph: Graph;
+    // Graph being walked.
+    private graph: Graph;
 
-    lastVertex: number;
+    // Cached index of the last vertex in this.graph.
+    private lastVertex: number;
 
+    // Prefix of current highest scoring path.
     left: Edge[];
+
+    // Suffix of current highest scoring path.
     right: Edge[];
+
+    // Index of vertex at end of this.left.
     current: number;
 
-    checkpoints: boolean[];
+    // Stack of checkpoint markers corresponding to edges in this.left.
+    // Extended on each call to advance(). Trimmed on each call to retreat().
+    // Used in the implementation of the restore() method, which retreats()
+    // to the last checkpointed edge. DESIGN NOTE: after constructor(), 
+    // checkpoints always starts with a single `true` entry. This entry
+    // halts the restore() process once this.left === [].
+    private checkpoints: boolean[];
 
     constructor(graph: Graph) {
         this.graph = graph;
@@ -102,12 +116,6 @@ export class GraphWalker {
         // implies that we failed to find a path.
         return this.right.length > 0;
     }
-
-    // reinstate() {
-    //     for (const edge of this.graph.edgeLists[this.current]) {
-    //         edge.discarded = false;
-    //     }
-    // }
 
     // Marks the current vertex as checkpointed for possible later use by the
     // restore() method.
