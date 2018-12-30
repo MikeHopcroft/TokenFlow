@@ -1,4 +1,4 @@
-import { Edge, Graph } from './types';
+import { Edge, Graph } from '../../src/graph/types';
 
 export interface Path2 {
     edges: Edge[];

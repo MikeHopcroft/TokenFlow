@@ -1,5 +1,8 @@
-import { DynamicGraph, Edge, GraphWalker, StaticGraph } from '../src/graph';
+import { DynamicGraph, Edge, GraphWalker } from '../src/graph';
 
+// Returns a string representation of the current path and its score.
+// The path is rendered as a sequence of vertices, each of which is
+// represented by the letters a, b, c, ...
 function getPath(g: GraphWalker) {
     const path = [ ...g.left, ...g.right ];
     const current = g.current;
@@ -18,19 +21,29 @@ function getPath(g: GraphWalker) {
     return `${text}: ${score}`;
 }
 
+// Exercises the GraphWalker API to generates all paths in a graph.
 function* walk(g: GraphWalker): IterableIterator<string> {
     while (true) {
+        // Advance down next edge in current best path.
         g.advance();
 
         if (g.complete()) {
+            // If the path is complete, ie it goes from the first vertex to the
+            // last vertex, then yield the path.
             yield(getPath(g));
         }
         else {
+            // Otherwise, walk further down the path.
             yield* walk(g);
         }
 
+        // We've now explored all paths down this edge.
+        // Retreat back to the previous vertex.
         g.retreat(true);
     
+        // Then, attempt to discard the edge we just explored. If, after
+        // discarding, there is no path to the end then break out of the loop.
+        // Otherwise go back to the top to explore the new path.
         if (!g.discard()) {
             break;
         }
@@ -56,50 +69,11 @@ function makeEdgeList(vertexCount: number): Edge[][] {
 
 function go() {
     const edgeList1: Edge[][] = makeEdgeList(6);
-    const graph1 = new StaticGraph(edgeList1);
+    const graph1 = new DynamicGraph(edgeList1);
     const walker1 = new GraphWalker(graph1);
-
-    const edgeList2: Edge[][] = makeEdgeList(6);
-    const graph2 = new DynamicGraph(edgeList2);
-    const walker2 = new GraphWalker(graph2);
-
     const walk1 = walk(walker1);
-    const walk2 = walk(walker2);
-
-    while (true)
-    {
-        const step1 = walk1.next();
-        const step2 = walk2.next();
-
-        if (step1.done !== step2.done) {
-            console.log('Sequences have different lengths.');
-            break;
-        }
-
-        if (step1.done || step2.done) {
-            break;
-        }
-
-        if (step1.value === step2.value) {
-            console.log(`${step1.value} === ${step2.value}`);
-        }
-        else {
-            console.log(`${step1.value} !== ${step2.value}`);
-            break;
-        }
-    }
+    const paths = [...walk1];
+    console.log(paths);
 }
-
-// Tests
-//  *1. Both walks produce same results.
-//   2. Right number of paths.
-//   3. All paths different.
-//   4. Paths in correct order.
-//   5. Correct number of paths.
-//  *6. Exact sequence of paths.
-//
-// Checkpoint
-// Restore
-
 
 go();
