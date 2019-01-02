@@ -1,8 +1,9 @@
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
-
-import { levenshtein } from '../matchers';
-import { Edge, findBestPath } from './best_path';
 import { v3 } from 'murmurhash';
+
+import { Edge, findBestPath } from './best_path';
+import { DynamicGraph, Graph } from '../graph';
+import { levenshtein } from '../matchers';
 import { Token, TokenFactory } from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger } from '../utilities';
@@ -432,7 +433,7 @@ export class Tokenizer {
         return { score, length: rightmostA + 1 };
     }
 
-    processQuery(terms: string[]): Edge[] {
+    generateGraph(terms: string[]): Graph {
         const stemmed = terms.map(this.stemTerm);
         const hashed = stemmed.map(this.hashTerm);
 
@@ -472,19 +473,25 @@ export class Tokenizer {
             }
         });
 
-        const path = findBestPath(edgeLists);
+        const graph = new DynamicGraph(edgeLists);
+        return graph;
+    }
+
+    processQuery(terms: string[]): Edge[] {
+        const graph = this.generateGraph(terms);
+        const path = graph.findPath([], 0);
 
         if (this.debugMode) {
             this.logger.log('edge list:');
-            edgeLists.forEach((edges) => {
+            for (const edges of graph.edgeLists) {
                 const text = edges.map(this.decodeEdge).join(',');
                 // const text = edges.map((edge) => `Edge(s=${edge.score}, l=${edge.length})`).join(', ');
                 this.logger.log(`    [${text}]`);
-            });
+            }
             this.logger.log('best path:');
-            path.forEach((edge) => {
+            for (const edge of path) {
                 this.logger.log(`    ${this.decodeEdge(edge)}`);
-            });
+            }
         }
 
         return path;
