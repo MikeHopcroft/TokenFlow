@@ -6,6 +6,14 @@ export function GenericEquality<T>(a: T, b: T): boolean {
     return a === b;
 }
 
+export type Matcher = (
+    query: number[],
+    prefix: number[],
+    isDownstreamTerm: DownstreamTermPredicate<number>,
+    isTokenHash: TokenPredicate<number>,
+    isEqual: EqualityPredicate<number>
+) => DiffResults<number>;
+
 export interface DiffResults<T> {
     match: T[];             // The sequence that represents the match that
                             // minimizes Levenshtein edit distance.

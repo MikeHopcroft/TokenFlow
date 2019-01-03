@@ -1,14 +1,22 @@
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 import { v3 } from 'murmurhash';
 
-import { Edge, findBestPath } from './best_path';
-import { DynamicGraph, Graph } from '../graph';
-import { levenshtein } from '../matchers';
+import { Edge, DynamicGraph, Graph } from '../graph';
+import { DownstreamTermPredicate, levenshtein, Matcher } from '../matchers';
 import { Token, TokenFactory } from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger } from '../utilities';
 
 export type StemmerFunction = (term: string) => string;
+
+export interface Alias {
+    pid: PID;
+    text: string;
+    stemmed: string;
+    hashes: number[];
+    matcher: Matcher;
+    isDownstream: DownstreamTermPredicate<number>;
+}
 
 export class Tokenizer {
     debugMode = true;
@@ -22,11 +30,8 @@ export class Tokenizer {
     // Murmurhash seed.
     seed = 0;
 
-    items: string[] = [];
-    pids: PID[] = [];
-
-    hashedItems: number[][] = [];
-    stemmedItems: string[] = [];
+    // Information about each alias.
+    aliases: Alias[] = [];
 
     hashToText: { [hash: number]: string } = {};
     hashToFrequency: { [hash: number]: number } = {};
@@ -144,7 +149,7 @@ export class Tokenizer {
     }
 
     decodeEdge = (edge: Edge) => {
-        return `Edge("${this.items[edge.label]}", score=${edge.score}, length=${edge.length})`;
+        return `Edge("${this.aliases[edge.label].text}", score=${edge.score}, length=${edge.length})`;
     }
 
     pidToName = (pid: PID) => {
@@ -178,7 +183,7 @@ export class Tokenizer {
             // TODO: EXPERIMENT 1: filter out downstream words.
             else {
                 // TODO: Where does toUpperCase and replacing spaces with underscores go?
-                const name = pidToName(this.pids[edge.label]);
+                const name = pidToName(this.aliases[edge.label].pid);
                 const text = `[${name}]`;
                 rewritten.push(text);
                 termIndex += edge.length;
@@ -196,7 +201,7 @@ export class Tokenizer {
             }
             else {
                 const children = tokens.slice(termIndex, termIndex + edge.length);
-                output.push(tokenFactory(this.pids[edge.label], children));
+                output.push(tokenFactory(this.aliases[edge.label].pid, children));
                 termIndex += edge.length;
             }
         }
@@ -215,18 +220,23 @@ export class Tokenizer {
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
         // share a pid, but have different ids.
-        const id = this.items.length;
-        this.items.push(text);
-        this.pids.push(pid);
+        const id = this.aliases.length;
 
         // Split input string into individual terms.
         const terms = text.split(/\s+/);
 
         const stemmed = terms.map(this.stemTermInternal);
-        this.stemmedItems.push(stemmed.join(' '));
 
         const hashed = stemmed.map(this.hashTerm);
-        this.hashedItems.push(hashed);
+
+        this.aliases.push({
+            pid,
+            text,
+            stemmed: stemmed.join(' '),
+            hashes: hashed,
+            matcher: levenshtein,
+            isDownstream: this.isDownstreamTerm
+        });
 
         hashed.forEach((hash, index) => {
             // Add this term to hash_to_text so that we can decode hashes later.
@@ -234,6 +244,8 @@ export class Tokenizer {
                 this.hashToText[hash] = stemmed[index];
             }
 
+            // TODO: Consider removing code to compute frequencies.
+            // Currently this code is unused. Would it be a good signal?
             // Update term frequency
             // DESIGN ALTERNATIVE: could use lengths of posting lists instead.
             if (hash in this.hashToFrequency) {
@@ -459,7 +471,7 @@ export class Tokenizer {
                 // the tail of the query.
                 const tail = hashed.slice(index);
                 const scored = items.map((item) =>
-                    ({ ...this.score(tail, this.hashedItems[item]), label: item }));
+                    ({ ...this.score(tail, this.aliases[item].hashes), label: item }));
 
                 const sorted = scored.sort((a, b) => b.score - a.score);
 

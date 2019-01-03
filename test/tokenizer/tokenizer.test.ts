@@ -17,9 +17,9 @@ describe('Tokenizer', () => {
                 const pid = item[0];
                 const text = item[1];
                 tokenizer.addItem(pid, text, false);
-                assert.equal(tokenizer.items.length, index + 1);
-                assert.equal(tokenizer.items[index], text);
-                assert.equal(tokenizer.pids[index], pid);
+                assert.equal(tokenizer.aliases.length, index + 1);
+                assert.equal(tokenizer.aliases[index].text, text);
+                assert.equal(tokenizer.aliases[index].pid, pid);
             });
         });
 
@@ -28,7 +28,7 @@ describe('Tokenizer', () => {
             const tokenizer = new Tokenizer(downstreamWords, undefined, true, false);
             const input = 'small unsweeten ice tea';
             tokenizer.addItem(1, input, false);
-            const observed = tokenizer.hashedItems[0];
+            const observed = tokenizer.aliases[0].hashes;
             const expected:number[] = [2557986934, 1506511588, 4077993285, 1955911164];
             assert.deepEqual(observed, expected);
         });
@@ -46,8 +46,8 @@ describe('Tokenizer', () => {
     
             // Verify that item text and stemmed item text are recorded.
             items.forEach((item, index) => {
-                assert.equal(tokenizer.items[index], items[index]);
-                assert.equal(tokenizer.stemmedItems[index], items[index]);
+                assert.equal(tokenizer.aliases[index].text, items[index]);
+                assert.equal(tokenizer.aliases[index].stemmed, items[index]);
             });
 
             // Verify that posting lists are correct.
