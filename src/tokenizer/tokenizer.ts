@@ -76,12 +76,7 @@ export class Tokenizer {
 
     // Arrow function to allow use in map.
     static defaultStemTerm = (term: string): string => {
-        if (term.startsWith('@')) {
-            return term;
-        }
-        else {
-            return Tokenizer.snowballStemmer.stem(term.toLowerCase());
-        }
+        return Tokenizer.snowballStemmer.stem(term);
     }
 
     static lower32 = Math.pow(2, 32);
@@ -446,7 +441,7 @@ export class Tokenizer {
     }
 
     generateGraph(terms: string[]): Graph {
-        const stemmed = terms.map(this.stemTerm);
+        const stemmed = terms.map(this.stemTermInternal);
         const hashed = stemmed.map(this.hashTerm);
 
         // const edgeLists: Array<Array<{ score: number, length: number }>> = [];
