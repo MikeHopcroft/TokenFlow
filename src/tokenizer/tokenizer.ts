@@ -9,13 +9,13 @@ import { Logger } from '../utilities';
 
 export type StemmerFunction = (term: string) => string;
 
-export interface Alias {
+export interface TokenizerAlias {
     pid: PID;
     text: string;
-    stemmed: string;
-    hashes: number[];
     matcher: Matcher;
     isDownstreamTerm: DownstreamTermPredicate<number>;
+    stemmed: string;
+    hashes: number[];
 }
 
 export class Tokenizer {
@@ -31,7 +31,7 @@ export class Tokenizer {
     seed = 0;
 
     // Information about each alias.
-    aliases: Alias[] = [];
+    aliases: TokenizerAlias[] = [];
 
     hashToText: { [hash: number]: string } = {};
     hashToFrequency: { [hash: number]: number } = {};
@@ -101,6 +101,10 @@ export class Tokenizer {
 
     static isTokenHash(hash: HASH) {
         return hash >= Tokenizer.minTokenHash;
+    }
+
+    stemAndHash(term: string): number {
+        return this.hashTerm(this.stemTermInternal(term));
     }
 
     addHashedDownstreamTerm(term: string) {
@@ -342,7 +346,7 @@ export class Tokenizer {
     }
 
     // Arrow function to allow use in map.
-    score = (query: number[], alias: Alias): { score: number, length: number } => {
+    score = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
         const prefix = alias.hashes;
 
         const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = 
