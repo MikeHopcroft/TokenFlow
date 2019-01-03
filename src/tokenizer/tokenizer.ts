@@ -2,7 +2,7 @@ import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 import { v3 } from 'murmurhash';
 
 import { Edge, DynamicGraph, Graph } from '../graph';
-import { DownstreamTermPredicate, levenshtein, Matcher } from '../matchers';
+import { DownstreamTermPredicate, levenshtein, Matcher, exactPrefixHash } from '../matchers';
 import { Token, TokenFactory } from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger } from '../utilities';
@@ -15,7 +15,7 @@ export interface Alias {
     stemmed: string;
     hashes: number[];
     matcher: Matcher;
-    isDownstream: DownstreamTermPredicate<number>;
+    isDownstreamTerm: DownstreamTermPredicate<number>;
 }
 
 export class Tokenizer {
@@ -42,7 +42,8 @@ export class Tokenizer {
 
     hashedDownstreamWordsSet = new Set<HASH>();
 
-    score: (query: number[], prefix: number[]) => { score: number, length: number };
+    // TODO: Remove this temporary field. Used for backwards compatability.
+    matcher: Matcher;
 
     constructor(
         downstreamWords: Set<string>,
@@ -59,10 +60,21 @@ export class Tokenizer {
         }
 
         if (relaxedMatching) {
-            this.score = this.relaxedMatchScore;
+            this.matcher = levenshtein;
         }
         else {
-            this.score = this.exactMatchScore;
+            this.matcher = (
+                query,
+                prefix,
+                isDownstreamTerm,
+                isToken
+            ) => exactPrefixHash(
+                query,
+                prefix,
+                true,       // Arbitrarily allow partial matches.
+                isDownstreamTerm,
+                isToken
+            );
         }
 
         this.debugMode = debugMode;
@@ -211,7 +223,13 @@ export class Tokenizer {
     // Indexing a phrase
     //
     ///////////////////////////////////////////////////////////////////////////
-    addItem(pid: PID, text: string, addTokensToDownstream: boolean): void {
+    addItem2(
+        pid: PID,
+        text: string,
+        addTokensToDownstream: boolean,
+        matcher: Matcher,
+        isDownstreamTerm: DownstreamTermPredicate<number>
+    ): void {
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
         // share a pid, but have different ids.
@@ -221,19 +239,18 @@ export class Tokenizer {
         const terms = text.split(/\s+/);
 
         const stemmed = terms.map(this.stemTermInternal);
-
-        const hashed = stemmed.map(this.hashTerm);
+        const hashes = stemmed.map(this.hashTerm);
 
         this.aliases.push({
             pid,
             text,
             stemmed: stemmed.join(' '),
-            hashes: hashed,
-            matcher: levenshtein,
-            isDownstream: this.isDownstreamTerm
+            hashes,
+            matcher,
+            isDownstreamTerm
         });
 
-        hashed.forEach((hash, index) => {
+        for (const [index, hash] of hashes.entries()) {
             // Add this term to hash_to_text so that we can decode hashes later.
             if (!(hash in this.hashToText)) {
                 this.hashToText[hash] = stemmed[index];
@@ -258,7 +275,7 @@ export class Tokenizer {
             else {
                 this.postings[hash] = [id];
             }
-        });
+        }
 
         if (addTokensToDownstream) {
             for (const term of terms) {
@@ -271,6 +288,17 @@ export class Tokenizer {
 
         // TODO: Add tuples.
     }
+
+    addItem(pid: PID, text: string, addTokensToDownstream: boolean): void {
+        this.addItem2(
+            pid,
+            text,
+            addTokensToDownstream,
+            this.matcher,
+            this.isDownstreamTerm
+        );
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -313,9 +341,12 @@ export class Tokenizer {
         }
     }
 
-    relaxedMatchScore(query: number[], prefix: number[]) {
+    // Arrow function to allow use in map.
+    score = (query: number[], alias: Alias): { score: number, length: number } => {
+        const prefix = alias.hashes;
+
         const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = 
-            levenshtein(query, prefix, this.isDownstreamTerm, Tokenizer.isTokenHash);
+            alias.matcher(query, prefix, alias.isDownstreamTerm, Tokenizer.isTokenHash);
 
         // Ratio of match length to match length + edit distance.
         // const matchFactor = match.length / (match.length + cost);
@@ -466,7 +497,7 @@ export class Tokenizer {
                 // the tail of the query.
                 const tail = hashed.slice(index);
                 const scored = items.map((item) =>
-                    ({ ...this.score(tail, this.aliases[item].hashes), label: item }));
+                    ({ ...this.score(tail, this.aliases[item]), label: item }));
 
                 const sorted = scored.sort((a, b) => b.score - a.score);
 

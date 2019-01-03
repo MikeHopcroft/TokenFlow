@@ -111,3 +111,14 @@ export function exactPrefixString(
     const { match, ...rest } = exactPrefix(a, b, allowPartialMatch, isDownstreamTerm, isToken);
     return { match: match.join(''), ...rest };
 }
+
+// Hash diff.
+export function exactPrefixHash(
+    query: number[],
+    prefix: number[],
+    allowPartialMatch: boolean,
+    isDownstreamTerm: DownstreamTermPredicate<number>,
+    isToken: TokenPredicate<number>
+) {
+    return exactPrefix(query, prefix, allowPartialMatch, isDownstreamTerm, isToken);
+}

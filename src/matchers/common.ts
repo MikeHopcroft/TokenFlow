@@ -11,7 +11,7 @@ export type Matcher = (
     prefix: number[],
     isDownstreamTerm: DownstreamTermPredicate<number>,
     isTokenHash: TokenPredicate<number>,
-    isEqual: EqualityPredicate<number>
+    isEqual?: EqualityPredicate<number>
 ) => DiffResults<number>;
 
 export interface DiffResults<T> {
