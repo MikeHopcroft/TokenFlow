@@ -30,5 +30,22 @@ export class PeekableSequence<T> {
     atEOF(): boolean {
         return this.current.done;
     }
+
+    skipOptional(value: T): boolean {
+        if (!this.atEOF() && this.peek() === value)
+        {
+            this.get();
+            return true;
+        }
+        return false;
+    }
+
+    nextIs(value: T): boolean {
+        if (!this.atEOF()) {
+            return this.peek() === value;
+        }
+
+        return false;
+    }
 }
 

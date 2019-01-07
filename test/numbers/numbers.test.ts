@@ -1,5 +1,46 @@
 /*
 
+VALUE (V)
+MAGNITUDE QUANTIFIER (MQ)
+A number, 1 <= x <= 999, that can be used to quantify a magnitude like
+'thousand', 'million', 'billion', etc. For example, 'seven hundred
+sixty eight' as in 'seven hundred sixty eight million'.
+
+V = [MQ 'million'] [MQ 'thousand'] [MQ] | 'zero'
+
+
+HUNDREDS QUANTIFIER (HQ)
+A number, 1 <= x <= 99, that can be used to quantify the 'hundred'
+magnitude. For example, 'sixty three' as in 'sixty three hundred'.
+Note that multiples of 10 cannot quantify the 'hundred' magnitude.
+The word, 'a', is also an HC, as in 'a hundred'.
+
+TENS VALUE (TV)
+A number, 1 <= x <= 99. Note that TV differs from HQ in that it includes
+multiples of 10.
+
+QUANTIFYING UNITS (QU)
+A number, 1 <= x <= 19. Examples include 'one', 'two', 'ten', and 'seventeen'.
+
+QUANTIFYING TENS (QT)
+A number, 20 <= x <= 90, where x is a multiple of 10. Examples include
+'twenty', 'thirty', etc.
+
+QUANTIFYING DIGITS (QD)
+A single, non-zero decimal digit. Examples include 'one', 'five', and 'nine'.
+
+BILLIONS MAGNITUDE (M9)
+The word, 'billion'.
+
+MILLIONS MAGNITUDE (M6)
+The word, 'million'.
+
+THOUSANDS MAGNITUDE (M3)
+The word, 'thousand'.
+
+HUNDREDS MAGNITUDE (M2)
+The word, 'hundred'.
+
 V = [MQ 'million'] [MQ 'thousand'] [MQ] | 'zero'
 MQ = (('a' | TV) 'hundred' [['and'] TV]) | TV
 MQ = [HQ 'hundred' [['and'] TV] |
