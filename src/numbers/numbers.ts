@@ -5,66 +5,106 @@ interface Region {
     magnitude: number;
 }
 
-function multiply(a: Region, b: Region): Region {
-    if (a.magnitude !== 0) {
-        throw TypeError('Region `a` must have magnitude zero.');
-    }
+const quantifyingDigits: Array<[string,number]> = [
+    ['one', 1],
+    ['two', 2],
+    ['three', 3],
+    ['four', 4],
+    ['five', 5],
+    ['six', 6],
+    ['seven', 7],
+    ['eight', 8],
+    ['nine', 9],
+];
 
-    return { value: a.value * b.value, magnitude: b.magnitude };
-}
+const elevenToNineteen: Array<[string,number]> = [
+    ['eleven', 11],
+    ['twelve', 12],
+    ['thirteen', 13],
+    ['fourteen', 14],
+    ['fifteen', 15],
+    ['sixteen', 16],
+    ['seventeen', 17],
+    ['eighteen', 18],
+    ['nineteen', 19],
+];
 
-function add(a: Region, b: Region | undefined): Region {
-    if (!b) {
-        return a;
-    }
+const twentyToNinety: Array<[string,number]> = [
+    ['twenty', 20],
+    ['thirty', 30],
+    ['forty', 40],
+    ['fifty', 50],
+    ['sixty', 60],
+    ['seventy', 70],
+    ['eighty', 80],
+    ['ninety', 90],
+];
 
-    if (a.magnitude !== 0 || b.magnitude !== 0) {
-        throw TypeError('Regions `a` and `b` must have magnitude zero.');
-    }
-
-    return { value: a.value + b.value, magnitude: a.magnitude };
-}
-
-function valueOf(regions: Region[]): number | undefined {
-    if (regions.length === 0) {
-        return undefined;
-    }
-    else {
-        let sum = 0;
-        for (const region of regions) {
-            sum += region.value;
-        }
-        return sum;
-    }
-}
+const magnitudes: Array<[string,number]> = [
+    ['thousand', 1000],
+    ['million', 1e6],
+    ['billion', 1e9],
+    ['trillion', 1e12],
+];
 
 class NumberParser {
-    const A: number;
-    const AND: number;
-    const M2: number;
-    const Z: number;
-
-    // [a, 1..9, 11..19]
-    const QUX10: Map<number, Region>;
-
-    // [20, 30, 40, 50, 60, 70, 80, 90]
-    const QT: Map<number, Region>;
+    A: number;
+    AND: number;
+    M2: number;
+    Z: number;
 
     // [1..9]
-    const QD: Map<number, Region>;
+    QD: Map<number, Region>;
 
-    const magnitudes: Map<number, Region>;
+    // [a, 1..9, 11..19]
+    QUX10: Map<number, Region>;
+
+    // [20, 30, 40, 50, 60, 70, 80, 90]
+    QT: Map<number, Region>;
+
+    magnitudes: Map<number, Region>;
+
+    constructor() {
+        this.A = this.hash('a');
+        this.AND = this.hash('and');
+        this.M2 = this.hash('hundred');
+        this.Z = this.hash('zero');
+
+        this.QD = this.createMap(quantifyingDigits);
+        this.QUX10 = this.createMap([...quantifyingDigits, ...elevenToNineteen]);
+        this.QT = this.createMap(twentyToNinety);
+        this.magnitudes = this.createMap(magnitudes);
+    }
+
+    hash(text: string): number {
+        // TODO: Implement
+    }
+
+    createMap(items: Array<[string, number]>): Map<number, Region> {
+        // TODO: Implement
+        const m = new Map<number, Region>();
+        for (const [text, value] of items) {
+            const hash = this.hash(text);
+            // TODO: Set magnitude correctly.
+            const forceCompileError;
+            m.set(hash, {value, magnitude: 0});
+        }
+        return m;
+    }
 
     parseV(input: PeekableSequence<number>): number | undefined {
-        if (!input.atEOF() && input.peek() === this.Z) {
-            // Number is zero.
-            input.get();
+        // if (!input.atEOF() && input.peek() === this.Z) {
+        //     // Number is zero.
+        //     input.get();
+        //     return 0;
+        // }
+        if (input.nextIs(this.Z)) {
             return 0;
         }
         
         let value = 0;
 
-        // Look for a sequnce of regions with decreasing magnitude.
+        // Look for a sequence of regions with decreasing magnitude.
         const regions: Region[] = [];
         while (!input.atEOF()) {
             const region = this.parseRegion(input, value);
@@ -75,7 +115,8 @@ class NumberParser {
                 )) 
             {
                 value += region.value;
-                console.log(`parseV: ${value}`);
+                // console.log(`parseV: ${value}`);
+                this.report('parseV', value, 0);
                 regions.push(region);
             }
             else {
@@ -83,8 +124,8 @@ class NumberParser {
             }
         }
 
-        return valueOf(regions);
-
+        // return valueOf(regions);
+        return value;
     }
 
     parseRegion(input: PeekableSequence<number>, value: number): Region | undefined {
@@ -95,6 +136,7 @@ class NumberParser {
             if (magnitude) {
                 input.get();
                 region = multiply(region, magnitude);
+                this.report('parseRegion', value + region.value, 0);
             }
         }
 
@@ -102,55 +144,100 @@ class NumberParser {
     }
 
     parseMQ(input: PeekableSequence<number>, value: number): Region | undefined {
-        if (input.peek() === this.A) {
-            // Could be A or A M2 [[AND] TV]
-            input.get();
+        let region: Region | undefined;
 
-            if (!input.atEOF()) {
-                const hq = this.parseHQ(input, value);
-            }
+        if (input.nextIs(this.A)) {
+            input.skipOptional(this.A);
 
-            if (input.peek() === this.M2) {
-                // Consistent with A M2 [[AND] TV]
-                input.get();
-                let region = { value: 100, magnitude: 0 };
-                console.log(`parseMQ:1: ${value + region.value}`);
-                
-                // TODO: What if we skip over AND but don't find a TV?
-                // Seems we should "unskip"
-                this.skipOptional(input, this.AND);
+            // Might be A ('a'), as in 'a million'
+            region = { value: 1, magnitude: 0 };
 
-                // TODO: Perhaps parseTV should check for EOF.
-                if (!input.atEOF()) {
-                    const tv = this.parseTV(input, value);
-                    if (tv) {
-                        region = add(region, tv);
-                        console.log(`parseMQ:2: ${value + region.value}`);
-                    }
-                }
+            // Consistant with either A or A M2 [[AND] TV]
+            if (input.nextIs(this.M2)) {
+                // This is A M2 [[AND] TV]
+                region = { value: 100, magnitude: 0 };
+                input.skipOptional(this.M2);
+                input.skipOptional(this.AND);
 
-                // TODO: Need to return region here.
-            }
-            else {
-                // This is A ('a')
-                return { value: 1, magnitude: 0 };
+                region = add(region, this.parseTV(input, value));
             }
         }
         else {
-            // Could be HQ M2 [[AND] TV]
-            const hq = this.parseHQ(input, value);
-            if (hq && input.skipRequired(this.M2)) {
-                // Have found HQ M2.
-                // Look for optional [[AND] TV]
-                input.skipOptional(this.AND);
-                const tv = this.parseTV(input, value);
-                return add(hq, tv);
-            }
+            // Consistent with either HQ M2 [[AND] TV] or just TV
+            region = this.parseTV(input, value);
 
+            if (region && isHQ(region) && input.nextIs(this.M2)) 
+            {
+                // Consistent with HQ M2 [[AND] TV]
+                input.skipOptional(this.M2);
+                input.skipOptional(this.AND);
+                region.value *= 100;
+
+                region = add(region, this.parseTV(input, value));
+            }
+            // Otherwise, consistent with TV
         }
+
+        return region;
     }
 
-    parseHQ(input: PeekableSequence<number>, regions: Region[]): Region | undefined {
+    // parseMQ2(input: PeekableSequence<number>, value: number): Region | undefined {
+    //     if (input.peek() === this.A) {
+    //         // Could be A or A M2 [[AND] TV]
+    //         input.get();
+
+    //         if (input.nextIs(this.M2)) {
+    //             // Consistent with A M2 [[AND] TV]
+    //             // as in 'a hundred and five'
+    //             input.get();
+    //             let region = { value: 100, magnitude: 0 };
+    //             this.report('parseMQ:1', value + region.value, 0);
+    //             // console.log(`parseMQ:1: ${value + region.value}`);
+                
+    //             // TODO: What if we skip over AND but don't find a TV?
+    //             // Seems we should "unskip"
+    //             input.skipOptional(this.AND);
+
+    //             // TODO: Perhaps parseTV should check for EOF.
+    //             if (!input.atEOF()) {
+    //                 const tv = this.parseTV(input, value);
+    //                 if (tv) {
+    //                     region = add(region, tv);
+    //                     this.report('parseMQ:2', value + region.value, 0);
+    //                     // console.log(`parseMQ:2: ${value + region.value}`);
+    //                 }
+    //             }
+
+    //             // TODO: Need to return region here.
+    //         }
+    //         else {
+    //             // This is A ('a'), as in 'a million'
+    //             return { value: 1, magnitude: 0 };
+    //         }
+    //     }
+    //     else {
+    //         // Could be HQ M2 [[AND] TV] or just HQ
+    //         let region = this.parseHQ(input, value);
+
+    //         if (region && input.skipOptional(this.M2)) {
+    //             // Have found HQ M2.
+    //             this.report('parseMQ:3', value + region.value, 0);
+
+    //             // Look for optional [[AND] TV]
+    //             input.skipOptional(this.AND);
+    //             const tv = this.parseTV(input, value);
+                
+    //             region = add(region, tv);
+    //             // if (tv) {
+    //             //     region = add(region, tv);
+    //             //     // return add(region, tv);
+    //             // }
+    //         }
+    //         return region;
+    //     }
+    // }
+
+    parseHQ(input: PeekableSequence<number>, value: number): Region | undefined {
         if (!input.atEOF()) {
             const token = input.peek();
 
@@ -173,7 +260,7 @@ class NumberParser {
         return undefined;
     }
 
-    parseTV(input: PeekableSequence<number>, regions: Region[]): Region | undefined {
+    parseTV(input: PeekableSequence<number>, value: number): Region | undefined {
     }
 
     parseQU() {
@@ -186,20 +273,65 @@ class NumberParser {
     }
 
     parseM() {
-
     }
 
-    // TODO: Consider static method, function, or make a mmember of
-    // PeekableSequence.
-    skipOptional(input: PeekableSequence<number>, token: number): boolean {
-
+    report(location: string, value: number, length: number) {
+        console.log(`${location}: value: ${value}, length: ${length}`);
     }
 
-    // TODO: Consider static method, function, or make a mmember of
-    // PeekableSequence.
-    skipRequired(input: PeekableSequence<number>, token: number): boolean {
+    // // TODO: Consider static method, function, or make a mmember of
+    // // PeekableSequence.
+    // skipOptional(input: PeekableSequence<number>, token: number): boolean {
 
+    // }
+
+    // // TODO: Consider static method, function, or make a mmember of
+    // // PeekableSequence.
+    // skipRequired(input: PeekableSequence<number>, token: number): boolean {
+
+    // }
+}
+
+
+function multiply(a: Region, b: Region): Region {
+    if (a.magnitude !== 0) {
+        throw TypeError('Region `a` must have magnitude zero.');
     }
+
+    return { value: a.value * b.value, magnitude: b.magnitude };
+}
+
+function add(a: Region, b: Region | undefined): Region {
+    if (!b) {
+        return a;
+    }
+
+    // if (!a) {
+    //     return b;
+    // }
+
+    if (a.magnitude !== 0 || b.magnitude !== 0) {
+        throw TypeError('Regions `a` and `b` must have magnitude zero.');
+    }
+
+    return { value: a.value + b.value, magnitude: a.magnitude };
+}
+
+function valueOf(regions: Region[]): number | undefined {
+    if (regions.length === 0) {
+        return undefined;
+    }
+    else {
+        let sum = 0;
+        for (const region of regions) {
+            sum += region.value;
+        }
+        return sum;
+    }
+}
+
+function isHQ(region: Region) {
+    return region.magnitude === 0 && region.value % 10 !== 0;
 }
 
 
