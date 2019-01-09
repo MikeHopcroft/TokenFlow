@@ -1,5 +1,6 @@
 export * from './graph';
 export * from './ingestors';
+export * from './numbers';
 export * from './recognizers';
 export * from './relevance_suite';
 export * from './stemmer_confusion_matrix';

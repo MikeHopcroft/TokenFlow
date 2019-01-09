@@ -1,6 +1,6 @@
 import { PeekableSequence } from '../utilities';
 
-interface Region {
+export interface Region {
     value: number;
     magnitude: number;
 }
@@ -51,7 +51,7 @@ const magnitudes: Array<[string,number]> = [
     ['trillion', 12],
 ];
 
-class NumberParser {
+export class NumberParser {
     stemAndHash: StemAndHash;
 
     A: number;
@@ -145,9 +145,12 @@ class NumberParser {
         if (region && !input.atEOF()) {
             const magnitude = this.magnitudes.get(input.peek());
             if (magnitude) {
+                this.report('parseRegion:1', value + region.value, 0);
+
                 input.get();
                 region = multiply(region, magnitude);
-                this.report('parseRegion', value + region.value, 0);
+                value += region.value;
+                // this.report('parseRegion:2', value, 0);
             }
         }
 
@@ -169,20 +172,46 @@ class NumberParser {
                 region.value *= 100;
                 input.skip(this.M2);
 
+                // Do report intermediate value.
+                value += region.value;
+                this.report('parseMQ:1', value, 0);
+
                 region = add(region, this.parseANDTV(input, value));
+
+                value += region.value;
+                // Don't report final values.
+                // this.report('parseMQ:2', value, 0);
             }
         }
         else {
             // Consistent with either HQ M2 [[AND] TV] or just TV.
             region = this.parseTV(input, value);
 
+            if (region) {
+//                value += region.value;
+                // TODO: ONLY REPORT HERE IF THIS IS AN INTERMEDIATE VALUE.
+                // this.report('parseMQ:2', value + region.value, 0);
+            }
+
             if (region && isHQ(region) && input.nextIs(this.M2)) 
             {
+                this.report('parseMQ:2', value + region.value, 0);
+
                 // Consistent with HQ M2 [[AND] TV].
                 input.skip(this.M2);
                 region.value *= 100;
 
-                region = add(region, this.parseANDTV(input, value));
+                // value += region.value;
+                
+                const andtv = this.parseANDTV(input, value + region. value);
+                if (andtv) {
+                    this.report('parseMQ:3', value + region.value, 0);
+                    region = add(region, andtv);
+                }
+
+                // Only report intermediate values.
+                // value += region.value;
+                // this.report('parseMQ:4', value + region.value, 0);
             }
             else {
                 // Otherwise, region is consistent with TV.
@@ -213,17 +242,23 @@ class NumberParser {
 
     parseHQ(input: PeekableSequence<number>, value: number): Region | undefined {
         // First try QUX10 = [a, 1..9, 11..19].
-        let region = this.parseQUX10(input, value);
+        let region = this.parseQUX10(input);
 
         if (!region) {
             // Then try QT QD.
-            const qt = this.parseQT(input, value);
-            const qd = this.parseQD(input, value);
+            const qt = this.parseQT(input);
+            const qd = this.parseQD(input);
 
             // Need both QT and QD. Disallow "twenty hundred".
             if (qt && qd) {
                 region = add(qt, qd);
+                value += region.value;
+                this.report('parseHQ:2', value, 0);
             }
+        }
+        else {
+            value += region.value;
+            this.report('parseHQ:1', value, 0);
         }
 
         return region;
@@ -231,31 +266,42 @@ class NumberParser {
 
     parseTV(input: PeekableSequence<number>, value: number): Region | undefined {
         // First try QU = [1..19]
-        let region = this.parseQU(input, value);
+        let region = this.parseQU(input);
         if (!region) {
             // Then try QT [QD]
-            region = this.parseQT(input, value);
+            region = this.parseQT(input);
             if (region) {
-                region = add(region, this.parseQD(input, value));
+                const qd = this.parseQD(input);
+                if (qd) {
+                    // Report here because this is an intermediate value.
+                    this.report('parseTV:2', value + region.value, 0);
+                    region = add(region, qd);
+//                    region = add(region, this.parseQD(input));
+                }
             }
+        }
+        else {
+            // Don't report here. The pattern is to only report internal
+            // value change steps on the way to the final value.
+//            this.report('parseTV:1', value + region.value, 0);
         }
 
         return region;
     }
 
-    parseQU(input: PeekableSequence<number>, value: number): Region | undefined {
+    parseQU(input: PeekableSequence<number>): Region | undefined {
         return this.parseToken(input, this.QU);
     }
 
-    parseQUX10(input: PeekableSequence<number>, value: number): Region | undefined {
+    parseQUX10(input: PeekableSequence<number>): Region | undefined {
         return this.parseToken(input, this.QUX10);
     }
 
-    parseQT(input: PeekableSequence<number>, value: number): Region | undefined {
+    parseQT(input: PeekableSequence<number>): Region | undefined {
         return this.parseToken(input, this.QT);
     }
 
-    parseQD(input: PeekableSequence<number>, value: number): Region | undefined {
+    parseQD(input: PeekableSequence<number>): Region | undefined {
         return this.parseToken(input, this.QD);
     }
 
@@ -267,6 +313,10 @@ class NumberParser {
 
             region = m.get(token);
             if (region) {
+                // IMPORTANT: need to copy region here because callers assume
+                // they may make edits. TODO: is there a safer/better way to 
+                // do the copy?
+                region = {...region};
                 input.get();
             }
         }
@@ -278,7 +328,7 @@ class NumberParser {
     }
 
     report(location: string, value: number, length: number) {
-        console.log(`${location}: value: ${value}, length: ${length}`);
+        console.log(`  ${location}: value: ${value}, length: ${length}`);
     }
 }
 
