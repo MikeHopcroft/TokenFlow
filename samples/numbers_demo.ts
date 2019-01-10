@@ -68,11 +68,13 @@ function test(text: string) {
 // test('two');
 // test('ten');
 // test('eleven');
-// test('twenty');
-// test('twenty one');
-// test('one hundred twenty one');
+//// test('twenty');
+//// test('twenty one');
+
+// BADTEST: parseTV:2 returns 120 before parseMQ:3 returns 100
+test('one hundred twenty one');
 // test('five hundred and twenty one');
-// test('four hundred eighty six thousand twenty one');
+//// test('four hundred eighty six thousand twenty one');
 // test('four hundred eighty six');
 // DONE: TODO: running previous line makes next line fail. Some state is being retained.
 
@@ -85,5 +87,6 @@ function test(text: string) {
 //test(`three billion a million and 5`);
 
 // TODO: test phrases with multiple numbers
-test('five hundred thousand two million three');
+// BADTEST: returns 500,000 instead of 500,002.
+//// test('five hundred thousand two million three');
 
