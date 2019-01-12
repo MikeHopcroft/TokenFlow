@@ -214,8 +214,11 @@ export class NumberParser {
                 value.length += region.length;
                 // this.report('parseMQ:1', value.value, value.length);
                 report(output, value.value, value.length);
+                const current = output.length;
 
                 region = add(region, this.parseANDTV(input, value, output));
+
+                rollback(output, current);
 
                 value.value += region.value;
                 value.length += region.length;

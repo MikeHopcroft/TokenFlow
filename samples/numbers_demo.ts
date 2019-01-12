@@ -77,7 +77,7 @@ function test(text: string) {
 //// test('twenty one');
 
 // BADTEST: parseTV:2 returns 120 before parseMQ:3 returns 100
-test('one hundred twenty one');
+// test('one hundred twenty one');
 // test('five hundred and twenty one');
 //// test('four hundred eighty six thousand twenty one');
 // test('four hundred eighty six');
@@ -92,5 +92,11 @@ test('one hundred twenty one');
 // test(`three billion a million and 5`);
 
 // TODO: test phrases with multiple numbers
-test('five hundred thousand two million three');
+// test('five hundred thousand two million three');
 
+test('a hundred');
+test('a hundred five');
+test('hundred');
+
+test('a thousand');
+test('a million and three');
