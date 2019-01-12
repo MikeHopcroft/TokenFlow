@@ -1,4 +1,4 @@
-import { NumberParser } from '../src';
+import { NumberMatch, NumberParser } from '../src';
 import { PeekableSequence } from '../src';
 
 import { v3 } from 'murmurhash';
@@ -56,12 +56,17 @@ function stemAndHash(text: string): number {
 const parser = new NumberParser(stemAndHash);
 
 function test(text: string) {
+    const output: NumberMatch[] = [];
+
     console.log(`"${text}"`);
     const terms = text.split(/\s+/);
     const hashes = terms.map(stemAndHash);
     const input = new PeekableSequence<number>(hashes[Symbol.iterator]());
-    const value = parser.parseV(input);
-    console.log(`  VALUE: ${value}, length: XXX`);
+    const value = parser.parseV(input, output);
+    // console.log(`  VALUE: ${value}, length: XXX`);
+    for (const match of output) {
+        console.log(`  value: ${match.value}, length: ${match.length}`);
+    }
 }
 
 // test('one');
@@ -84,9 +89,8 @@ test('one hundred twenty one');
 // test('four hundred eighty six thousand twenty one hundred fifty three');
 
 // BADTEST: MQ should be able to start with AND, if this is not the first region.
-//test(`three billion a million and 5`);
+// test(`three billion a million and 5`);
 
 // TODO: test phrases with multiple numbers
-// BADTEST: returns 500,000 instead of 500,002.
-//// test('five hundred thousand two million three');
+test('five hundred thousand two million three');
 
