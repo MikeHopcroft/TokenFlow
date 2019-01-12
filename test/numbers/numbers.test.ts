@@ -42,8 +42,11 @@ const hashes: Array<[string, number]> = [
 
 const dict = new Map<string, number>(hashes);
 
+// Murmurhash seed.
 const seed = 0;
 
+// To aid in debugging, this stemming and hashing function maps numeric terms
+// to their values. Other terms are hashed with Murmurhash v3.
 function stemAndHash(text: string): number {
     let hash = dict.get(text);
     if (!hash) {
@@ -52,7 +55,7 @@ function stemAndHash(text: string): number {
     return hash;
 }
 
-
+// Parses one string and compares the result with the expected list of values.
 function test(parser: NumberParser, text: string, expected: NumberMatch[]) {
     const output: NumberMatch[] = [];
 
@@ -66,7 +69,7 @@ function test(parser: NumberParser, text: string, expected: NumberMatch[]) {
 
 
 describe('NumberParser', () => {
-    // This test ...
+    // This test run a test cases from a list.
     it('list of cases', () => {
         const cases: Array<[string, NumberMatch[]]> = [
             // zero .. nine
@@ -134,7 +137,7 @@ describe('NumberParser', () => {
                 { value: 5e12, length: 2 }
             ]],
 
-
+            // Multi-part numbers less than 1000.
             ['twenty one', [
                 { value: 20, length: 1 },
                 { value: 21, length: 2 },
@@ -158,6 +161,12 @@ describe('NumberParser', () => {
                 { value: 100, length: 2 },
                 { value: 130, length: 3 },
                 { value: 132, length: 4 },
+            ]],
+
+            // Multi-region numbers
+            ['twenty thousand', [
+                { value: 20, length: 1 },
+                { value: 20e3, length: 2 },
             ]],
 
             ['thirty seven hundred fifty nine', [
@@ -217,10 +226,9 @@ describe('NumberParser', () => {
 
             // Sequence with no numbers
             ['sequence with no numbers', []],
+            ['', []],
 
-
-
-            // Broken case
+            // Broken case - starts with 'a'
             // ['a sequence with no numbers', []],
          ];
 
@@ -240,49 +248,5 @@ Undecided cases:
     "a million and 3" - "and" not used with hundreds. 1000000 or 1000003?
     "fifteen hundred two hundred eighty six"
     "four hundred eighty six thousand twenty one hundred fifty three"
-
-one, two, seventeen
-    V => MQ => TV => QU
-zero
-    V
-ten
-    V => MQ => TV => QU
-twenty, thirty ...
-    V => MQ => TV => QT
-twenty three
-    V => MQ => QT QD
-X ten three
-    V => MQ => QU X
-X twenty zero
-    V => MQ => QT X
-one hundred five
-    V => MQ => TV 'hundred' TV
-one hundred and five
-    V => MQ => TV 'hundred' TV
-one hundred twenty three
-    V => MQ => TV 'hundred' TV => QU H QT QD
-X ten hundred
-    PROBLEM: QU contains 10 so match is QU H
-ten thousand
-    V => MQ 'thousand' => TV 'thousand' => QU 'thousand'
-ten million
-    V => MQ M6 => TV M6 => QU M6
-X twenty hundred
-    PROBLEM: QT contains 20 so match QT H
-a thousand
-    V => MQ M3 => A M3
-a hundred
-two thousand
-fifteen hundred
-fifteen hundred thousand
-X two thousand thousand
-five hundred thousand two hundred eighty six
-X fifteen hundred two hundred eighty six
-fifteen hundred eighty six
-? fifteen hundred thousand two hundred eighty six
-(((five hundred) twenty seven) million) (((three hundred) sixty four) thousand) ((two hundred) eighty six)
-((((fifty five) hundred) twenty seven) million) (((thirty three hundred) sixty four) thousand) ((twenty two hundred) eighty six)
-UNITS MAGNITUDES
-
 
 */

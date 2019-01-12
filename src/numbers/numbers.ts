@@ -1,23 +1,21 @@
 import { PeekableSequence } from '../utilities';
 
-// TODO: Unit test
-// TODO: Emit edges with values and phrase lengths
-//   Regions hold lengths?
-//   Pass region down, instead of (value, length) tuple.
-
 export interface NumberMatch {
     value: number;
     length: number;
 }
 
-export interface Region {
-    // The numerical value of this regions terms.
+export interface Period {
+    // The numerical value of this period's input terms.
     value: number;
 
-    // The magnitude of this region's most significant three-digit grouping.
+    // TODO: do periods even need magnitudes?
+    // The log base 10 of this period's least significant digit.
+    // E.g. the magnitude of 20 is 0, because 20 is in the 1s period.
+    // The magnitude of 20,000 is 3, because 20,000 is in the 1000s period.
     magnitude: number;
 
-    // The number of terms this region spans.
+    // The number of input terms this period spans.
     length: number;
 }
 
@@ -67,6 +65,7 @@ const magnitudes: Array<[string, number]> = [
     ['trillion', 12],
 ];
 
+// TODO: Does this even need to be a class?
 export class NumberParser {
     stemAndHash: StemAndHash;
 
@@ -76,18 +75,18 @@ export class NumberParser {
     Z: number;
 
     // [1..9]
-    QD: Map<number, Region>;
+    QD: Map<number, Period>;
 
     // [1..19]
-    QU: Map<number, Region>;
+    QU: Map<number, Period>;
 
     // [a, 1..9, 11..19]
-    QUX10: Map<number, Region>;
+    QUX10: Map<number, Period>;
 
     // [20, 30, 40, 50, 60, 70, 80, 90]
-    QT: Map<number, Region>;
+    QT: Map<number, Period>;
 
-    magnitudes: Map<number, Region>;
+    magnitudes: Map<number, Period>;
 
     constructor(stemAndHash: StemAndHash) {
         this.stemAndHash = stemAndHash;
@@ -104,8 +103,8 @@ export class NumberParser {
         this.magnitudes = this.createMagnitudeMap(magnitudes);
     }
 
-    private createMap(items: Array<[string, number]>): Map<number, Region> {
-        const m = new Map<number, Region>();
+    private createMap(items: Array<[string, number]>): Map<number, Period> {
+        const m = new Map<number, Period>();
         for (const [text, value] of items) {
             const hash = this.stemAndHash(text);
             m.set(hash, { value, magnitude: 0, length: 1 });
@@ -113,8 +112,8 @@ export class NumberParser {
         return m;
     }
 
-    private createMagnitudeMap(items: Array<[string, number]>): Map<number, Region> {
-        const m = new Map<number, Region>();
+    private createMagnitudeMap(items: Array<[string, number]>): Map<number, Period> {
+        const m = new Map<number, Period>();
         for (const [text, magnitude] of items) {
             const hash = this.stemAndHash(text);
             const value = Math.pow(10, magnitude);
@@ -124,284 +123,201 @@ export class NumberParser {
     }
 
     parseV(input: PeekableSequence<number>, output: NumberMatch[]) {
+        if (input.nextIs(this.Z)) {
+            input.get();
+            report(output, 0, 1);
+            return;
+        }
+
+        // TODO: perhaps value should not be a Period.
+        // Perhaps we should just maintain two numbers, for value and length;
+        // Another possibility is that we can add lower magnitude periods to
+        // higher magnitude periods. Not sure what the new magnitude would be.
         let value = {
             value: 0,
             magnitude: 0,
             length: 0
         };
 
-        if (input.nextIs(this.Z)) {
-            input.get();
-            report(output, value.value, 1);
-            return;
-            // this.report('parseV', value.value, 1);
-            // return value.value;
-        }
-
-        // Look for a sequence of regions with decreasing magnitude.
+        // Look for a sequence of periods with decreasing magnitude.
         let magnitude = Infinity;
         while (!input.atEOF()) {
-            // COPYING value because parseRegion changes it.
-            // COPY is now done by callee.
-            // const region = this.parseRegion(input, {...value});
-            const region = this.parseRegion(input, value, output);
-            if (!region || region.magnitude >= magnitude) {
-                // We either couldn't parse the next region,
+            const period = this.parsePeriod(input, value, output);
+            if (!period || period.magnitude >= magnitude) {
+                // We either couldn't parse the next period,
                 // or its magnitude is not less than the current
                 // magnitude. Stop parsing here.
                 break;
             }
             // TODO: Right now add requires both magnitudes to be zero.
-            value = add(value, {...region, magnitude: 0});
-            // value += region.value;
-            magnitude = region.magnitude;
+            // Is this correct? It seems like Value shouldn't be a Period.
+            value = add(value, {...period, magnitude: 0});
+            magnitude = period.magnitude;
             report(output, value.value, value.length);
-            // this.report('parseV', value.value, value.length);
         }
-
-        // TODO: need to handle the case where nothing is parsed
-        // and we return undefined. Chances are this code will be
-        // modified to return an edge with a value and a length.
-        // return value.value;
-        return;
     }
 
-    // TODO: what is this three-digit portion of a number, the
-    // portion before each comma, called?
-    parseRegion(input: PeekableSequence<number>, v: Region, output: NumberMatch[]): Region | undefined {
-        const value = copy(v);
-        let region = this.parseMQ(input, value, output);
+    // A "period" is a three-digit grouping of numerical digits in standard form.
+    // e.g. the thousands period, the millions period, etc.
+    private parsePeriod(input: PeekableSequence<number>, value: Period, output: NumberMatch[]): Period | undefined {
+        let period = this.parseMQ(input, value, output);
 
-        if (region && !input.atEOF()) {
+        if (period && !input.atEOF()) {
             const magnitude = this.magnitudes.get(input.peek());
             if (magnitude) {
-                // TODO: parseRegion needs value to be passed in as region
-                // in order to accumulate length correctly.
-                // output.push({value: value.value + region.value, length: value.length + region.length});
-                report(output, value.value + region.value, value.length + region.length);
-                // this.report('parseRegion:1', value.value + region.value, value.length + region.length);
-
+                report(output, value.value + period.value, value.length + period.length);
                 input.get();
-                region = multiply(region, magnitude);
-                value.value += region.value;
-                value.length += region.length;
-                // // this.report('parseRegion:2', value, 0);
+                period = multiply(period, magnitude);
             }
         }
 
-        return region;
+        return period;
     }
 
-    parseMQ(input: PeekableSequence<number>, v: Region, output: NumberMatch[]): Region | undefined {
+    private parseMQ(input: PeekableSequence<number>, v: Period, output: NumberMatch[]): Period | undefined {
         let value = copy(v);
-        let region: Region | undefined;
+        let period: Period | undefined;
 
+        // TODO: recude code duplication between two branches of this if statement.
         if (input.nextIs(this.A)) {
             input.skip(this.A);
 
             // Might be A ('a'), as in 'a million'
-            region = { value: 1, magnitude: 0, length: 1 };
+            period = { value: 1, magnitude: 0, length: 1 };
 
             // Consistant with either A or A M2 [[AND] TV]
             if (input.nextIs(this.M2)) {
                 // This is A M2 [[AND] TV]
-                region.value *= 100;
-                region.length += 1;
+                period.value *= 100;
+                period.length += 1;
                 input.skip(this.M2);
 
-                // Do report intermediate value.
-                value.value += region.value;
-                value.length += region.length;
-                // this.report('parseMQ:1', value.value, value.length);
+                // We may be at an intermediate value, so report it here.
+                // Save the current position in output so that we can roll back
+                // and "unreport" this value if parseANDTV doesn't report
+                // values of its own.
+                value = add(value, period);
                 report(output, value.value, value.length);
                 const current = output.length;
 
-                region = add(region, this.parseANDTV(input, value, output));
+                period = add(period, this.parseANDTV(input, value, output));
 
+                // Pop off the value pushed before parseANDTV, if it is still
+                // at the end of the output array. In this case the value will
+                // be returned and then reported by the caller.
                 rollback(output, current);
-
-                value.value += region.value;
-                value.length += region.length;
-                // Don't report final values.
-                // // this.report('parseMQ:2', value, 0);
             }
         }
         else {
             // Consistent with either HQ M2 [[AND] TV] or just TV.
-            region = this.parseTV(input, value, output);
+            period = this.parseTV(input, value, output);
 
-            if (region) {
-                //                value += region.value;
-                // TODO: ONLY REPORT HERE IF THIS IS AN INTERMEDIATE VALUE.
-                // this.report('parseMQ:2', value + region.value, 0);
-            }
-
-            if (region && isHQ(region) && input.nextIs(this.M2)) {
-                // this.report('parseMQ:2', value.value + region.value, value.length + region.length);
-                report(output, value.value + region.value, value.length + region.length);
+            if (period && isHQ(period) && input.nextIs(this.M2)) {
+                report(output, value.value + period.value, value.length + period.length);
 
                 // Consistent with HQ M2 [[AND] TV].
                 input.skip(this.M2);
-                region.value *= 100;
-                region.length++;
-
-                // TODO: How to decide when to report here. It is possible
-                // that andtv() will need to report, but it seems its report
-                // should come after this function reports. Do we care?
-                // Our semantics for determining whether to report seem correct.
-                // We'd just like to report vefore andtv() if possible, but we
-                // don't know until andtv() returns, whether we should have
-                // reported.
-                // value += region.value;
-                value = add(value, region);
-
+                period.value *= 100;
+                period.length++;
+                
+                // We may be at an intermediate value, so report it here.
+                // Save the current position in output so that we can roll back
+                // and "unreport" this value if parseANDTV doesn't report
+                // values of its own.
+                value = add(value, period);
                 report(output, value.value, value.length);
                 const current = output.length;
 
                 const andtv = this.parseANDTV(input, value, output);
                 if (andtv) {
-                    // this.report('parseMQ:3', value.value, value.length);
-                    // report(output, value.value, value.length);
-                    // value = add(value, andtv);
-                    // this.report('parseMQ:4', value.value, value.length);
-                    // report(output, value.value, value.length);
-                    region = add(region, andtv);
+                    period = add(period, andtv);
                 }
+
+                // Pop off the value pushed before parseANDTV, if it is still
+                // at the end of the output array. In this case the value will
+                // be returned and then reported by the caller.
                 rollback(output, current);
-
-
-                // Only report intermediate values.
-                // value += region.value;
-                // this.report('parseMQ:4', value + region.value, 0);
             }
             else {
                 // Otherwise, region is consistent with TV.
             }
         }
 
-        return region;
+        return period;
     }
 
-    parseANDTV(input: PeekableSequence<number>, v: Region, output: NumberMatch[]): Region | undefined {
-        const value = copy(v);
-        let region: Region | undefined;
+    private parseANDTV(input: PeekableSequence<number>, value: Period, output: NumberMatch[]): Period | undefined {
+        let period: Period | undefined;
 
         if (input.nextIs(this.AND)) {
             input.skip(this.AND);
             const tv = this.parseTV(input, value, output);
             // If we see AND, we require the TV.
             if (tv) {
-                region = tv;
+                period = tv;
             }
         }
         else {
             // If we don't see AND, the TV is optional.
-            region = this.parseTV(input, value, output);
+            period = this.parseTV(input, value, output);
         }
 
-        return region;
+        return period;
     }
 
-    //
-    // TODO: is parseHQ really obsolete?
-    //
-    // parseHQ(input: PeekableSequence<number>, v: Region): Region | undefined {
-    //     const value = copy(v);
-
-    //     // First try QUX10 = [a, 1..9, 11..19].
-    //     let region = this.parseQUX10(input);
-
-    //     if (!region) {
-    //         // Then try QT QD.
-    //         const qt = this.parseQT(input);
-    //         const qd = this.parseQD(input);
-
-    //         // Need both QT and QD. Disallow "twenty hundred".
-    //         if (qt && qd) {
-    //             region = add(qt, qd);
-    //             value.value += region.value;
-    //             value.length += region.length;
-    //             this.report('parseHQ:2', value.value, value.length);
-    //         }
-    //     }
-    //     else {
-    //         value.value += region.value;
-    //         value.length += region.length;
-    //         this.report('parseHQ:1', value.value, value.length);
-    //     }
-
-    //     return region;
-    // }
-
-    parseTV(input: PeekableSequence<number>, v: Region, output: NumberMatch[]): Region | undefined {
-        const value = copy(v);
-
+    private parseTV(input: PeekableSequence<number>, value: Period, output: NumberMatch[]): Period | undefined {
         // First try QU = [1..19]
-        let region = this.parseQU(input);
-        if (!region) {
+        let period = this.parseQU(input);
+        if (!period) {
             // Then try QT [QD]
-            region = this.parseQT(input);
-            if (region) {
+            period = this.parseQT(input);
+            if (period) {
                 const qd = this.parseQD(input);
                 if (qd) {
                     // Report here because this is an intermediate value.
-                    // this.report('parseTV:2', value.value + region.value, value.length + region.length);
-                    report(output, value.value + region.value, value.length + region.length);
-                    region = add(region, qd);
-                    //                    region = add(region, this.parseQD(input));
+                    report(output, value.value + period.value, value.length + period.length);
+                    period = add(period, qd);
                 }
             }
         }
-        else {
-            // Don't report here. The pattern is to only report internal
-            // value change steps on the way to the final value.
-            //            this.report('parseTV:1', value + region.value, 0);
-        }
 
-        return region;
+        return period;
     }
 
-    parseQU(input: PeekableSequence<number>): Region | undefined {
+    private parseQU(input: PeekableSequence<number>): Period | undefined {
         return this.parseToken(input, this.QU);
     }
 
-    parseQUX10(input: PeekableSequence<number>): Region | undefined {
+    private parseQUX10(input: PeekableSequence<number>): Period | undefined {
         return this.parseToken(input, this.QUX10);
     }
 
-    parseQT(input: PeekableSequence<number>): Region | undefined {
+    private parseQT(input: PeekableSequence<number>): Period | undefined {
         return this.parseToken(input, this.QT);
     }
 
-    parseQD(input: PeekableSequence<number>): Region | undefined {
+    private parseQD(input: PeekableSequence<number>): Period | undefined {
         return this.parseToken(input, this.QD);
     }
 
-    parseToken(input: PeekableSequence<number>, m: Map<number, Region>): Region | undefined {
-        let region: Region | undefined;
+    private parseToken(input: PeekableSequence<number>, m: Map<number, Period>): Period | undefined {
+        let period: Period | undefined;
 
         if (!input.atEOF()) {
             const token = input.peek();
 
-            region = m.get(token);
-            if (region) {
-                // IMPORTANT: need to copy region here because callers assume
-                // they may make edits. TODO: is there a safer/better way to 
-                // do the copy?
-                region = { ...region };
+            period = m.get(token);
+            if (period) {
+                // IMPORTANT: must copy Period here because callers assume they
+                // may make edits to the Period that is returned.
+                // TODO: is there a safer/better way to do the copy?
+                period = { ...period };
                 input.get();
             }
         }
 
-        return region;
+        return period;
     }
-
-    parseM() {
-    }
-
-    // report(location: string, value: number, length: number) {
-    //     console.log(`  ${location}: value: ${value}, length: ${length}`);
-    // }
 }
 
 function report(output: NumberMatch[], value: number, length: number) {
@@ -414,10 +330,9 @@ function rollback(output: NumberMatch[], current: number) {
     }
 }
 
-
-function multiply(a: Region, b: Region): Region {
+function multiply(a: Period, b: Period): Period {
     if (a.magnitude !== 0) {
-        throw TypeError('Region `a` must have magnitude zero.');
+        throw TypeError('Period `a` must have magnitude zero.');
     }
 
     return { 
@@ -427,13 +342,13 @@ function multiply(a: Region, b: Region): Region {
     };
 }
 
-function add(a: Region, b: Region | undefined): Region {
+function add(a: Period, b: Period | undefined): Period {
     if (!b) {
         return a;
     }
 
     if (a.magnitude !== 0 || b.magnitude !== 0) {
-        throw TypeError('Regions `a` and `b` must have magnitude zero.');
+        throw TypeError('Periods `a` and `b` must have magnitude zero.');
     }
 
     return {
@@ -443,23 +358,10 @@ function add(a: Region, b: Region | undefined): Region {
     };
 }
 
-function copy(a: Region) {
+function copy(a: Period) {
     return {...a};
 }
 
-function valueOf(regions: Region[]): number | undefined {
-    if (regions.length === 0) {
-        return undefined;
-    }
-    else {
-        let sum = 0;
-        for (const region of regions) {
-            sum += region.value;
-        }
-        return sum;
-    }
-}
-
-function isHQ(region: Region) {
-    return region.magnitude === 0 && region.value % 10 !== 0;
+function isHQ(period: Period) {
+    return period.magnitude === 0 && period.value % 10 !== 0;
 }
