@@ -2,10 +2,11 @@ import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 import { v3 } from 'murmurhash';
 
 import { Edge, DynamicGraph, Graph } from '../graph';
-import { DownstreamTermPredicate, levenshtein, Matcher, exactPrefixHash } from '../matchers';
+import { DiffResults, DownstreamTermPredicate, levenshtein, Matcher, exactPrefixHash } from '../matchers';
+import { NumberParser, NumberMatch } from '../numbers';
 import { Token, TokenFactory } from './tokens';
 import { HASH, ID, PID } from './types';
-import { Logger } from '../utilities';
+import { Logger, PeekableSequence } from '../utilities';
 
 export type StemmerFunction = (term: string) => string;
 
@@ -45,6 +46,8 @@ export class Tokenizer {
     // TODO: Remove this temporary field. Used for backwards compatability.
     matcher: Matcher;
 
+    numberParser: NumberParser | null = null;
+
     constructor(
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
@@ -78,6 +81,8 @@ export class Tokenizer {
         }
 
         this.debugMode = debugMode;
+
+        this.numberParser = new NumberParser(this.stemAndHash);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -103,7 +108,7 @@ export class Tokenizer {
         return hash >= Tokenizer.minTokenHash;
     }
 
-    stemAndHash(term: string): number {
+    stemAndHash = (term: string): number => {
         return this.hashTerm(this.stemTermInternal(term));
     }
 
@@ -346,11 +351,15 @@ export class Tokenizer {
     }
 
     // Arrow function to allow use in map.
-    score = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
+    matchAndScore = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
         const prefix = alias.hashes;
+        const match = alias.matcher(query, prefix, alias.isDownstreamTerm, Tokenizer.isTokenHash);
 
-        const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = 
-            alias.matcher(query, prefix, alias.isDownstreamTerm, Tokenizer.isTokenHash);
+        return this.score(query, prefix, match);
+    }
+
+    score(query: number[], prefix: number[], diff: DiffResults<number>) {
+        const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = diff;
 
         // Ratio of match length to match length + edit distance.
         // const matchFactor = match.length / (match.length + cost);
@@ -440,6 +449,7 @@ export class Tokenizer {
         // }
         const downstreamWordFactor = 
             (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
+
         // NOTE: BUG BUG: The test, (common !== prefix.length), assumes that
         // the prefix does not have duplicated terms. Example: query = "a b",
         // and prefix = "a b b". Then commonTerms={a,b}, so common === 2,
@@ -481,9 +491,12 @@ export class Tokenizer {
 
         // const edgeLists: Array<Array<{ score: number, length: number }>> = [];
         const edgeLists: Edge[][] = [];
-        hashed.forEach((hash, index) => {
 
+        for (const [index, hash] of hashed.entries()) {
             // TODO: exclude starting at hashes that are conjunctions.
+
+            let edges: Edge[] = [];
+            const tail = hashed.slice(index);
 
             if (hash in this.postings) {
                 // This query term is in at least one product term.
@@ -499,21 +512,44 @@ export class Tokenizer {
 
                 // Generate score for all of the items, matched against
                 // the tail of the query.
-                const tail = hashed.slice(index);
+                // const tail = hashed.slice(index);
                 const scored = items.map((item) =>
-                    ({ ...this.score(tail, this.aliases[item]), label: item }));
+                    ({ ...this.matchAndScore(tail, this.aliases[item]), label: item, isNumber: false }));
 
-                const sorted = scored.sort((a, b) => b.score - a.score);
-
-                edgeLists.push(sorted);
+                edges = edges.concat(scored);
             }
-            else {
+
+            if (this.numberParser) {
+                const input = new PeekableSequence<number>(tail[Symbol.iterator]());
+                const output: NumberMatch[] = [];
+                this.numberParser.parse(input, output);
+                for (const value of output) {
+                    const match = hashed.slice(value.length);
+                    const commonTerms = new Set<number>(match);
+    
+                    const diff: DiffResults<number> = {
+                        match,
+                        cost: 0,
+                        leftmostA: 0,
+                        rightmostA: value.length,
+                        alignments: value.length,
+                        commonTerms
+                    };
+    
+                    const { score, length } = this.score(hashed, match, diff);
+                    edges.push({ score, length, label: value.value, isNumber: true });
+                }
+            }
+
+            if (edges.length === 0) {
                 if (this.debugMode) {
                     this.logger.log(`  "${stemmed[index]}" UNKNOWN`);
                 }
-                edgeLists.push([]);
             }
-        });
+
+            const sorted = edges.sort((a, b) => b.score - a.score);
+            edgeLists.push(sorted);
+        }
 
         const graph = new DynamicGraph(edgeLists);
         return graph;

@@ -1,5 +1,11 @@
 import { DynamicGraph, Edge, GraphWalker } from '../src/graph';
 
+// This file demonstrates using the GraphWalker API to enumerate all possible
+// paths through a graph corresponding to the term sequence, `a-b-c-d-e-f`,
+// followed by a terminating vertex `g`. Each term in the graph has edges to
+// all successive terms. The edges are weighted to that a longer edge is always
+// preferred to any combination of shorter edges.
+
 // Returns a string representation of the current path and its score.
 // The path is rendered as a sequence of vertices, each of which is
 // represented by the letters a, b, c, ...
@@ -50,16 +56,22 @@ function* walk(g: GraphWalker): IterableIterator<string> {
     }
 }
 
+// Creates an edge list representing a graph with `number` vertices.
+// Each vertex has edges to all successive vertices. Edges are scored so that
+// longer edges are always preferred over any combination of shorter edges.
 function makeEdgeList(vertexCount: number): Edge[][] {
     const edgeList: Edge[][] = [];
 
-    for (let i = 0; i < vertexCount; ++i) {
+    for (let vertex = 0; vertex < vertexCount; ++vertex) {
         const edges: Edge[] = [];
-        for (let j = 2; i + j <= vertexCount; ++j) {
-            const label = i * 10 + i + j;
-            const length = j;
-            const score = j - Math.pow(0.2, j);
-            edges.push({ score, length, label });
+        for (let length = 2; vertex + length <= vertexCount; ++length) {
+            const label = vertex * 10 + vertex + length;
+
+            // Choose score so that longer edge is always preferred over any
+            // combination of shorter edges.
+            const score = length - Math.pow(0.2, length);
+
+            edges.push({ score, length, label, isNumber: false });
         }
         edgeList.push(edges);
     }
@@ -68,11 +80,10 @@ function makeEdgeList(vertexCount: number): Edge[][] {
 }
 
 function go() {
-    const edgeList1: Edge[][] = makeEdgeList(6);
-    const graph1 = new DynamicGraph(edgeList1);
-    const walker1 = new GraphWalker(graph1);
-    const walk1 = walk(walker1);
-    const paths = [...walk1];
+    const edgeList: Edge[][] = makeEdgeList(6);
+    const graph = new DynamicGraph(edgeList);
+    const walker = new GraphWalker(graph);
+    const paths = [...walk(walker)];
     console.log(paths);
 }
 

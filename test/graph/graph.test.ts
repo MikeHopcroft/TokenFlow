@@ -63,7 +63,8 @@ function makeEdgeList(vertexCount: number): Edge[][] {
             const label = i * 10 + i + j;
             const length = j;
             const score = j - Math.pow(0.2, j);
-            edges.push({ score, length, label });
+            const isNumber = false;
+            edges.push({ score, length, label, isNumber });
         }
         edgeList.push(edges);
     }
