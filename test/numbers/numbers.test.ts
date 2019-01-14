@@ -62,7 +62,7 @@ function test(parser: NumberParser, text: string, expected: NumberMatch[]) {
     const terms = text.split(/\s+/);
     const hashes = terms.map(stemAndHash);
     const input = new PeekableSequence<number>(hashes[Symbol.iterator]());
-    const value = parser.parseV(input, output);
+    const value = parser.parse(input, output);
 
     assert.deepEqual(output, expected, `For input "${text}"`);
 }
@@ -177,6 +177,12 @@ describe('NumberParser', () => {
                 { value: 3759, length: 5 },
             ]],
 
+            ['one hundred million', [
+                { value: 1, length: 1 },
+                { value: 100, length: 2 },
+                { value: 100e6, length: 3 },
+            ]],
+
             ['eight hundred sixty four million two hundred eighty eight thousand seven hundred ninety one', [
                 { value: 8, length: 1 },
                 { value: 800, length: 2 },
@@ -230,6 +236,11 @@ describe('NumberParser', () => {
 
             // Broken case - starts with 'a'
             // ['a sequence with no numbers', []],
+
+            // Possible cases
+            // ['a', [{ value: 1, length: 1 }]],
+            // ['an', [{ value: 1, length: 1 }]],
+            // 'an million'
          ];
 
         const parser = new NumberParser(stemAndHash);

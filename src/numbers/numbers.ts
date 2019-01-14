@@ -5,7 +5,11 @@ export interface NumberMatch {
     length: number;
 }
 
-export interface Period {
+    // A "period" is a three-digit grouping of numerical digits in standard form.
+    // e.g. the thousands period, the millions period, etc. The `Period` interface
+    // represents the numeric value of the sequence of digits that make uo 
+    // particular period.
+    export interface Period {
     // The numerical value of this period's input terms.
     value: number;
 
@@ -122,37 +126,41 @@ export class NumberParser {
         return m;
     }
 
-    parseV(input: PeekableSequence<number>, output: NumberMatch[]) {
+    // Parses the input sequence to generate the set of numbers consistent
+    // with the head of the input sequence. For example, the input sequence
+    // 'one hundred twenty threee horses' is consistent with 1, 100, 120, and
+    // 123.
+    // 
+    // The input sequence is a PeekableSequence of hashes of stemmed English
+    // language words. The hashes should be consistent with the StemAndHash
+    // function passed to the constructor.
+    //
+    // The resulting NumberMatches will be pushed onto the output array.
+    parse(input: PeekableSequence<number>, output: NumberMatch[]) {
         if (input.nextIs(this.Z)) {
+            // Special case for the term 'zero'.
             input.get();
             report(output, 0, 1);
             return;
         }
 
-        // TODO: perhaps value should not be a Period.
-        // Perhaps we should just maintain two numbers, for value and length;
-        // Another possibility is that we can add lower magnitude periods to
-        // higher magnitude periods. Not sure what the new magnitude would be.
-        let value = {
+        let value: Period = {
             value: 0,
-            magnitude: 0,
+            magnitude: Infinity,
             length: 0
         };
 
         // Look for a sequence of periods with decreasing magnitude.
-        let magnitude = Infinity;
         while (!input.atEOF()) {
             const period = this.parsePeriod(input, value, output);
-            if (!period || period.magnitude >= magnitude) {
+            if (!period || period.magnitude >= value.magnitude) {
                 // We either couldn't parse the next period,
                 // or its magnitude is not less than the current
                 // magnitude. Stop parsing here.
                 break;
             }
-            // TODO: Right now add requires both magnitudes to be zero.
-            // Is this correct? It seems like Value shouldn't be a Period.
-            value = add(value, {...period, magnitude: 0});
-            magnitude = period.magnitude;
+
+            value = add(value, period);
             report(output, value.value, value.length);
         }
     }
@@ -160,25 +168,28 @@ export class NumberParser {
     // A "period" is a three-digit grouping of numerical digits in standard form.
     // e.g. the thousands period, the millions period, etc.
     private parsePeriod(input: PeekableSequence<number>, value: Period, output: NumberMatch[]): Period | undefined {
-        let period = this.parseMQ(input, value, output);
+        const period = this.parseMQ(input, value, output);
 
         if (period && !input.atEOF()) {
             const magnitude = this.magnitudes.get(input.peek());
             if (magnitude) {
+                // Report intermediate value returned by parseMQ().
                 report(output, value.value + period.value, value.length + period.length);
                 input.get();
-                period = multiply(period, magnitude);
+
+                // Then update period with magnitude.
+                period.value *= magnitude.value;
+                period.magnitude = magnitude.magnitude;
+                period.length += magnitude.length;
             }
         }
 
         return period;
     }
 
-    private parseMQ(input: PeekableSequence<number>, v: Period, output: NumberMatch[]): Period | undefined {
-        let value = copy(v);
+    private parseMQ(input: PeekableSequence<number>, value: Period, output: NumberMatch[]): Period | undefined {
         let period: Period | undefined;
 
-        // TODO: recude code duplication between two branches of this if statement.
         if (input.nextIs(this.A)) {
             input.skip(this.A);
 
@@ -187,25 +198,12 @@ export class NumberParser {
 
             // Consistant with either A or A M2 [[AND] TV]
             if (input.nextIs(this.M2)) {
-                // This is A M2 [[AND] TV]
-                period.value *= 100;
-                period.length += 1;
-                input.skip(this.M2);
+                // NOTE: don't report here because `a` is not a number by itself.
+                // TODO: decide whether `a` should be treated as the number `one`.
+                // TODO: if `a` is `one`, what about `an`?
 
-                // We may be at an intermediate value, so report it here.
-                // Save the current position in output so that we can roll back
-                // and "unreport" this value if parseANDTV doesn't report
-                // values of its own.
-                value = add(value, period);
-                report(output, value.value, value.length);
-                const current = output.length;
-
-                period = add(period, this.parseANDTV(input, value, output));
-
-                // Pop off the value pushed before parseANDTV, if it is still
-                // at the end of the output array. In this case the value will
-                // be returned and then reported by the caller.
-                rollback(output, current);
+                // Consistent with A M2 [[AND] TV]
+                period = this.parseM2ANDTV(input, value, output, period);
             }
         }
         else {
@@ -213,35 +211,43 @@ export class NumberParser {
             period = this.parseTV(input, value, output);
 
             if (period && isHQ(period) && input.nextIs(this.M2)) {
-                report(output, value.value + period.value, value.length + period.length);
-
                 // Consistent with HQ M2 [[AND] TV].
-                input.skip(this.M2);
-                period.value *= 100;
-                period.length++;
-                
-                // We may be at an intermediate value, so report it here.
-                // Save the current position in output so that we can roll back
-                // and "unreport" this value if parseANDTV doesn't report
-                // values of its own.
-                value = add(value, period);
-                report(output, value.value, value.length);
-                const current = output.length;
-
-                const andtv = this.parseANDTV(input, value, output);
-                if (andtv) {
-                    period = add(period, andtv);
-                }
-
-                // Pop off the value pushed before parseANDTV, if it is still
-                // at the end of the output array. In this case the value will
-                // be returned and then reported by the caller.
-                rollback(output, current);
+                // Report intermediate value before parsing the M2.
+                report(output, value.value + period.value, value.length + period.length);
+                period = this.parseM2ANDTV(input, value, output, period);
             }
             else {
-                // Otherwise, region is consistent with TV.
+                // Consistent with TV
+                // Just fall through to end of function.
             }
         }
+
+        return period;
+    }
+
+    private parseM2ANDTV(input: PeekableSequence<number>, v: Period, output: NumberMatch[], tv: Period): Period {
+        input.skip(this.M2);
+        let period = {
+            value: tv.value * 100,
+            length: tv.length + 1,
+            magnitude: tv.magnitude
+        };
+        
+        // We may be at an intermediate value, so report it here.
+        // Save the current position in output so that we can roll back
+        // and "unreport" this value if parseANDTV doesn't report
+        // values of its own.
+        const value = add(v, period);
+        report(output, value.value, value.length);
+        const current = output.length;
+
+        const andtv = this.parseANDTV(input, value, output);
+        period = add(period, andtv);
+
+        // Pop off the value pushed before parseANDTV, if it is still
+        // at the end of the output array. In this case the value will
+        // be returned and then reported by the caller.
+        rollback(output, current);
 
         return period;
     }
@@ -330,30 +336,18 @@ function rollback(output: NumberMatch[], current: number) {
     }
 }
 
-function multiply(a: Period, b: Period): Period {
-    if (a.magnitude !== 0) {
-        throw TypeError('Period `a` must have magnitude zero.');
-    }
-
-    return { 
-        value: a.value * b.value,
-        magnitude: b.magnitude,
-        length: a.length + b.length
-    };
-}
-
 function add(a: Period, b: Period | undefined): Period {
     if (!b) {
         return a;
     }
 
-    if (a.magnitude !== 0 || b.magnitude !== 0) {
-        throw TypeError('Periods `a` and `b` must have magnitude zero.');
+    if (a.magnitude < b.magnitude) {
+        throw TypeError('Periods `b` must have smaller magnitude.');
     }
 
     return {
         value: a.value + b.value,
-        magnitude: a.magnitude,
+        magnitude: b.magnitude,
         length: a.length + b.length
     };
 }

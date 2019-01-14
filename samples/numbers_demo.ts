@@ -62,7 +62,7 @@ function test(text: string) {
     const terms = text.split(/\s+/);
     const hashes = terms.map(stemAndHash);
     const input = new PeekableSequence<number>(hashes[Symbol.iterator]());
-    const value = parser.parseV(input, output);
+    const value = parser.parse(input, output);
     // console.log(`  VALUE: ${value}, length: XXX`);
     for (const match of output) {
         console.log(`  value: ${match.value}, length: ${match.length}`);
@@ -100,3 +100,4 @@ test('hundred');
 
 test('a thousand');
 test('a million and three');
+test('one hundred million');
