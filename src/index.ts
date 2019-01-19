@@ -1,5 +1,7 @@
+export * from './aliases';
 export * from './graph';
 export * from './ingestors';
+export * from './matchers';
 export * from './numbers';
 export * from './recognizers';
 export * from './relevance_suite';
