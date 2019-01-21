@@ -7,7 +7,7 @@ describe('Tokenizer', () => {
     describe('#addItem', () => {
         it('should add item text to `this.items` and PIDs to `this.pids`', () => {
             const downstreamWords = new Set([]);
-            const tokenizer = new Tokenizer(downstreamWords, undefined, true, false);
+            const tokenizer = new Tokenizer(downstreamWords, undefined, false);
             const items:Array<[PID, string]> = [
                 [1, 'one'],
                 [2, 'two'],
@@ -25,7 +25,7 @@ describe('Tokenizer', () => {
 
         it('should apply MurmurHash3 with seed value of 0.', () => {
             const downstreamWords = new Set([]);
-            const tokenizer = new Tokenizer(downstreamWords, undefined, true, false);
+            const tokenizer = new Tokenizer(downstreamWords, undefined, false);
             const input = 'small unsweeten ice tea';
             tokenizer.addItem(1, input, false);
             const observed = tokenizer.aliases[0].hashes;
@@ -35,7 +35,7 @@ describe('Tokenizer', () => {
 
         it('should build posting lists.', () => {
             const downstreamWords = new Set([]);
-            const tokenizer = new Tokenizer(downstreamWords, undefined, true, false);
+            const tokenizer = new Tokenizer(downstreamWords, undefined, false);
 
             // DESIGN NOTE: the terms 'a'..'f' are known to stem to themselves.
             const items = ['a b c', 'b c d', 'd e f'];
@@ -85,7 +85,7 @@ describe('Tokenizer', () => {
     describe('#stemTerm', () => {
         it('should apply the Snowball English Stemmer', () => {
             const downstreamWords = new Set([]);
-            const tokenizer = new Tokenizer(downstreamWords, undefined, true, false);
+            const tokenizer = new Tokenizer(downstreamWords, undefined, false);
             const input = 'red convertible sedan rims tires knobby spinners slicks turbo charger';
             const terms = input.split(/\s+/);
             const stemmed = terms.map((term) => tokenizer.stemTerm(term));
@@ -98,7 +98,7 @@ describe('Tokenizer', () => {
     describe('#exactMathScore', () => {
         it('should return the length of the common prefix', () => {
             const downstreamWords = new Set([]);
-            const tokenizer = new Tokenizer(downstreamWords, undefined, true, false);
+            const tokenizer = new Tokenizer(downstreamWords, undefined, false);
 
             assert.deepEqual({score: 2, length: 2}, tokenizer.exactMatchScore([1, 2, 3, 4, 5], [1, 2]));
             assert.deepEqual({score: 0, length: 0}, tokenizer.exactMatchScore([1, 2, 3, 4, 5], [1, 2, 4]));

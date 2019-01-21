@@ -43,15 +43,11 @@ export class Tokenizer {
 
     hashedDownstreamWordsSet = new Set<HASH>();
 
-    // TODO: Remove this temporary field. Used for backwards compatability.
-    matcher: Matcher;
-
     numberParser: NumberParser | null = null;
 
     constructor(
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
-        relaxedMatching: boolean,
         debugMode: boolean
     ) {
         this.logger = new Logger('tf:tokenizer');
@@ -60,24 +56,6 @@ export class Tokenizer {
         this.stemTerm = stemmer;
         for (const term of downstreamWords) {
             this.addHashedDownstreamTerm(term);
-        }
-
-        if (relaxedMatching) {
-            this.matcher = levenshtein;
-        }
-        else {
-            this.matcher = (
-                query,
-                prefix,
-                isDownstreamTerm,
-                isToken
-            ) => exactPrefixHash(
-                query,
-                prefix,
-                true,       // Arbitrarily allow partial matches.
-                isDownstreamTerm,
-                isToken
-            );
         }
 
         this.debugMode = debugMode;
@@ -303,7 +281,7 @@ export class Tokenizer {
             pid,
             text,
             addTokensToDownstream,
-            this.matcher,
+            levenshtein,
             this.isDownstreamTerm
         );
     }

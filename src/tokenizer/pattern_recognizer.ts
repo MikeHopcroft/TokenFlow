@@ -27,12 +27,11 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
         downstreamWords: Set<string>,
         stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
         addTokensToDownstream: boolean,
-        relaxedMatching: boolean,
         debugMode: boolean
     ) {
         this.logger = new Logger('tf:PatternRecognizer');
         this.items = items;
-        this.tokenizer = new Tokenizer(downstreamWords, stemmer, relaxedMatching, debugMode);
+        this.tokenizer = new Tokenizer(downstreamWords, stemmer, debugMode);
         this.stemmer = this.tokenizer.stemTerm;
         this.tokenFactory = tokenFactory;
 

@@ -64,5 +64,5 @@ export function CreateAttributeRecognizer(
         }
     };
 
-    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, false, true, debugMode);
+    return new PatternRecognizer(items, tokenFactory, downstreamWords, stemmer, false, debugMode);
 }
