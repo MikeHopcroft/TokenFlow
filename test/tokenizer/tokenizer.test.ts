@@ -1,7 +1,41 @@
 import { assert } from 'chai';
 import 'mocha';
 
-import { PID, Tokenizer } from '../../src/tokenizer';
+import { Lexicon, DefaultTermModel } from '../../src/aliases';
+import { PID, Tokenizer, PIDToken, PIDTOKEN, TokenizerAlias } from '../../src/tokenizer';
+import { levenshtein } from '../../src';
+
+function* aliasGenerator(items: string[]) {
+    for (const item of items) {
+        yield {
+            token: { type: PIDTOKEN, pid: 1},
+            text: item,
+            matcher: levenshtein
+        };
+    }
+}
+
+const termModel = new DefaultTermModel();
+
+function tokenizerAlias(pid: PID, text: string): TokenizerAlias
+{
+    const token = { type: PIDTOKEN, pid };
+    const terms = text.split(/\s+/);
+    const stemmed = terms.map(termModel.stem);
+    const hashes = stemmed.map(termModel.hashTerm);
+    const isDownstreamTerm = (hash: number) => false;
+
+    return {
+        token,
+        text,
+        terms,
+        stemmed,
+        hashes,
+        matcher: levenshtein,
+        isDownstreamTerm
+    };
+}
+
 
 describe('Tokenizer', () => {
     describe('#addItem', () => {
@@ -14,12 +48,13 @@ describe('Tokenizer', () => {
                 [3, 'three']];
 
             items.forEach((item, index) => {
-                const pid = item[0];
-                const text = item[1];
-                tokenizer.addItem(pid, text, false);
+                const [pid, text] = item;
+                tokenizer.addItem3(tokenizerAlias(pid, text), false);
+
                 assert.equal(tokenizer.aliases.length, index + 1);
                 assert.equal(tokenizer.aliases[index].text, text);
-                assert.equal(tokenizer.aliases[index].pid, pid);
+                const pidToken: PIDToken = tokenizer.aliases[index].token as PIDToken;
+                assert.equal(pidToken.pid, pid);
             });
         });
 
@@ -27,7 +62,11 @@ describe('Tokenizer', () => {
             const downstreamWords = new Set([]);
             const tokenizer = new Tokenizer(downstreamWords, undefined, false);
             const input = 'small unsweeten ice tea';
-            tokenizer.addItem(1, input, false);
+            
+            const lexicon = new Lexicon();
+            lexicon.addDomain(aliasGenerator([input]));
+            lexicon.ingest(tokenizer);
+
             const observed = tokenizer.aliases[0].hashes;
             const expected:number[] = [2557986934, 1506511588, 4077993285, 1955911164];
             assert.deepEqual(observed, expected);
@@ -40,14 +79,14 @@ describe('Tokenizer', () => {
             // DESIGN NOTE: the terms 'a'..'f' are known to stem to themselves.
             const items = ['a b c', 'b c d', 'd e f'];
 
-            items.forEach((item, index) => {
-                tokenizer.addItem(index, item, false);
-            });
-    
+            const lexicon = new Lexicon();
+            lexicon.addDomain(aliasGenerator(items));
+            lexicon.ingest(tokenizer);
+
             // Verify that item text and stemmed item text are recorded.
             items.forEach((item, index) => {
                 assert.equal(tokenizer.aliases[index].text, items[index]);
-                assert.equal(tokenizer.aliases[index].stemmed, items[index]);
+                assert.equal(tokenizer.aliases[index].stemmed.join(' '), items[index]);
             });
 
             // Verify that posting lists are correct.

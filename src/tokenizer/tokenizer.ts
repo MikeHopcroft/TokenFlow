@@ -4,19 +4,20 @@ import { v3 } from 'murmurhash';
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, levenshtein, Matcher, exactPrefixHash } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
-import { Token, TokenFactory } from './tokens';
+import { PIDToken, PIDTOKEN, Token, TokenFactory} from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger, PeekableSequence } from '../utilities';
 
 export type StemmerFunction = (term: string) => string;
 
 export interface TokenizerAlias {
-    pid: PID;
+    token: Token;
     text: string;
+    terms: string[];
+    stemmed: string[];
+    hashes: number[];
     matcher: Matcher;
     isDownstreamTerm: DownstreamTermPredicate<number>;
-    stemmed: string;
-    hashes: number[];
 }
 
 export class Tokenizer {
@@ -177,7 +178,8 @@ export class Tokenizer {
             // TODO: EXPERIMENT 1: filter out downstream words.
             else {
                 // TODO: Where does toUpperCase and replacing spaces with underscores go?
-                const name = pidToName(this.aliases[edge.label].pid);
+                const pidToken = this.aliases[edge.label].token as PIDToken;
+                const name = pidToName(pidToken.pid);
                 const text = `[${name}]`;
                 rewritten.push(text);
                 termIndex += edge.length;
@@ -195,7 +197,8 @@ export class Tokenizer {
             }
             else {
                 const children = tokens.slice(termIndex, termIndex + edge.length);
-                output.push(tokenFactory(this.aliases[edge.label].pid, children));
+                const pidToken = this.aliases[edge.label].token as PIDToken;
+                output.push(tokenFactory(pidToken.pid, children));
                 termIndex += edge.length;
             }
         }
@@ -210,6 +213,19 @@ export class Tokenizer {
     // Indexing a phrase
     //
     ///////////////////////////////////////////////////////////////////////////
+    
+    addItem(pid: PID, text: string, addTokensToDownstream: boolean): void {
+        // Add matcher and isDownstreamTerm predicates to each item
+        // before calling addItem2().
+        this.addItem2(
+            pid,
+            text,
+            addTokensToDownstream,
+            levenshtein,
+            this.isDownstreamTerm
+        );
+    }
+
     addItem2(
         pid: PID,
         text: string,
@@ -217,30 +233,34 @@ export class Tokenizer {
         matcher: Matcher,
         isDownstreamTerm: DownstreamTermPredicate<number>
     ): void {
+        // Split input string into individual terms.
+        const terms = text.split(/\s+/);
+        const stemmed = terms.map(this.stemTermInternal);
+        const hashes = stemmed.map(this.hashTerm);
+        const token: PIDToken = { type: PIDTOKEN, pid };
+        this.addItem3({
+            token,
+            text,
+            terms,
+            stemmed,
+            hashes,
+            matcher,
+            isDownstreamTerm
+        }, addTokensToDownstream);
+    }
+
+    addItem3(alias: TokenizerAlias, addTokensToDownstream: boolean) {
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
         // share a pid, but have different ids.
         const id = this.aliases.length;
 
-        // Split input string into individual terms.
-        const terms = text.split(/\s+/);
+        this.aliases.push(alias);
 
-        const stemmed = terms.map(this.stemTermInternal);
-        const hashes = stemmed.map(this.hashTerm);
-
-        this.aliases.push({
-            pid,
-            text,
-            stemmed: stemmed.join(' '),
-            hashes,
-            matcher,
-            isDownstreamTerm
-        });
-
-        for (const [index, hash] of hashes.entries()) {
+        for (const [index, hash] of alias.hashes.entries()) {
             // Add this term to hash_to_text so that we can decode hashes later.
             if (!(hash in this.hashToText)) {
-                this.hashToText[hash] = stemmed[index];
+                this.hashToText[hash] = alias.stemmed[index];
             }
 
             // TODO: Consider removing code to compute frequencies.
@@ -264,8 +284,10 @@ export class Tokenizer {
             }
         }
 
+        // TODO: Can tokens be detected by their hashes, rather than searching
+        // for special characters in the raw text?
         if (addTokensToDownstream) {
-            for (const term of terms) {
+            for (const term of alias.terms) {
                 if (term.startsWith('@')) {
                     this.downstreamWords.add(term);
                     this.addHashedDownstreamTerm(term);
@@ -274,16 +296,6 @@ export class Tokenizer {
         }
 
         // TODO: Add tuples.
-    }
-
-    addItem(pid: PID, text: string, addTokensToDownstream: boolean): void {
-        this.addItem2(
-            pid,
-            text,
-            addTokensToDownstream,
-            levenshtein,
-            this.isDownstreamTerm
-        );
     }
 
 

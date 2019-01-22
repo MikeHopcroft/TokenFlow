@@ -1,3 +1,2 @@
 // export * from './domain';
-// export * from './lexicon';
-export const foobar = 1;
+export * from './lexicon';
