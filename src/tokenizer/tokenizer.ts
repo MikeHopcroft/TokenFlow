@@ -144,7 +144,9 @@ export class Tokenizer {
     }
 
     decodeEdge = (edge: Edge) => {
-        return `Edge("${this.aliases[edge.label].text}", score=${edge.score}, length=${edge.length})`;
+        const alias = this.aliases[edge.label];
+        const text = (alias)?alias.text:'unknown';
+        return `Edge("${text}", score=${edge.score}, length=${edge.length})`;
     }
 
     pidToName = (pid: PID) => {
