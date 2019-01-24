@@ -4,6 +4,8 @@ import {
     generateAliases,
     Item,
     PID,
+    PIDToken,
+    PIDTOKEN,
     Recognizer,
     StemmerFunction,
     Token,
@@ -13,9 +15,12 @@ import {
     WordToken
 } from '.';
 
+import { Lexicon, Alias } from '../aliases';
+import { levenshtein } from '../matchers';
+
 export class PatternRecognizer<ITEM extends Item> implements Recognizer {
     logger: Logger;
-    items: Map<PID, ITEM>;
+
     tokenizer: Tokenizer;
     tokenFactory: TokenFactory;
     stemmer: (word: string) => string;
@@ -30,25 +35,33 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
         debugMode: boolean
     ) {
         this.logger = new Logger('tf:PatternRecognizer');
-        this.items = items;
+
         this.tokenizer = new Tokenizer(downstreamWords, stemmer, debugMode);
         this.stemmer = this.tokenizer.stemTerm;
         this.tokenFactory = tokenFactory;
 
         // Ingest index.
+        const aliases: Alias[] = [];
         let aliasCount = 0;
-        for (const [pid, item] of this.items) {
+        for (const [pid, item] of items) {
             for (const aliasPattern of item.aliases) {
                 for (const alias of generateAliases(aliasPattern)) {
-                    this.tokenizer.addItem(item.pid, alias, addTokensToDownstream);
+                    aliases.push({
+                        token: ({ type: PIDTOKEN, pid } as PIDToken),
+                        text: alias,
+                        matcher: levenshtein            
+                    });
                     this.ownTerms.add(alias);
                     aliasCount++;
                 }
             }
         }
+        const lexicon = new Lexicon();
+        lexicon.addDomain(aliases[Symbol.iterator]());
+        lexicon.ingest(this.tokenizer);
 
         // TODO: print name of tokenizer here?
-        this.logger.log(`${this.items.size} items contributed ${aliasCount} aliases.`);
+        this.logger.log(`${items.size} items contributed ${aliasCount} aliases.`);
     }
 
     apply = (tokens: Token[]) => {

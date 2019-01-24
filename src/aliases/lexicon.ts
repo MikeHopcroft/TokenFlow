@@ -111,18 +111,10 @@ class Domain {
     private ownTerms: Set<number>;
     private downstreamTerms: Set<number>;
 
-    // TODO: correct implementations
-    // private stemTermInternal: (text: string) => string;
-    // private hashTerm: (text: string) => number;
-
     constructor(aliases: IterableIterator<Alias>, termModel: TermModel) {
         this.tokenizerAliases = [];
         this.ownTerms = new Set<number>();
         this.downstreamTerms = new Set<number>();
-
-        // TODO: correct implementations
-        // this.stemTermInternal = (text: string) => text;
-        // this.hashTerm = (text: string) => 0;
 
         for (const alias of aliases) {
             const terms = alias.text.split(/\s+/);

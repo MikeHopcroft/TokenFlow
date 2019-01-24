@@ -61,7 +61,8 @@ export class Tokenizer {
 
         this.debugMode = debugMode;
 
-        this.numberParser = new NumberParser(this.stemAndHash);
+        // TODO: Uncomment following line one Pipeline is integrated with graph.
+        // this.numberParser = new NumberParser(this.stemAndHash);
     }
 
     ///////////////////////////////////////////////////////////////////////////
