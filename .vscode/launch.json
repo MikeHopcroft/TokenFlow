@@ -80,6 +80,14 @@
             "name": "Launch Stemmer Confusion",
             "program": "${workspaceFolder}/build/samples/stemmer_confusion_demo.js",
             "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Unified Demo",
+            "program": "${workspaceFolder}/build/samples/unified_demo.js",
+            "outputCapture": "std"
         }
+
     ]
 }

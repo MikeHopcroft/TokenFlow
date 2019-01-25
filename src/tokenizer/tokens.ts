@@ -28,6 +28,14 @@ export interface PIDToken extends Token {
     pid: PID;
 }
 
+export const NUMBERTOKEN: unique symbol = Symbol('NUMBERTOKEN');
+export type NUMBERTOKEN = typeof NUMBERTOKEN;
+
+export interface NumberToken extends Token {
+    type: NUMBERTOKEN;
+    value: number;
+}
+
 // TODO: Should this return CompositeToken or would it sometime
 // want the flexibility to return a new WORD or other Token2s?
 export type TokenFactory = (pid: PID, children: Token[]) => Token;

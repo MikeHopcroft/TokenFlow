@@ -4,7 +4,7 @@ import { v3 } from 'murmurhash';
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, levenshtein, Matcher, exactPrefixHash } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
-import { PIDToken, PIDTOKEN, Token, TokenFactory} from './tokens';
+import { PIDToken, PIDTOKEN, Token, TokenFactory, NUMBERTOKEN, NumberToken} from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger, PeekableSequence } from '../utilities';
 
@@ -62,7 +62,7 @@ export class Tokenizer {
         this.debugMode = debugMode;
 
         // TODO: Uncomment following line one Pipeline is integrated with graph.
-        // this.numberParser = new NumberParser(this.stemAndHash);
+        this.numberParser = new NumberParser(this.stemAndHash);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -148,6 +148,25 @@ export class Tokenizer {
         const alias = this.aliases[edge.label];
         const text = (alias)?alias.text:'unknown';
         return `Edge("${text}", score=${edge.score}, length=${edge.length})`;
+    }
+
+    aliasFromEdge = (edge: Edge): TokenizerAlias | undefined => {
+        return this.aliases[edge.label];
+    }
+
+    tokenFromEdge = (edge: Edge): Token | undefined => {
+        if (edge.isNumber) {
+            return ({
+                type: NUMBERTOKEN,
+                value: edge.label
+            } as NumberToken);
+        }
+        else if (edge.label === -1) {
+            return undefined;
+        }
+        else {
+            return this.aliases[edge.label].token;
+        }
     }
 
     pidToName = (pid: PID) => {
@@ -517,20 +536,21 @@ export class Tokenizer {
                 const output: NumberMatch[] = [];
                 this.numberParser.parse(input, output);
                 for (const value of output) {
-                    const match = hashed.slice(value.length);
+                    const match = hashed.slice(index, index + value.length);
                     const commonTerms = new Set<number>(match);
     
                     const diff: DiffResults<number> = {
                         match,
                         cost: 0,
                         leftmostA: 0,
-                        rightmostA: value.length,
+                        rightmostA: value.length - 1,
                         alignments: value.length,
                         commonTerms
                     };
     
                     const { score, length } = this.score(hashed, match, diff);
                     edges.push({ score, length, label: value.value, isNumber: true });
+                    console.log(`NUMBER: value: ${value.value}, length: ${length}, score: ${score}`);
                 }
             }
 

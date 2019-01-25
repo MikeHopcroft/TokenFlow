@@ -49,7 +49,7 @@ export class PatternRecognizer<ITEM extends Item> implements Recognizer {
                     aliases.push({
                         token: ({ type: PIDTOKEN, pid } as PIDToken),
                         text: alias,
-                        matcher: levenshtein            
+                        matcher: levenshtein
                     });
                     this.ownTerms.add(alias);
                     aliasCount++;

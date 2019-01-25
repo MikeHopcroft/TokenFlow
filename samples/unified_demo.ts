@@ -1,74 +1,201 @@
+import * as Debug from 'debug';
+import * as fs from 'fs';
+import * as path from 'path';
 
-// // Create Domains from yaml files
-// // Create Lexicon
-// // Create Tokenizer
-// // Some sort of GraphWalker demo.
-// // Token factory for GraphWalker
+import { levenshtein } from '../src/matchers';
+import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Token, Tokenizer } from '../src/tokenizer';
+import { Lexicon } from '../src';
 
-// import * as fs from 'fs';
+export const ATTRIBUTE2: unique symbol = Symbol('ATTRIBUTE2');
+export type ATTRIBUTE2 = typeof ATTRIBUTE2;
 
-// import { Alias, Domain, Lexicon } from '../src';
-// import { itemMapFromYamlString, Item, Matcher, Token, Tokenizer, TokenFactory } from '../src';
+export interface AttributeToken2 extends Token {
+    type: ATTRIBUTE2;
+    pid: PID;
+    name: string;
+}
 
-// type TokenFactory2 = (item: Item) => Token;
+export const ENTITY2: unique symbol = Symbol('ENTITY2');
+export type ENTITY2 = typeof ENTITY2;
+
+export interface EntityToken2 extends Token {
+    type: ENTITY2;
+    pid: PID;
+    name: string;
+}
+
+export const INTENT2: unique symbol = Symbol('INTENT2');
+export type INTENT2 = typeof INTENT2;
+
+export interface IntentToken2 extends Token {
+    type: INTENT2;
+    id: PID;
+    name: string;
+}
+
+export const QUANTIFIER2: unique symbol = Symbol('QUANTIFIER2');
+export type QUANTIFIER2 = typeof QUANTIFIER2;
+
+export interface QuantifierToken2 extends Token {
+    type: QUANTIFIER2;
+    value: number;
+}
 
 
-// function* flatten(items: Map<number, Item>, factory: TokenFactory2, matcher: Matcher): IterableIterator<Alias> {
-//     for (const [index, item] of items.entries()) {
-//         const token = factory(item);
-//         for (const alias of item.aliases) {
-//             yield {
-//                 token,
-//                 text: alias,
-//                 matcher
-//             };
-//         }
-//     }
-// }
+type AnyToken =
+    AttributeToken2 |
+    EntityToken2 |
+    IntentToken2 |
+    // MultipleAttributeToken |
+    NumberToken |
+    QuantifierToken2
+    // WordToken;
+    ;
 
-// function domainFromYamlFile(yamlFilePath: string, matcher: Matcher, factory: TokenFactory2, tokenizer: Tokenizer) {
-//     const yamlText = fs.readFileSync(yamlFilePath, 'utf8');
-//     const items = itemMapFromYamlString(yamlText);
-//     return domainFromItems(items, matcher, factory, tokenizer);
-// }
+export function tokenToString(t: Token) {
+    const token = t as AnyToken;
+    let name: string;
+    switch (token.type) {
+        case ATTRIBUTE2:
+            const attribute = token.name.replace(/\s/g, '_').toUpperCase();
+            name = `[ATTRIBUTE:${attribute},${token.pid}]`;
+            break;
+        case ENTITY2:
+            const entity = token.name.replace(/\s/g, '_').toUpperCase();
+            name = `[ENTITY:${entity},${token.pid}]`;
+            break;
+        case INTENT2:
+            name = `[INTENT:${token.name}]`;
+            break;
+        case QUANTIFIER2:
+            name = `[QUANTIFIER:${token.value}]`;
+            break;
+        // case WORD:
+        //     name = `[WORD:${token.text}]`;
+        //     break;
+        case NUMBERTOKEN:
+            name = `[NUMBER: ${token.value}]`; 
+            break;
+        default:
+            {
+                const symbol = t.type.toString();
+                name = `[${symbol.slice(7, symbol.length - 1)}]`;
+            }
+    }
+    return name;
+}
 
-// function domainFromYamlText(yamlText: string, matcher: Matcher, factory: TokenFactory2, tokenizer: Tokenizer) {
-//     const items = itemMapFromYamlString(yamlText);
-//     return domainFromItems(items, matcher, factory, tokenizer);
-// }
+type TokenFactory2 = (item: Item) => Token;
 
+function* aliasesFromYamlString(yamlText: string, factory: TokenFactory2) {
+    const items = itemMapFromYamlString(yamlText);
 
-// function domainFromItems(items: Map<number, Item>, matcher: Matcher, factory: TokenFactory2, tokenizer: Tokenizer) {
-//     // TODO: Could Domain.constructor() take an iterator or an iterable,
-//     // instead of materializing into an array.
-//     const aliases = [...flatten(items, factory, matcher)];
-//     const domain = new Domain(aliases, factory, tokenizer);
-//     return domain;
-// }
+    for (const [pid, item] of items) {
+        for (const aliasPattern of item.aliases) {
+            for (const alias of generateAliases(aliasPattern)) {
+                yield {
+                    token: factory(item),
+                    text: alias,
+                    matcher: levenshtein
+                };
+            }
+        }
+    }
+}
 
-// function go(yamlTexts: string[], matcher: Matcher) {
-//     const dummyDownstreamWords = new Set<string>();
-//     const dummyStemmer = Tokenizer.defaultStemTerm;
-//     const dummyRelaxedMatching = true;
-//     const debugMode = false;
-//     const tokenizer = new Tokenizer(dummyDownstreamWords, dummyStemmer, dummyRelaxedMatching, debugMode);
+export class Unified {
+    tokenizer: Tokenizer;
 
-//     const entitiesFile = 'entities.yaml';
-//     const entities = domainFromYamlFile(entitiesFile, matcher, factory, tokenizer);
+    constructor(
+        entityFile: string,
+        intentsFile: string,
+        attributesFile: string,
+        quantifiersFile: string,
+        debugMode = false
+    ) {
+        this.tokenizer = new Tokenizer(new Set<string>(), undefined, debugMode);
+        const lexicon = new Lexicon();
 
-//     for (const yamlText of yamlTexts) {
-//         // TODO: Do we still need a map or will an array suffice?
-//         const items = itemMapFromYamlString(yamlText);
+        // Attributes
+        const attributes = aliasesFromYamlString(
+            fs.readFileSync(attributesFile, 'utf8'),
+            (item: Item) => ({
+                type: ATTRIBUTE2,
+                pid: item.pid,
+                name: item.name
+            }));
+        lexicon.addDomain(attributes);
 
-//         // TODO: Could Domain.constructor() take an iterator or an iterable,
-//         // instead of materializing into an array.
-//         const aliases = [...flatten(items, matcher)];
-//         const domain = new Domain(aliases, factory, tokenizer);
+        // Entities
+        const entities = aliasesFromYamlString(
+            fs.readFileSync(entityFile, 'utf8'),
+            (item: Item) => ({
+                type: ENTITY2,
+                pid: item.pid,
+                name: item.name
+            }));
+        lexicon.addDomain(entities);
 
-//         for (const [index, item] of items.entries()) {
-//             for (const alias of item.aliases) {
+        // Quantifiers
+        const quantifiers = aliasesFromYamlString(
+            fs.readFileSync(quantifiersFile, 'utf8'),
+            (item: Item) => ({
+                type: QUANTIFIER2,
+                value: item.pid
+            }));
+        lexicon.addDomain(quantifiers);
 
-//             }
-//         }
-//     }
-// }
+        // Intents
+        const intents = aliasesFromYamlString(
+            fs.readFileSync(intentsFile, 'utf8'),
+            (item: Item) => ({
+                type: INTENT2,
+                pid: item.pid,
+                name: item.name
+            }));
+        lexicon.addDomain(intents);
+        
+        lexicon.ingest(this.tokenizer);
+    }
+
+    processOneQuery(query: string) {
+        const terms = query.split(/\s+/);
+        // TODO: terms should be stemmed and hashed by TermModel in Lexicon.
+        const graph = this.tokenizer.generateGraph(terms);
+        const path = graph.findPath([], 0);
+
+        for (const edge of path) {
+            const token = this.tokenizer.tokenFromEdge(edge);
+            if (token) {
+                console.log(`    ${tokenToString(token)}`);
+            }
+            else {
+                console.log('    UNKNOWN');
+            }
+        }
+    }
+}
+
+function go() {
+    // unified_demo is intended to be a debugging tool invoked by a human
+    // from the console. Therefore use human-readable console logging to stdout.
+    // Also enable tf:* to see all alerts.
+    Debug.enable('tf-interactive,tf:*');
+
+    const unified = new Unified(
+        path.join(__dirname, './data/cars/catalog.yaml'),
+        path.join(__dirname, './data/intents.yaml'),
+        path.join(__dirname, './data/attributes.yaml'),
+        path.join(__dirname, './data/quantifiers.yaml'),
+        true);
+
+        unified.processOneQuery('I would like twenty silver two door convertibles with no tinted windows and extra fuzzy dice and four studded tires');
+
+        // Example of "(twenty two) door" vs "twenty (two door)"
+        // unified.processOneQuery('I would like twenty two door convertibles with tinted windows and fuzzy dice');
+
+        // unified.processOneQuery('I would like twenty three convertible with tinted windows and fuzzy dice');
+        // unified.processOneQuery('twenty three');
+}
+
+go();
