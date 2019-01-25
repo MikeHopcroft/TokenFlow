@@ -1,4 +1,9 @@
 
+* Downstream terms
+    * Tokenizer no longer gets/manages downstream terms
+    * Lexicon provides term hash iterator (or set?)
+    * Regognizers provide term hash iterator (more likely set?)
+    * Alternately, could one build a pipeline on top of a Lexicon of domains?
 * Stemmer needs special handling for numbers
 * isDownstreamTerm function needs to handle number tokens
 * Move lexicon.ts to src/tokenizer
@@ -7,7 +12,7 @@
     * ~~`Tokenizer.matcher`~~
     * `Tokenizer.downstreamWords`
     * `Tokenizer.hashedDownstreamWordSet`
-    * `isNumberHash`
+    * ~~`isNumberHash`~~
     * `isTokenHash`
     * `stemAndHash`
     * `addHashedDownstreamTerm`

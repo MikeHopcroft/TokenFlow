@@ -62,7 +62,7 @@ export class Tokenizer {
         this.debugMode = debugMode;
 
         // TODO: Uncomment following line one Pipeline is integrated with graph.
-        this.numberParser = new NumberParser(this.stemAndHash);
+        // this.numberParser = new NumberParser(this.stemAndHash);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -83,6 +83,10 @@ export class Tokenizer {
     // TODO: this method should be replaced by TermModel method.
     static isTokenHash(hash: HASH) {
         return hash >= Tokenizer.minTokenHash;
+    }
+
+    private static isNeverDownstreamTerm(hash: number) {
+        return false;
     }
 
     stemAndHash = (term: string): number => {
@@ -300,19 +304,19 @@ export class Tokenizer {
         return new Set([...a].filter(x => b.has(x)));
     }
 
-    commonDownstreamWords(commonTerms: Set<HASH>) {
-        return new Set([...commonTerms].filter(x => this.hashedDownstreamWordsSet.has(x)));
-    }
+    // commonDownstreamWords(commonTerms: Set<HASH>) {
+    //     return new Set([...commonTerms].filter(x => this.hashedDownstreamWordsSet.has(x)));
+    // }
 
     // Arrow function to allow use in map.
     matchAndScore = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
         const prefix = alias.hashes;
         const match = alias.matcher(query, prefix, alias.isDownstreamTerm, Tokenizer.isTokenHash);
 
-        return this.score(query, prefix, match);
+        return this.score(query, prefix, alias.isDownstreamTerm, match);
     }
 
-    score(query: number[], prefix: number[], diff: DiffResults<number>) {
+    score(query: number[], prefix: number[], isDownstreamTerm: DownstreamTermPredicate<number>, diff: DiffResults<number>) {
         const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = diff;
 
         // Ratio of match length to match length + edit distance.
@@ -382,7 +386,8 @@ export class Tokenizer {
         // const commonTerms = this.commonTerms(query, prefix);
         // const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), match);
         // const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), prefix.slice(0, match.length));
-        const commonDownstreamWords = this.commonDownstreamWords(commonTerms);
+        const commonDownstreamWords = // this.commonDownstreamWords(commonTerms);
+            new Set([...commonTerms].filter(isDownstreamTerm));
 
         let score = matchFactor * commonFactor * positionFactor * lengthFactor;
         // if (nonDownstreamWordCount === 0) {
@@ -435,6 +440,12 @@ export class Tokenizer {
             this.logger.log(`      query="${query}"`);
             this.logger.log(`      prefix="${prefix}"`);
             this.logger.log(`      match="${match}"\n`);
+
+            if (prefixText === "four on the floor") {
+                console.log("four on the floor");
+                isDownstreamTerm(3162218338);
+                isDownstreamTerm(3162218338);
+            }
         }
         return { score, length: rightmostA + 1 };
     }
@@ -490,7 +501,7 @@ export class Tokenizer {
                         commonTerms
                     };
     
-                    const { score, length } = this.score(hashed, match, diff);
+                    const { score, length } = this.score(hashed, match, Tokenizer.isNeverDownstreamTerm, diff);
                     edges.push({ score, length, label: value.value, isNumber: true });
                     console.log(`NUMBER: value: ${value.value}, length: ${length}, score: ${score}`);
                 }

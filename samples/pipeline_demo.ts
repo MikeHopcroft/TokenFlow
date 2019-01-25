@@ -24,7 +24,8 @@ function pipelineDemo(query: string, debugMode = false) {
 }
 
 // pipelineDemo('i want a dice', true);
-pipelineDemo('i want a horn', true);
+pipelineDemo("I'll take the school bus", true);
+// pipelineDemo('i want a horn', true);
 
 // pipelineDemo('convertible with tinted windows and fuzzy dice', true);
 // pipelineDemo('can I get four four cars');

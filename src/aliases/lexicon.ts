@@ -81,7 +81,8 @@ export interface Alias {
 }
 
 export class Lexicon {
-    private domains: Array<IterableIterator<Alias>>;
+    // private domains: Array<IterableIterator<Alias>>;
+    private domains: Domain[];
     private termModel: TermModel;
 
     constructor() {
@@ -90,28 +91,33 @@ export class Lexicon {
     }
 
     addDomain(aliases: IterableIterator<Alias>) {
-        this.domains.push(aliases);
+        // this.domains.push(aliases);
+        this.domains.push(new Domain(aliases, this.termModel));
     }
 
     ingest(tokenizer: Tokenizer) {
-        const domains: Domain[] = [];
-        for (const aliases of this.domains) {
-            domains.push(new Domain(aliases, this.termModel));
-        }
+        // const domains: Domain[] = [];
+        // for (const aliases of this.domains) {
+        //     domains.push(new Domain(aliases, this.termModel));
+        // }
 
-        for (const domain of domains) {
-            domain.addDownstreamTerms(domains);
+        for (const domain of this.domains) {
+            domain.addDownstreamTerms(this.domains);
             domain.ingest(tokenizer);
         }
     }
 }
 
 class Domain {
+    private termModel: TermModel;
+
     private tokenizerAliases: TokenizerAlias[];
     private ownTerms: Set<number>;
     private downstreamTerms: Set<number>;
 
     constructor(aliases: IterableIterator<Alias>, termModel: TermModel) {
+        this.termModel = termModel;
+
         this.tokenizerAliases = [];
         this.ownTerms = new Set<number>();
         this.downstreamTerms = new Set<number>();
@@ -128,6 +134,10 @@ class Domain {
                 hashes,
                 isDownstreamTerm: this.isDownstreamTerm
             });
+
+            for (const hash of hashes) {
+                this.ownTerms.add(hash);
+            }
         }
     }
 
@@ -149,6 +159,8 @@ class Domain {
     }
 
     isDownstreamTerm = (hash: number) => {
-        return this.ownTerms.has(hash);
+        return this.termModel.isTokenHash(hash) ||
+            // this.termModel.isNumberHash(hash) ||
+            this.downstreamTerms.has(hash);
     }
 }

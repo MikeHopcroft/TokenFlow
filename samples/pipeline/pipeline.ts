@@ -93,6 +93,8 @@ export class Pipeline {
 
         this.intentRecognizer = CreateIntentRecognizer(
             intentsFile,
+
+            // TODO: BUGBUG: Next line makes the set {'@', 'Q', 'U', ...} instead of {'@QUANTITY'}. 
             new Set<string>('@QUANTITY'),
             stemmer,
             debugMode);
