@@ -80,10 +80,7 @@ export class Tokenizer {
     static minNumberHash = 1 * Tokenizer.lower32;
     static minTokenHash = 2 * Tokenizer.lower32;
 
-    static isNumberHash(hash: HASH) {
-        return hash >= Tokenizer.minNumberHash && hash < Tokenizer.minTokenHash;
-    }
-
+    // TODO: this method should be replaced by TermModel method.
     static isTokenHash(hash: HASH) {
         return hash >= Tokenizer.minTokenHash;
     }
@@ -236,41 +233,6 @@ export class Tokenizer {
     //
     ///////////////////////////////////////////////////////////////////////////
     
-    addItem(pid: PID, text: string, addTokensToDownstream: boolean): void {
-        // Add matcher and isDownstreamTerm predicates to each item
-        // before calling addItem2().
-        this.addItem2(
-            pid,
-            text,
-            addTokensToDownstream,
-            levenshtein,
-            this.isDownstreamTerm
-        );
-    }
-
-    addItem2(
-        pid: PID,
-        text: string,
-        addTokensToDownstream: boolean,
-        matcher: Matcher,
-        isDownstreamTerm: DownstreamTermPredicate<number>
-    ): void {
-        // Split input string into individual terms.
-        const terms = text.split(/\s+/);
-        const stemmed = terms.map(this.stemTermInternal);
-        const hashes = stemmed.map(this.hashTerm);
-        const token: PIDToken = { type: PIDTOKEN, pid };
-        this.addItem3({
-            token,
-            text,
-            terms,
-            stemmed,
-            hashes,
-            matcher,
-            isDownstreamTerm
-        }, addTokensToDownstream);
-    }
-
     addItem3(alias: TokenizerAlias, addTokensToDownstream: boolean) {
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
@@ -340,26 +302,6 @@ export class Tokenizer {
 
     commonDownstreamWords(commonTerms: Set<HASH>) {
         return new Set([...commonTerms].filter(x => this.hashedDownstreamWordsSet.has(x)));
-    }
-
-    isDownstreamTerm = (hash: HASH) => {
-        return Tokenizer.isNumberHash(hash) || this.hashedDownstreamWordsSet.has(hash);
-    }
-
-    exactMatchScore(query: number[], prefix: number[]) {
-        let index = 0;
-
-        if (prefix.length <= query.length) {
-            for (index = 0; index < prefix.length; ++index) {
-                if (query[index] !== prefix[index]) {
-                    return { score: 0, length: 0 };
-                }
-            }
-            return { score: prefix.length, length: prefix.length };
-        }
-        else {
-            return { score: 0, length: 0 };
-        }
     }
 
     // Arrow function to allow use in map.

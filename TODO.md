@@ -1,8 +1,23 @@
 
+* Stemmer needs special handling for numbers
+* isDownstreamTerm function needs to handle number tokens
+* Move lexicon.ts to src/tokenizer
+* `Tokenizer.matchAndScore` should get `isTokenHash` from termModel.
 * Remove `Tokenizer` members
     * ~~`Tokenizer.matcher`~~
     * `Tokenizer.downstreamWords`
     * `Tokenizer.hashedDownstreamWordSet`
+    * `isNumberHash`
+    * `isTokenHash`
+    * `stemAndHash`
+    * `addHashedDownstreamTerm`
+    * `stemTermInternal`
+    * `hashTerm`
+    * `decodeTerm`
+    * `addItem2`, `addItem`
+    * `PID`, `pidToName`
+    * `aliasFromEdge`
+    * `processQuery`
 * Remove `Tokenizer.constructor()` parameters
     * `downstreamWords`
     * ~~`relaxedMatching`~~ parameter.

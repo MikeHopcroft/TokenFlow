@@ -187,7 +187,7 @@ function go() {
         path.join(__dirname, './data/intents.yaml'),
         path.join(__dirname, './data/attributes.yaml'),
         path.join(__dirname, './data/quantifiers.yaml'),
-        true);
+        false);
 
         unified.processOneQuery('I would like twenty silver two door convertibles with no tinted windows and extra fuzzy dice and four studded tires');
 

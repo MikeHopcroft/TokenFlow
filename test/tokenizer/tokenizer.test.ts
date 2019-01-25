@@ -133,19 +133,4 @@ describe('Tokenizer', () => {
             assert.equal(observed, expected);
         });
     });
-
-    describe('#exactMathScore', () => {
-        it('should return the length of the common prefix', () => {
-            const downstreamWords = new Set([]);
-            const tokenizer = new Tokenizer(downstreamWords, undefined, false);
-
-            assert.deepEqual({score: 2, length: 2}, tokenizer.exactMatchScore([1, 2, 3, 4, 5], [1, 2]));
-            assert.deepEqual({score: 0, length: 0}, tokenizer.exactMatchScore([1, 2, 3, 4, 5], [1, 2, 4]));
-            assert.deepEqual({score: 0, length: 0}, tokenizer.exactMatchScore([1, 2, 3, 4, 5], [2]));
-            assert.deepEqual({score: 0, length: 0}, tokenizer.exactMatchScore([1, 2, 3, 4, 5], []));
-            assert.deepEqual({score: 0, length: 0}, tokenizer.exactMatchScore([1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6, 7]));
-            assert.deepEqual({score: 0, length: 0}, tokenizer.exactMatchScore([], [1, 2, 3, 4, 5, 6, 7]));
-        });
-    });
-
 });
