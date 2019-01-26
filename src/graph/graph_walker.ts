@@ -21,6 +21,7 @@ export class GraphWalker {
     right: Edge[];
 
     // Index of vertex at end of this.left.
+    // TODO: BUGBUG: INVESTIGATE. Why is this.left.length !== this.current?
     current: number;
 
     // Stack of checkpoint markers corresponding to edges in this.left.
@@ -143,5 +144,18 @@ export class GraphWalker {
         else {
             throw TypeError('GraphWalker.restore(): attempt to restore from first vertex.');   
         }
+    }
+
+    currentEdge(): Edge {
+        // Current edge is stored on vertex before `this.current`.
+        return this.left[this.left.length - 1];
+    }
+
+    currentEdgeScore(): number {
+        return this.currentEdge().score;
+    }
+
+    currentPathScore(): number {
+        return this.graph.score();
     }
 }

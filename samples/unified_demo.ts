@@ -178,12 +178,6 @@ export class Unified implements Recognizer {
         for (const edge of path) {
             const token = this.tokenizer.tokenFromEdge(edge);
             console.log(`    ${tokenToString(token)}`);
-            // if (token) {
-            //     console.log(`    ${tokenToString(token)}`);
-            // }
-            // else {
-            //     console.log('    UNKNOWN');
-            // }
         }
     }
 

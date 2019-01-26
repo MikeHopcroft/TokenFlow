@@ -93,4 +93,8 @@ export class DynamicGraph implements Graph {
 
         return forwardPath;
     }
+
+    score(): number {
+        return this.vertices[this.vertices.length - 1].score;
+    }
 }

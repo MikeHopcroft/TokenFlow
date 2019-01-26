@@ -165,7 +165,7 @@ export class TestCase {
                 const text = tokenToString(token);
 
                 if (text === term) {
-                    console.log(`  ${text} ok`);
+                    console.log(`  ${text} - score: ${walker.currentEdgeScore()} ok`);
                     succeeded = true;
                     // TODO: NOTE: everything in observed will always match the prefix of terms.
                     // Do we still need observed?
@@ -173,7 +173,7 @@ export class TestCase {
                     break;
                 }
 
-                console.log(`  ${text} no match <<<<<<<<<<<<<<<<<<<<`);
+                console.log(`  ${text} - score: ${walker.currentEdgeScore()} no match <<<<<<<<<<<<<<<<<<<<`);
                 walker.retreat(false);
                 walker.discard();
 

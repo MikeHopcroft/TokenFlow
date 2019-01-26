@@ -23,5 +23,8 @@ export interface Graph {
     // Returns the index of the last vertex in the graph.
     lastVertex(): number;
 
+    // Returns the score of the current best path through the graph.
+    score(): number;
+
     // TODO: consider adding method to clear discarded property on all edges.
 }

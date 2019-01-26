@@ -26,6 +26,8 @@ export class StaticGraph implements Graph {
     right: Edge[] = [];
     current = 0;
 
+    currentScore = -Infinity;
+
     constructor(edgeLists: Edge[][]) {
         // TODO: Reevaluate the design choice of the -1 sentinel.
         // Perhaps use `undefined`?
@@ -107,7 +109,9 @@ export class StaticGraph implements Graph {
         let index;
         for (index = 0; index < this.paths.length; ++index) {
             if (StaticGraph.startsWith(this.paths[index].edges, prefix) &&
-                StaticGraph.validPath(this.paths[index].edges)) {
+                StaticGraph.validPath(this.paths[index].edges))
+            {
+                this.currentScore = this.paths[index].score;    
                 return this.paths[index].edges.slice(prefix.length);
             }
         }
@@ -134,5 +138,10 @@ export class StaticGraph implements Graph {
             }
         }
         return true;
-    }    
+    }
+
+
+    score(): number {
+        return this.currentScore;
+    }
 }
