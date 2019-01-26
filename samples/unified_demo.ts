@@ -2,9 +2,11 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { Edge } from '../src/graph';
 import { levenshtein } from '../src/matchers';
-import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Token, Tokenizer } from '../src/tokenizer';
+import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Recognizer, Token, Tokenizer, WordToken, WORD } from '../src/tokenizer';
 import { Lexicon } from '../src';
+import { RelevanceSuite } from '../src/relevance_suite';
 
 export const ATTRIBUTE2: unique symbol = Symbol('ATTRIBUTE2');
 export type ATTRIBUTE2 = typeof ATTRIBUTE2;
@@ -65,7 +67,8 @@ export function tokenToString(t: Token) {
             name = `[ENTITY:${entity},${token.pid}]`;
             break;
         case INTENT2:
-            name = `[INTENT:${token.name}]`;
+            // name = `[INTENT:${token.name}]`;
+            name = `[${token.name}]`;
             break;
         case QUANTIFIER2:
             name = `[QUANTIFIER:${token.value}]`;
@@ -74,7 +77,7 @@ export function tokenToString(t: Token) {
         //     name = `[WORD:${token.text}]`;
         //     break;
         case NUMBERTOKEN:
-            name = `[NUMBER: ${token.value}]`; 
+            name = `[NUMBER:${token.value}]`; 
             break;
         default:
             {
@@ -103,7 +106,8 @@ function* aliasesFromYamlString(yamlText: string, factory: TokenFactory2) {
     }
 }
 
-export class Unified {
+export class Unified implements Recognizer {
+    lexicon: Lexicon;
     tokenizer: Tokenizer;
 
     constructor(
@@ -114,7 +118,7 @@ export class Unified {
         debugMode = false
     ) {
         this.tokenizer = new Tokenizer(new Set<string>(), undefined, debugMode);
-        const lexicon = new Lexicon();
+        this.lexicon = new Lexicon();
 
         // Attributes
         const attributes = aliasesFromYamlString(
@@ -124,7 +128,7 @@ export class Unified {
                 pid: item.pid,
                 name: item.name
             }));
-        lexicon.addDomain(attributes);
+        this.lexicon.addDomain(attributes);
 
         // Entities
         const entities = aliasesFromYamlString(
@@ -134,7 +138,7 @@ export class Unified {
                 pid: item.pid,
                 name: item.name
             }));
-        lexicon.addDomain(entities);
+        this.lexicon.addDomain(entities);
 
         // Quantifiers
         const quantifiers = aliasesFromYamlString(
@@ -143,7 +147,7 @@ export class Unified {
                 type: QUANTIFIER2,
                 value: item.pid
             }));
-        lexicon.addDomain(quantifiers);
+        this.lexicon.addDomain(quantifiers);
 
         // Intents
         const intents = aliasesFromYamlString(
@@ -153,15 +157,18 @@ export class Unified {
                 pid: item.pid,
                 name: item.name
             }));
-        lexicon.addDomain(intents);
+        this.lexicon.addDomain(intents);
         
-        lexicon.ingest(this.tokenizer);
+        this.lexicon.ingest(this.tokenizer);
     }
 
     processOneQuery(query: string) {
         const terms = query.split(/\s+/);
+        const stemmed = terms.map(this.lexicon.termModel.stem);
+        const hashed = stemmed.map(this.lexicon.termModel.hashTerm);
+
         // TODO: terms should be stemmed and hashed by TermModel in Lexicon.
-        const graph = this.tokenizer.generateGraph(terms);
+        const graph = this.tokenizer.generateGraph(hashed, stemmed);
         const path = graph.findPath([], 0);
 
         for (const edge of path) {
@@ -173,6 +180,61 @@ export class Unified {
                 console.log('    UNKNOWN');
             }
         }
+    }
+
+    //
+    // Recognizer methods
+    //
+    apply(tokens: Token[]): Token[]
+    {
+        const terms = tokens.map( token => {
+            if (token.type === WORD) {
+                // TODO: Would be nice not to type assert WordToken here.
+                // Need to do it because there could be multiple Token2 with
+                // type equal to WORD.
+                return (token as WordToken).text;
+            }
+            else {
+                // Generate name for token from its symbol.
+                // TODO: document that names cannot contain spaces, special chars, etc.
+                // Parens, square brackets, commas.
+                const symbol = token.type.toString();
+                return `@${symbol.slice(7, symbol.length - 1)}`;
+            }
+        });
+        const stemmed = terms.map(this.lexicon.termModel.stem);
+        const hashed = stemmed.map(this.lexicon.termModel.hashTerm);
+
+        // TODO: terms should be stemmed and hashed by TermModel in Lexicon.
+        const graph = this.tokenizer.generateGraph(hashed, stemmed);
+        const path = graph.findPath([], 0);
+
+        return this.tokenizeMatches(tokens, path);
+    }
+
+    tokenizeMatches = (tokens: Token[], path: Edge[]) => {
+        let termIndex = 0;
+        const output: Token[] = [];
+        for (const edge of path) {
+            const token = this.tokenizer.tokenFromEdge(edge);
+            if (token) {
+                output.push(token);
+                termIndex += edge.length;
+            }
+            else {
+                output.push(tokens[termIndex++]);
+            }
+        }
+        return output;
+    }
+
+    stemmer(term: string): string
+    {
+        throw TypeError('No implemented.');
+    }
+
+    terms(): Set<string> {
+        throw TypeError('No implemented.');
     }
 }
 
@@ -198,4 +260,24 @@ function go() {
         // unified.processOneQuery('twenty three');
 }
 
-go();
+function go2() {
+    const showPassedCases = false;
+    const testFile = path.join(__dirname, './data/cars/tests2.yaml');
+
+    Debug.enable('tf-interactive,tf:*');
+
+    const unified = new Unified(
+        path.join(__dirname, './data/cars/catalog.yaml'),
+        path.join(__dirname, './data/intents.yaml'),
+        path.join(__dirname, './data/attributes.yaml'),
+        path.join(__dirname, './data/quantifiers.yaml'),
+        false);
+
+    // Blank line to separate console spew from pipeline constructor.
+    console.log();
+
+    const suite = RelevanceSuite.fromYamlString(fs.readFileSync(testFile, 'utf8'));
+    return suite.run(unified, tokenToString, showPassedCases);
+}
+
+go2();

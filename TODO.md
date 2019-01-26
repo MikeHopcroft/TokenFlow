@@ -1,8 +1,13 @@
 
+* New Relevance Test
+    * Some means to parse expected tokens from test.yaml.
+        * Perhaps just break expected text on spaces? 
+    * Some means to express alternate results.
+    * Bqcktracking comparison algorithm.
 * Downstream terms
     * Tokenizer no longer gets/manages downstream terms
     * Lexicon provides term hash iterator (or set?)
-    * Regognizers provide term hash iterator (more likely set?)
+    * Recognizers provide term hash iterator (more likely set?)
     * Alternately, could one build a pipeline on top of a Lexicon of domains?
 * Stemmer needs special handling for numbers
 * isDownstreamTerm function needs to handle number tokens

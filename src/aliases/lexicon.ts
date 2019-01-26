@@ -83,7 +83,7 @@ export interface Alias {
 export class Lexicon {
     // private domains: Array<IterableIterator<Alias>>;
     private domains: Domain[];
-    private termModel: TermModel;
+    termModel: TermModel;
 
     constructor() {
         this.domains = [];

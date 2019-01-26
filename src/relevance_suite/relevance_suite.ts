@@ -1,5 +1,6 @@
 import * as yaml from 'js-yaml';
-import { Recognizer, Token, WORD } from '../tokenizer';
+import { Lexicon } from '../aliases';
+import { Recognizer, Token, WORD, Tokenizer } from '../tokenizer';
 import { copyScalar } from '../utilities';
 
 export type TokenToString = (token: Token) => string;
@@ -131,7 +132,7 @@ export class TestCase {
         this.expected = expected;
     }
 
-    run(recognizer: Recognizer, tokenToString: TokenToString) {
+    run(recognizer: Recognizer, tokenToString: TokenToString): Result {
         const input = this.input.split(/\s+/).map( term => ({ type: WORD, text: term }));
 
         const tokens = recognizer.apply(input);
@@ -141,6 +142,24 @@ export class TestCase {
         const passed = (this.expected === observed);
 
         return new Result(this, observed, passed);
+    }
+
+    run2(lexicon: Lexicon, tokenizer: Tokenizer, tokenToString: TokenToString): Result {
+        const terms = this.input.split(/\s+/);
+        const stemmed = terms.map(lexicon.termModel.stem);
+        const hashed = stemmed.map(lexicon.termModel.hashTerm);
+        const graph = tokenizer.generateGraph(hashed, stemmed);
+
+        // TODO: Implement graph walk.
+        throw TypeError('Not implemented');
+
+        // const tokens = recognizer.apply(input);
+
+        // const observed = tokens.map(tokenToString).join(' ');
+
+        // const passed = (this.expected === observed);
+
+        // return new Result(this, observed, passed);
     }
 }
 
@@ -177,6 +196,18 @@ export class RelevanceSuite {
 
         this.tests.forEach((test) => {
             aggregator.recordResult(test.run(recognizer, tokenToString));
+        });
+
+        aggregator.print(showPassedCases);
+
+        return aggregator;
+    }
+
+    run2(lexicon: Lexicon, tokenizer: Tokenizer, tokenToString: TokenToString, showPassedCases = false): AggregatedResults {
+        const aggregator = new AggregatedResults();
+
+        this.tests.forEach((test) => {
+            aggregator.recordResult(test.run2(lexicon, tokenizer, tokenToString));
         });
 
         aggregator.print(showPassedCases);

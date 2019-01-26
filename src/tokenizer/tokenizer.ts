@@ -62,7 +62,7 @@ export class Tokenizer {
         this.debugMode = debugMode;
 
         // TODO: Uncomment following line one Pipeline is integrated with graph.
-        // this.numberParser = new NumberParser(this.stemAndHash);
+        this.numberParser = new NumberParser(this.stemAndHash);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -450,9 +450,10 @@ export class Tokenizer {
         return { score, length: rightmostA + 1 };
     }
 
-    generateGraph(terms: string[]): Graph {
-        const stemmed = terms.map(this.stemTermInternal);
-        const hashed = stemmed.map(this.hashTerm);
+    generateGraph(hashed: HASH[], stemmed: string[]): Graph {
+        // generateGraph(terms: string[]): Graph {
+        // const stemmed = terms.map(this.stemTermInternal);
+        // const hashed = stemmed.map(this.hashTerm);
 
         // const edgeLists: Array<Array<{ score: number, length: number }>> = [];
         const edgeLists: Edge[][] = [];
@@ -503,7 +504,7 @@ export class Tokenizer {
     
                     const { score, length } = this.score(hashed, match, Tokenizer.isNeverDownstreamTerm, diff);
                     edges.push({ score, length, label: value.value, isNumber: true });
-                    console.log(`NUMBER: value: ${value.value}, length: ${length}, score: ${score}`);
+                    // console.log(`NUMBER: value: ${value.value}, length: ${length}, score: ${score}`);
                 }
             }
 
@@ -522,7 +523,10 @@ export class Tokenizer {
     }
 
     processQuery(terms: string[]): Edge[] {
-        const graph = this.generateGraph(terms);
+        const stemmed = terms.map(this.stemTermInternal);
+        const hashed = stemmed.map(this.hashTerm);
+
+        const graph = this.generateGraph(hashed, stemmed);
         const path = graph.findPath([], 0);
 
         if (this.debugMode) {
