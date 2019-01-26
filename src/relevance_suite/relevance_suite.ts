@@ -1,5 +1,6 @@
 import * as yaml from 'js-yaml';
 import { Lexicon } from '../aliases';
+import { GraphWalker } from '../graph';
 import { Recognizer, Token, WORD, Tokenizer } from '../tokenizer';
 import { copyScalar } from '../utilities';
 
@@ -117,6 +118,7 @@ export class TestCase {
     suites: string[];
     input: string;
     expected: string;
+    expectedTokenText: string[];
 
     constructor(
         id: number,
@@ -130,36 +132,63 @@ export class TestCase {
         this.suites = suites;
         this.input = input;
         this.expected = expected;
+        this.expectedTokenText = expected.split(/\s+/);
     }
 
     run(recognizer: Recognizer, tokenToString: TokenToString): Result {
         const input = this.input.split(/\s+/).map( term => ({ type: WORD, text: term }));
-
         const tokens = recognizer.apply(input);
-
         const observed = tokens.map(tokenToString).join(' ');
-
         const passed = (this.expected === observed);
 
         return new Result(this, observed, passed);
     }
 
     run2(lexicon: Lexicon, tokenizer: Tokenizer, tokenToString: TokenToString): Result {
+        console.log('=========================');
         const terms = this.input.split(/\s+/);
         const stemmed = terms.map(lexicon.termModel.stem);
         const hashed = stemmed.map(lexicon.termModel.hashTerm);
         const graph = tokenizer.generateGraph(hashed, stemmed);
+        const walker = new GraphWalker(graph);
 
-        // TODO: Implement graph walk.
-        throw TypeError('Not implemented');
+        const observed: string[] = [];
+        let succeeded = false;
+        for (const term of this.expectedTokenText) {
+            console.log(`Check ${term}`);
+            succeeded = false;
+            while (walker.advance()) {
+                const edge = walker.left[walker.left.length - 1];
 
-        // const tokens = recognizer.apply(input);
+                // TODO: Really need an 'undefined'/'word' token.
+                const token = tokenizer.tokenFromEdge(edge);
+                const text = tokenToString(token);
 
-        // const observed = tokens.map(tokenToString).join(' ');
+                if (text === term) {
+                    console.log(`  ${text} ok`);
+                    succeeded = true;
+                    // TODO: NOTE: everything in observed will always match the prefix of terms.
+                    // Do we still need observed?
+                    observed.push(text);
+                    break;
+                }
 
-        // const passed = (this.expected === observed);
+                console.log(`  ${text} no match <<<<<<<<<<<<<<<<<<<<`);
+                walker.retreat(false);
+                walker.discard();
 
-        // return new Result(this, observed, passed);
+                // TODO: Need to either have a list of expected tokens,
+                // or need some way of formatting token before comparing
+                // with expected text. Formatting routine would have to
+                // be passed in.
+                // const text = 
+            }
+            if (!succeeded) {
+                break;
+            }
+        }
+        console.log(`${succeeded?"SUCCEEDED":"FAILED"}`);
+        return new Result(this, observed.join(' '), succeeded);
     }
 }
 

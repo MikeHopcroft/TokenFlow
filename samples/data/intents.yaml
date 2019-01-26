@@ -87,6 +87,7 @@ items:
       - (the,@QUANTITY) other
       - (one,@QUANTITY) of them
       # - one of them
+      - on the
 
   - pid: 100011
     name: CANCEL_ORDER

@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import { Edge } from '../src/graph';
 import { levenshtein } from '../src/matchers';
-import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Recognizer, Token, Tokenizer, WordToken, WORD } from '../src/tokenizer';
+import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Recognizer, Token, Tokenizer, WordToken, WORD, UnknownToken } from '../src/tokenizer';
 import { Lexicon } from '../src';
 import { RelevanceSuite } from '../src/relevance_suite';
 
@@ -50,7 +50,8 @@ type AnyToken =
     IntentToken2 |
     // MultipleAttributeToken |
     NumberToken |
-    QuantifierToken2
+    QuantifierToken2 |
+    UnknownToken
     // WordToken;
     ;
 
@@ -78,6 +79,9 @@ export function tokenToString(t: Token) {
         //     break;
         case NUMBERTOKEN:
             name = `[NUMBER:${token.value}]`; 
+            break;
+        case NUMBERTOKEN:
+            name = `[UNKNOWN]`; 
             break;
         default:
             {
@@ -173,12 +177,13 @@ export class Unified implements Recognizer {
 
         for (const edge of path) {
             const token = this.tokenizer.tokenFromEdge(edge);
-            if (token) {
-                console.log(`    ${tokenToString(token)}`);
-            }
-            else {
-                console.log('    UNKNOWN');
-            }
+            console.log(`    ${tokenToString(token)}`);
+            // if (token) {
+            //     console.log(`    ${tokenToString(token)}`);
+            // }
+            // else {
+            //     console.log('    UNKNOWN');
+            // }
         }
     }
 
@@ -277,7 +282,8 @@ function go2() {
     console.log();
 
     const suite = RelevanceSuite.fromYamlString(fs.readFileSync(testFile, 'utf8'));
-    return suite.run(unified, tokenToString, showPassedCases);
+    // return suite.run(unified, tokenToString, showPassedCases);
+    return suite.run2(unified.lexicon, unified.tokenizer, tokenToString, true);
 }
 
 go2();

@@ -4,7 +4,7 @@ import { v3 } from 'murmurhash';
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, levenshtein, Matcher, exactPrefixHash } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
-import { PIDToken, PIDTOKEN, Token, TokenFactory, NUMBERTOKEN, NumberToken} from './tokens';
+import { PIDToken, PIDTOKEN, Token, TokenFactory, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger, PeekableSequence } from '../utilities';
 
@@ -155,7 +155,7 @@ export class Tokenizer {
         return this.aliases[edge.label];
     }
 
-    tokenFromEdge = (edge: Edge): Token | undefined => {
+    tokenFromEdge = (edge: Edge): Token => {
         if (edge.isNumber) {
             return ({
                 type: NUMBERTOKEN,
@@ -163,7 +163,9 @@ export class Tokenizer {
             } as NumberToken);
         }
         else if (edge.label === -1) {
-            return undefined;
+            return {
+                type: UNKNOWNTOKEN
+            };
         }
         else {
             return this.aliases[edge.label].token;
