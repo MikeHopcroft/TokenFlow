@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import { Edge } from '../src/graph';
 import { levenshtein } from '../src/matchers';
-import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Recognizer, Token, Tokenizer, WordToken, WORD, UnknownToken } from '../src/tokenizer';
+import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Recognizer, Token, Tokenizer, WordToken, WORD, UnknownToken, UNKNOWNTOKEN } from '../src/tokenizer';
 import { Lexicon } from '../src';
 import { RelevanceSuite } from '../src/relevance_suite';
 
@@ -48,12 +48,10 @@ type AnyToken =
     AttributeToken2 |
     EntityToken2 |
     IntentToken2 |
-    // MultipleAttributeToken |
     NumberToken |
     QuantifierToken2 |
-    UnknownToken
-    // WordToken;
-    ;
+    UnknownToken |
+    WordToken;
 
 export function tokenToString(t: Token) {
     const token = t as AnyToken;
@@ -74,13 +72,13 @@ export function tokenToString(t: Token) {
         case QUANTIFIER2:
             name = `[QUANTIFIER:${token.value}]`;
             break;
-        // case WORD:
-        //     name = `[WORD:${token.text}]`;
-        //     break;
+        case WORD:
+            name = `[WORD:${token.text}]`;
+            break;
         case NUMBERTOKEN:
             name = `[NUMBER:${token.value}]`; 
             break;
-        case NUMBERTOKEN:
+        case UNKNOWNTOKEN:
             name = `[UNKNOWN]`; 
             break;
         default:

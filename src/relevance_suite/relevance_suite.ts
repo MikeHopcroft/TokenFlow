@@ -1,7 +1,7 @@
 import * as yaml from 'js-yaml';
 import { Lexicon } from '../aliases';
 import { GraphWalker } from '../graph';
-import { Recognizer, Token, WORD, Tokenizer } from '../tokenizer';
+import { Recognizer, Token, WORD, Tokenizer, UNKNOWNTOKEN, WordToken } from '../tokenizer';
 import { copyScalar } from '../utilities';
 
 export type TokenToString = (token: Token) => string;
@@ -152,6 +152,7 @@ export class TestCase {
         const graph = tokenizer.generateGraph(hashed, stemmed);
         const walker = new GraphWalker(graph);
 
+        let end = 0;
         const observed: string[] = [];
         let succeeded = false;
         for (const term of this.expectedTokenText) {
@@ -159,9 +160,17 @@ export class TestCase {
             succeeded = false;
             while (walker.advance()) {
                 const edge = walker.left[walker.left.length - 1];
+                end += edge.length;
 
                 // TODO: Really need an 'undefined'/'word' token.
-                const token = tokenizer.tokenFromEdge(edge);
+                let token = tokenizer.tokenFromEdge(edge);
+                if (token.type === UNKNOWNTOKEN) {
+                    const start = end - edge.length;
+                    token = ({
+                        type: WORD,
+                        text: terms.slice(start, end).join('_').toUpperCase()
+                    } as WordToken);
+                }
                 const text = tokenToString(token);
 
                 if (text === term) {
@@ -175,7 +184,9 @@ export class TestCase {
 
                 console.log(`  ${text} - score: ${walker.currentEdgeScore()} no match <<<<<<<<<<<<<<<<<<<<`);
                 walker.retreat(false);
+                // TODO: should we be looking at the return value of discard()?
                 walker.discard();
+                end -= edge.length;
 
                 // TODO: Need to either have a list of expected tokens,
                 // or need some way of formatting token before comparing

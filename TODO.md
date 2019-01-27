@@ -1,4 +1,10 @@
 
+* WordTokens
+    * Perhaps tokenizer should build default edges
+    * and default edges should contain the HASH value
+    * and TermModel or Lexicon should contqin the HASH to text mapping.
+    * Edge.isNumber might become Edge.type.
+    * ALTERNATIVE: text of edge is recovered later, perhaps by RelevanceSuite.
 * `GraphWalker`: `this.left.length !== this.current`
 * New Relevance Test
     * Some means to parse expected tokens from test.yaml.
