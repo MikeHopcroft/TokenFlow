@@ -56,15 +56,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch relevance_demo_cars",
-            "program": "${workspaceFolder}/build/samples/relevance_demo_cars.js",
-            "outputCapture": "std"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch pipeline_demo",
-            "program": "${workspaceFolder}/build/samples/pipeline_demo.js",
+            "name": "Launch relevance_demo",
+            "program": "${workspaceFolder}/build/samples/relevance_demo.js",
             "outputCapture": "std"
         },
         {

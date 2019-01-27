@@ -1,8 +1,8 @@
 import * as Debug from 'debug';
 import * as path from 'path';
-import { Pipeline, printTokens } from './pipeline';
 import * as readlineSync from 'readline-sync';
 import {speechToTextFilter} from './speech_to_text_filter';
+import { tokenToString, Unified } from './unified';
 
 export function repl(
     catlogFile: string,
@@ -19,7 +19,7 @@ export function repl(
     console.log('A blank line exits.');
     console.log();
 
-    const pipeline = new Pipeline(catlogFile, intentFile, attributesFile, quantifierFile);
+    const unified = new Unified(catlogFile, intentFile, attributesFile, quantifierFile);
     console.log();
 
     while (true) {
@@ -41,8 +41,8 @@ export function repl(
             console.log('********************************************************');
         }
 
-        const tokens = pipeline.processOneQuery(text);
-        printTokens(tokens);
+        const tokens = unified.processOneQuery(text);
+        console.log(tokens.map(tokenToString).join(' '));
 
         console.log();
     }

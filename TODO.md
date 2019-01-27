@@ -1,4 +1,9 @@
 
+* Pipeline teardown
+    * RESTORE: stemmer_confusion_matrix
+    * pipeline_demo, relevance_demo_cars, relevance_demo_helper
+    * samples/pipeline, samples/recognizers
+    * src/tokenizer/patternRecognizer, src/recognizers, 
 * Remove concept of token references (terms that start with `@`)
 * WordTokens
     * Perhaps tokenizer should build default edges

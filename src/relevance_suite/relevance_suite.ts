@@ -70,7 +70,6 @@ export class AggregatedResults {
             console.log();
         }
 
-
         this.results.forEach((result => {
             if (!result.passed || showPassedCases) {
                 const suites = result.test.suites.join(' ');
