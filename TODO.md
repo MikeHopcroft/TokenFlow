@@ -8,7 +8,7 @@
 * REMOVE Tokenizer.hashTerm(). Need to update unit tests.
 * MOVE tokenizer/item_collection.ts
 * MOVE tokenizer/alias_generator.ts
-* RESTORE: stemmer_confusion_matrix
+* RESTORE: stemmer_confusion_matrix and demo
 * REFACTOR Tokenizer.decodeTerm(). Used for debugging. Should move to TermModel.
 
 * Pipeline teardown

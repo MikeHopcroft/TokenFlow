@@ -1,4 +1,4 @@
-import { generateAliases, Item, PID, StemmerFunction } from '..';
+import { generateAliases, Item, PID } from '..';
 import { Logger } from '../utilities';
 
 export type PIDAllocator = () => PID;
@@ -14,7 +14,6 @@ export type PIDAllocator = () => PID;
 //
 export function categoryBuilder<ITEM extends Item>(
     items: Map<PID, ITEM>,
-    stemmer: StemmerFunction,
     pidAllocator: PIDAllocator
 ) {
     const logger = new Logger('tf:categoryBuilder');

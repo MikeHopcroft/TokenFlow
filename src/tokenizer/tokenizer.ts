@@ -1,5 +1,3 @@
-import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
-
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
@@ -7,8 +5,6 @@ import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
 import { TermModel } from './term-model';
 import { HASH, ID } from './types';
 import { Logger, PeekableSequence } from '../utilities';
-
-export type StemmerFunction = (term: string) => string;
 
 export interface TokenizerAlias {
     token: Token;
@@ -24,21 +20,22 @@ export class Tokenizer {
     debugMode = true;
     logger: Logger;
 
-    static snowballStemmer = newStemmer('english');
-
     termModel: TermModel;
+    numberParser: NumberParser | null = null;
 
-    // Information about each alias.
+    // NOTE: aliases is public for access by unit tests.
+    // TODO: perhaps this should be protected instead? Then unit test
+    // could derive subclass which can provide access.
     aliases: TokenizerAlias[] = [];
 
-    hashToText: { [hash: number]: string } = {};
+    private hashToText: { [hash: number]: string } = {};
+
+    // NOTE: hashToFrequency is public for access by unit tests.
     hashToFrequency: { [hash: number]: number } = {};
 
+    // NOTE: postings is public for access by unit tests.
     postings: { [hash: number]: ID[] } = {};
 
-    hashedDownstreamWordsSet = new Set<HASH>();
-
-    numberParser: NumberParser | null = null;
 
     constructor(
         termModel: TermModel,
@@ -93,7 +90,7 @@ export class Tokenizer {
     //
     ///////////////////////////////////////////////////////////////////////////
     
-    addItem3(alias: TokenizerAlias) {
+    addItem(alias: TokenizerAlias) {
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
         // share a pid, but have different ids.
@@ -284,11 +281,6 @@ export class Tokenizer {
     }
 
     generateGraph(hashed: HASH[], stemmed: string[]): Graph {
-        // generateGraph(terms: string[]): Graph {
-        // const stemmed = terms.map(this.stemTermInternal);
-        // const hashed = stemmed.map(this.hashTerm);
-
-        // const edgeLists: Array<Array<{ score: number, length: number }>> = [];
         const edgeLists: Edge[][] = [];
 
         for (const [index, hash] of hashed.entries()) {

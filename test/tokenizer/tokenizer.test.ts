@@ -56,7 +56,7 @@ describe('Tokenizer', () => {
 
             items.forEach((item, index) => {
                 const [pid, text] = item;
-                tokenizer.addItem3(tokenizerAlias(pid, text));
+                tokenizer.addItem(tokenizerAlias(pid, text));
 
                 assert.equal(tokenizer.aliases.length, index + 1);
                 assert.equal(tokenizer.aliases[index].text, text);

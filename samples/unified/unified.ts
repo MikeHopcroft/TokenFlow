@@ -1,7 +1,5 @@
-import * as Debug from 'debug';
 import * as fs from 'fs';
 
-import { Edge } from '../../src/graph';
 import { levenshtein } from '../../src/matchers';
 import {
     generateAliases,
@@ -11,7 +9,6 @@ import {
     NumberToken,
     NUMBERTOKEN,
     PID,
-    Recognizer,
     Token,
     Tokenizer,
     WordToken,

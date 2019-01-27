@@ -1,6 +1,6 @@
 import * as yaml from 'js-yaml';
 import { GraphWalker } from '../graph';
-import { Lexicon, Recognizer, Token, WORD, Tokenizer, UNKNOWNTOKEN, WordToken } from '../tokenizer';
+import { Lexicon, Token, WORD, Tokenizer, UNKNOWNTOKEN, WordToken } from '../tokenizer';
 import { copyScalar } from '../utilities';
 
 export type TokenToString = (token: Token) => string;
@@ -133,15 +133,6 @@ export class TestCase {
         this.expectedTokenText = expected.split(/\s+/);
     }
 
-    run(recognizer: Recognizer, tokenToString: TokenToString): Result {
-        const input = this.input.split(/\s+/).map( term => ({ type: WORD, text: term }));
-        const tokens = recognizer.apply(input);
-        const observed = tokens.map(tokenToString).join(' ');
-        const passed = (this.expected === observed);
-
-        return new Result(this, observed, passed);
-    }
-
     run2(lexicon: Lexicon, tokenizer: Tokenizer, tokenToString: TokenToString): Result {
         console.log('=========================');
         const terms = this.input.split(/\s+/);
@@ -227,18 +218,6 @@ export class RelevanceSuite {
 
     constructor(tests: TestCase[]) {
         this.tests = tests;
-    }
-
-    run(recognizer: Recognizer, tokenToString: TokenToString, showPassedCases = false) {
-        const aggregator = new AggregatedResults();
-
-        this.tests.forEach((test) => {
-            aggregator.recordResult(test.run(recognizer, tokenToString));
-        });
-
-        aggregator.print(showPassedCases);
-
-        return aggregator;
     }
 
     run2(lexicon: Lexicon, tokenizer: Tokenizer, tokenToString: TokenToString, showPassedCases = false): AggregatedResults {

@@ -74,7 +74,7 @@ class Domain {
 
     ingest(tokenizer: Tokenizer) {
         for (const alias of this.tokenizerAliases) {
-            tokenizer.addItem3(alias);
+            tokenizer.addItem(alias);
         }
     }
 
