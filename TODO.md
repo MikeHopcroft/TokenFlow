@@ -1,6 +1,12 @@
 
+* Remove Tokenizer downstream words concept.
+* REMOVE Tokenizer.hashTerm(). Need to update unit tests.
+* MOVE tokenizer/item_collection.ts
+* MOVE tokenizer/alias_generator.ts
+* RESTORE: stemmer_confusion_matrix
+* REFACTOR Tokenizer.decodeTerm(). Used for debugging. Should move to TermModel.
+
 * Pipeline teardown
-    * RESTORE: stemmer_confusion_matrix
     * pipeline_demo, relevance_demo_cars, relevance_demo_helper
     * samples/pipeline, samples/recognizers
     * src/tokenizer/patternRecognizer, src/recognizers, 

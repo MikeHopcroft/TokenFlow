@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import 'mocha';
 
-import { DefaultTermModel, Lexicon, PID, Tokenizer, PIDToken, PIDTOKEN, TokenizerAlias } from '../../src/tokenizer';
+import { DefaultTermModel, Lexicon, Token, Tokenizer, TokenizerAlias } from '../../src/tokenizer';
 import { levenshtein } from '../../src';
 
 function* aliasGenerator(items: string[]) {
@@ -15,6 +15,15 @@ function* aliasGenerator(items: string[]) {
 }
 
 const termModel = new DefaultTermModel();
+
+type PID = number;
+const PIDTOKEN: unique symbol = Symbol('PIDTOKEN');
+type PIDTOKEN = typeof PIDTOKEN;
+
+interface PIDToken extends Token {
+    type: PIDTOKEN;
+    pid: PID;
+}
 
 function tokenizerAlias(pid: PID, text: string): TokenizerAlias
 {

@@ -4,7 +4,7 @@ import { v3 } from 'murmurhash';
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
-import { PIDToken, Token, TokenFactory, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
+import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger, PeekableSequence } from '../utilities';
 
@@ -145,16 +145,6 @@ export class Tokenizer {
         }
     }
 
-    decodeEdge = (edge: Edge) => {
-        const alias = this.aliases[edge.label];
-        const text = (alias)?alias.text:'unknown';
-        return `Edge("${text}", score=${edge.score}, length=${edge.length})`;
-    }
-
-    aliasFromEdge = (edge: Edge): TokenizerAlias | undefined => {
-        return this.aliases[edge.label];
-    }
-
     tokenFromEdge = (edge: Edge): Token => {
         if (edge.isNumber) {
             return ({
@@ -171,67 +161,6 @@ export class Tokenizer {
             return this.aliases[edge.label].token;
         }
     }
-
-    pidToName = (pid: PID) => {
-        return `ITEM_${pid}`;
-    }
-
-    markMatches = (terms: string[], path: Edge[]) => {
-        let termIndex = 0;
-        const rewritten: string[] = [];
-        path.forEach((edge) => {
-            if (edge.label < 0) {
-                rewritten.push(terms[termIndex++]);
-            }
-            // TODO: EXPERIMENT 1: filter out downstream words.
-            else {
-                const text = `[${terms.slice(termIndex, termIndex + edge.length).join(" ")}]`;
-                rewritten.push(text);
-                termIndex += edge.length;
-            }
-        });
-        return rewritten.join(' ');
-    }
-
-    replaceMatches = (terms: string[], path: Edge[], pidToName: ((pid: PID) => string)) => {
-        let termIndex = 0;
-        const rewritten: string[] = [];
-        path.forEach((edge) => {
-            if (edge.label < 0) {
-                rewritten.push(terms[termIndex++]);
-            }
-            // TODO: EXPERIMENT 1: filter out downstream words.
-            else {
-                // TODO: Where does toUpperCase and replacing spaces with underscores go?
-                const pidToken = this.aliases[edge.label].token as PIDToken;
-                const name = pidToName(pidToken.pid);
-                const text = `[${name}]`;
-                rewritten.push(text);
-                termIndex += edge.length;
-            }
-        });
-        return rewritten.join(' ');
-    }
-
-    tokenizeMatches = (tokens: Token[], path: Edge[], tokenFactory: TokenFactory) => {
-        let termIndex = 0;
-        const output: Token[] = [];
-        for (const edge of path) {
-            if (edge.label < 0) {
-                output.push(tokens[termIndex++]);
-            }
-            else {
-                const children = tokens.slice(termIndex, termIndex + edge.length);
-                const pidToken = this.aliases[edge.label].token as PIDToken;
-                output.push(tokenFactory(pidToken.pid, children));
-                termIndex += edge.length;
-            }
-        }
-        return output;
-    }
-
-    // TODO: printFrequencies()
-    // TODO: printHashedItems()
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -291,12 +220,6 @@ export class Tokenizer {
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Indexing all tuples of a phrase.
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
     // Full-text matching and scoring algorithm follows.
     //
     ///////////////////////////////////////////////////////////////////////////
@@ -305,10 +228,6 @@ export class Tokenizer {
         const b = new Set(prefix);
         return new Set([...a].filter(x => b.has(x)));
     }
-
-    // commonDownstreamWords(commonTerms: Set<HASH>) {
-    //     return new Set([...commonTerms].filter(x => this.hashedDownstreamWordsSet.has(x)));
-    // }
 
     // Arrow function to allow use in map.
     matchAndScore = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
@@ -522,28 +441,5 @@ export class Tokenizer {
 
         const graph = new DynamicGraph(edgeLists);
         return graph;
-    }
-
-    processQuery(terms: string[]): Edge[] {
-        const stemmed = terms.map(this.stemTermInternal);
-        const hashed = stemmed.map(this.hashTerm);
-
-        const graph = this.generateGraph(hashed, stemmed);
-        const path = graph.findPath([], 0);
-
-        if (this.debugMode) {
-            this.logger.log('edge list:');
-            for (const edges of graph.edgeLists) {
-                const text = edges.map(this.decodeEdge).join(',');
-                // const text = edges.map((edge) => `Edge(s=${edge.score}, l=${edge.length})`).join(', ');
-                this.logger.log(`    [${text}]`);
-            }
-            this.logger.log('best path:');
-            for (const edge of path) {
-                this.logger.log(`    ${this.decodeEdge(edge)}`);
-            }
-        }
-
-        return path;
     }
 }
