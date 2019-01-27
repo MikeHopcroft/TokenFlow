@@ -1,5 +1,10 @@
 
+* decodeTerm should be in ... Lexicon?
+* isNeverDownstreamTerm
+* TermModel unit tests
+* UNIFY HASH and Hash
 * Remove Tokenizer downstream words concept.
+* Remove Tokenizer stemAndHash concept.
 * REMOVE Tokenizer.hashTerm(). Need to update unit tests.
 * MOVE tokenizer/item_collection.ts
 * MOVE tokenizer/alias_generator.ts

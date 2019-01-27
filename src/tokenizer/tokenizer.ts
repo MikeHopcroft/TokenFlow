@@ -1,11 +1,11 @@
 import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
-import { v3 } from 'murmurhash';
 
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
 import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
-import { HASH, ID, PID } from './types';
+import { TermModel } from './term-model';
+import { HASH, ID } from './types';
 import { Logger, PeekableSequence } from '../utilities';
 
 export type StemmerFunction = (term: string) => string;
@@ -26,11 +26,7 @@ export class Tokenizer {
 
     static snowballStemmer = newStemmer('english');
 
-    // Function that stems a term.
-    stemTerm: StemmerFunction;
-
-    // Murmurhash seed.
-    seed = 0;
+    termModel: TermModel;
 
     // Information about each alias.
     aliases: TokenizerAlias[] = [];
@@ -40,29 +36,19 @@ export class Tokenizer {
 
     postings: { [hash: number]: ID[] } = {};
 
-    downstreamWords: Set<string> = new Set<string>();
-
     hashedDownstreamWordsSet = new Set<HASH>();
 
     numberParser: NumberParser | null = null;
 
     constructor(
-        downstreamWords: Set<string>,
-        stemmer: StemmerFunction = Tokenizer.defaultStemTerm,
+        termModel: TermModel,
         debugMode: boolean
     ) {
         this.logger = new Logger('tf:tokenizer');
-
-        this.downstreamWords = new Set(downstreamWords);
-        this.stemTerm = stemmer;
-        for (const term of downstreamWords) {
-            this.addHashedDownstreamTerm(term);
-        }
-
+        this.termModel = termModel;
         this.debugMode = debugMode;
 
-        // TODO: Uncomment following line one Pipeline is integrated with graph.
-        this.numberParser = new NumberParser(this.stemAndHash);
+        this.numberParser = new NumberParser(this.termModel.stemAndHash);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -70,69 +56,8 @@ export class Tokenizer {
     // Utility functions
     //
     ///////////////////////////////////////////////////////////////////////////
-
-    // Arrow function to allow use in map.
-    static defaultStemTerm = (term: string): string => {
-        return Tokenizer.snowballStemmer.stem(term);
-    }
-
-    static lower32 = Math.pow(2, 32);
-    static minNumberHash = 1 * Tokenizer.lower32;
-    static minTokenHash = 2 * Tokenizer.lower32;
-
-    // TODO: this method should be replaced by TermModel method.
-    static isTokenHash(hash: HASH) {
-        return hash >= Tokenizer.minTokenHash;
-    }
-
     private static isNeverDownstreamTerm(hash: number) {
         return false;
-    }
-
-    stemAndHash = (term: string): number => {
-        return this.hashTerm(this.stemTermInternal(term));
-    }
-
-    addHashedDownstreamTerm(term: string) {
-        const hash = this.hashTerm(this.stemTermInternal(term));
-        this.hashedDownstreamWordsSet.add(hash);
-    }
-
-    stemTermInternal = (term: string): string => {
-        if (term.startsWith('@')) {
-            // This term is a token reference. Do not lowercase or stem.
-            return term;
-        }
-        else {
-            // This is a regular term. Lowercase then stem.
-            return this.stemTerm(term.toLowerCase());
-        }
-    }
-
-    // Arrow function to allow use in map.
-    hashTerm = (term: string): number => {
-        // DESIGN NOTE: murmurhash returns 32-bit hashes.
-        // Encode natural numbers x as x + (1 * 2^32).
-        // Encode tokens as hash(token) + (2 * 2^32)
-        // This allows a simple test to determine whether a hash
-        // is the hash of a number, the hash of a token, or the
-        // hash of a term.
-        if (term.startsWith('@')) {
-            // This is a token reference. Hash, then set high order DWORD to 2.
-            return v3(term, this.seed) + Tokenizer.minTokenHash;
-        }
-        else if (/^\d+$/.test(term)) {
-            // This is a number. Hash is just number with high order DWORD = 1.
-            return Number(term) + Tokenizer.minNumberHash;
-        }
-        else {
-            // This is a regular term. Just hash to produce a non-negative 32-bit value.
-            const hash = v3(term, this.seed);
-            if (hash >= Tokenizer.minNumberHash) {
-                throw TypeError(`hashTerm: murmurhash returned value greater than ${Tokenizer.minNumberHash - 1}`);
-            }
-            return hash;
-        }
     }
 
     // Arrow function to allow use in map.
@@ -168,7 +93,7 @@ export class Tokenizer {
     //
     ///////////////////////////////////////////////////////////////////////////
     
-    addItem3(alias: TokenizerAlias, addTokensToDownstream: boolean) {
+    addItem3(alias: TokenizerAlias) {
         // Internal id for this item. NOTE that the internal id is different
         // from the pid. The items "manual transmission" and "four on the floor"
         // share a pid, but have different ids.
@@ -202,19 +127,6 @@ export class Tokenizer {
                 this.postings[hash] = [id];
             }
         }
-
-        // TODO: Can tokens be detected by their hashes, rather than searching
-        // for special characters in the raw text?
-        if (addTokensToDownstream) {
-            for (const term of alias.terms) {
-                if (term.startsWith('@')) {
-                    this.downstreamWords.add(term);
-                    this.addHashedDownstreamTerm(term);
-                }
-            }
-        }
-
-        // TODO: Add tuples.
     }
 
 
@@ -232,7 +144,7 @@ export class Tokenizer {
     // Arrow function to allow use in map.
     matchAndScore = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
         const prefix = alias.hashes;
-        const match = alias.matcher(query, prefix, alias.isDownstreamTerm, Tokenizer.isTokenHash);
+        const match = alias.matcher(query, prefix, alias.isDownstreamTerm, this.termModel.isTokenHash);
 
         return this.score(query, prefix, alias.isDownstreamTerm, match);
     }

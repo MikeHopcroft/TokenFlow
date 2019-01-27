@@ -131,8 +131,8 @@ export class Unified {
         quantifiersFile: string,
         debugMode = false
     ) {
-        this.tokenizer = new Tokenizer(new Set<string>(), undefined, debugMode);
         this.lexicon = new Lexicon();
+        this.tokenizer = new Tokenizer(this.lexicon.termModel, debugMode);
 
         // Attributes
         const attributes = aliasesFromYamlString(
