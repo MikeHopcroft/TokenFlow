@@ -1,8 +1,10 @@
 import { Logger } from '../utilities';
 
 import {
+    Alias,
     generateAliases,
     Item,
+    Lexicon,
     PID,
     PIDToken,
     PIDTOKEN,
@@ -15,7 +17,6 @@ import {
     WordToken
 } from '.';
 
-import { Lexicon, Alias } from '../aliases';
 import { levenshtein } from '../matchers';
 
 export class PatternRecognizer<ITEM extends Item> implements Recognizer {

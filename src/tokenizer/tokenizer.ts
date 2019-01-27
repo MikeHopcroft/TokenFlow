@@ -2,9 +2,9 @@ import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 import { v3 } from 'murmurhash';
 
 import { Edge, DynamicGraph, Graph } from '../graph';
-import { DiffResults, DownstreamTermPredicate, levenshtein, Matcher, exactPrefixHash } from '../matchers';
+import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
-import { PIDToken, PIDTOKEN, Token, TokenFactory, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
+import { PIDToken, Token, TokenFactory, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
 import { HASH, ID, PID } from './types';
 import { Logger, PeekableSequence } from '../utilities';
 

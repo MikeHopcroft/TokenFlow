@@ -1,4 +1,5 @@
 
+* Remove concept of token references (terms that start with `@`)
 * WordTokens
     * Perhaps tokenizer should build default edges
     * and default edges should contain the HASH value

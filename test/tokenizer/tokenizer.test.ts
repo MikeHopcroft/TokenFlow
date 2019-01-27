@@ -1,8 +1,7 @@
 import { assert } from 'chai';
 import 'mocha';
 
-import { Lexicon, DefaultTermModel } from '../../src/aliases';
-import { PID, Tokenizer, PIDToken, PIDTOKEN, TokenizerAlias } from '../../src/tokenizer';
+import { DefaultTermModel, Lexicon, PID, Tokenizer, PIDToken, PIDTOKEN, TokenizerAlias } from '../../src/tokenizer';
 import { levenshtein } from '../../src';
 
 function* aliasGenerator(items: string[]) {

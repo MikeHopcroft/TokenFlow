@@ -1,4 +1,3 @@
-export * from './aliases';
 export * from './graph';
 export * from './ingestors';
 export * from './matchers';

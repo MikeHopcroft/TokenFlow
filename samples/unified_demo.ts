@@ -4,8 +4,7 @@ import * as path from 'path';
 
 import { Edge } from '../src/graph';
 import { levenshtein } from '../src/matchers';
-import { generateAliases, itemMapFromYamlString, Item, NumberToken, NUMBERTOKEN, PID, Recognizer, Token, Tokenizer, WordToken, WORD, UnknownToken, UNKNOWNTOKEN } from '../src/tokenizer';
-import { Lexicon } from '../src';
+import { generateAliases, itemMapFromYamlString, Item, Lexicon, NumberToken, NUMBERTOKEN, PID, Recognizer, Token, Tokenizer, WordToken, WORD, UnknownToken, UNKNOWNTOKEN } from '../src/tokenizer';
 import { RelevanceSuite } from '../src/relevance_suite';
 
 export const ATTRIBUTE2: unique symbol = Symbol('ATTRIBUTE2');

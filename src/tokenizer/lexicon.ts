@@ -2,7 +2,7 @@ import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 import { v3 } from 'murmurhash';
 
 import { Matcher } from '../matchers';
-import { Tokenizer, Token, TokenizerAlias } from '../tokenizer';
+import { Tokenizer, Token, TokenizerAlias } from '.';
 
 export type Hash = number;
 
@@ -81,7 +81,6 @@ export interface Alias {
 }
 
 export class Lexicon {
-    // private domains: Array<IterableIterator<Alias>>;
     private domains: Domain[];
     termModel: TermModel;
 
@@ -91,16 +90,10 @@ export class Lexicon {
     }
 
     addDomain(aliases: IterableIterator<Alias>) {
-        // this.domains.push(aliases);
         this.domains.push(new Domain(aliases, this.termModel));
     }
 
     ingest(tokenizer: Tokenizer) {
-        // const domains: Domain[] = [];
-        // for (const aliases of this.domains) {
-        //     domains.push(new Domain(aliases, this.termModel));
-        // }
-
         for (const domain of this.domains) {
             domain.addDownstreamTerms(this.domains);
             domain.ingest(tokenizer);
@@ -160,7 +153,7 @@ class Domain {
 
     isDownstreamTerm = (hash: number) => {
         return this.termModel.isTokenHash(hash) ||
-            // this.termModel.isNumberHash(hash) ||
+            this.termModel.isNumberHash(hash) ||
             this.downstreamTerms.has(hash);
     }
 }

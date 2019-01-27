@@ -1,7 +1,6 @@
 import * as yaml from 'js-yaml';
-import { Lexicon } from '../aliases';
 import { GraphWalker } from '../graph';
-import { Recognizer, Token, WORD, Tokenizer, UNKNOWNTOKEN, WordToken } from '../tokenizer';
+import { Lexicon, Recognizer, Token, WORD, Tokenizer, UNKNOWNTOKEN, WordToken } from '../tokenizer';
 import { copyScalar } from '../utilities';
 
 export type TokenToString = (token: Token) => string;
