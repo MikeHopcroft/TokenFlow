@@ -132,11 +132,6 @@ export class Tokenizer {
     // Full-text matching and scoring algorithm follows.
     //
     ///////////////////////////////////////////////////////////////////////////
-    commonTerms(query: HASH[], prefix: HASH[]) {
-        const a = new Set(query);
-        const b = new Set(prefix);
-        return new Set([...a].filter(x => b.has(x)));
-    }
 
     // Arrow function to allow use in map.
     matchAndScore = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
@@ -174,6 +169,7 @@ export class Tokenizer {
         // }
 
         // Ratio of match words common to query and prefix and length of match.
+        // ISSUE: commonFactor will be less than 1.0 when words are repeated.
         const commonFactor = commonTerms.size / match.length;
         // EXPERIMENT: replace above line with one of the two following:
         // const commonFactor = common / (rightmostA + 1);
