@@ -1,4 +1,7 @@
 
+* rename numbers to number-parser
+* ~~remove number-to-words dependency~~
+* bring in new repl code
 * decodeTerm should be in ... Lexicon?
 * isNeverDownstreamTerm
 * TermModel unit tests
