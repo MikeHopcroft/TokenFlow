@@ -4,14 +4,6 @@ export interface Token {
     type: symbol;
 }
 
-export const WORD: unique symbol = Symbol('WORD');
-export type WORD = typeof WORD;
-
-export interface WordToken extends Token {
-    type: WORD;
-    text: string;
-}
-
 export const NUMBERTOKEN: unique symbol = Symbol('NUMBERTOKEN');
 export type NUMBERTOKEN = typeof NUMBERTOKEN;
 

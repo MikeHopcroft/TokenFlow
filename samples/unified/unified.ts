@@ -11,8 +11,6 @@ import {
     PID,
     Token,
     Tokenizer,
-    WordToken,
-    WORD,
     UnknownToken,
     UNKNOWNTOKEN
 } from '../../src/tokenizer';
@@ -52,6 +50,13 @@ export interface QuantifierToken2 extends Token {
     value: number;
 }
 
+export const WORD: unique symbol = Symbol('WORD');
+export type WORD = typeof WORD;
+
+export interface WordToken extends Token {
+    type: WORD;
+    text: string;
+}
 
 type AnyToken =
     AttributeToken2 |

@@ -1,9 +1,10 @@
 import * as yaml from 'js-yaml';
 import { GraphWalker } from '../graph';
-import { Lexicon, Token, WORD, Tokenizer, UNKNOWNTOKEN, WordToken } from '../tokenizer';
+import { Lexicon, Token, Tokenizer, UNKNOWNTOKEN } from '../tokenizer';
 import { copyScalar } from '../utilities';
 
 export type TokenToString = (token: Token) => string;
+export type UnknownTokenFactory = (terms: string[]) => Token;
 
 export class Result {
     test: TestCase;
@@ -133,7 +134,12 @@ export class TestCase {
         this.expectedTokenText = expected.split(/\s+/);
     }
 
-    run2(lexicon: Lexicon, tokenizer: Tokenizer, tokenToString: TokenToString): Result {
+    run2(
+        lexicon: Lexicon,
+        tokenizer: Tokenizer,
+        tokenToString: TokenToString,
+        unknownFactory: UnknownTokenFactory
+    ): Result {
         console.log('=========================');
         const terms = this.input.split(/\s+/);
         const stemmed = terms.map(lexicon.termModel.stem);
@@ -155,10 +161,7 @@ export class TestCase {
                 let token = tokenizer.tokenFromEdge(edge);
                 if (token.type === UNKNOWNTOKEN) {
                     const start = end - edge.length;
-                    token = ({
-                        type: WORD,
-                        text: terms.slice(start, end).join('_').toUpperCase()
-                    } as WordToken);
+                    token = unknownFactory(terms.slice(start, end));
                 }
                 const text = tokenToString(token);
 
@@ -220,12 +223,18 @@ export class RelevanceSuite {
         this.tests = tests;
     }
 
-    run2(lexicon: Lexicon, tokenizer: Tokenizer, tokenToString: TokenToString, showPassedCases = false): AggregatedResults {
+    run2(
+        lexicon: Lexicon,
+        tokenizer: Tokenizer,
+        tokenToString: TokenToString,
+        unknownFactory: UnknownTokenFactory,
+        showPassedCases = false
+    ): AggregatedResults {
         const aggregator = new AggregatedResults();
 
-        this.tests.forEach((test) => {
-            aggregator.recordResult(test.run2(lexicon, tokenizer, tokenToString));
-        });
+        for (const test of this.tests) {
+            aggregator.recordResult(test.run2(lexicon, tokenizer, tokenToString, unknownFactory));
+        }
 
         aggregator.print(showPassedCases);
 

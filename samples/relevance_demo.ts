@@ -2,8 +2,16 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { tokenToString, Unified } from './unified';
+import { tokenToString, Unified, WORD, WordToken } from './unified';
 import { RelevanceSuite } from '../src/relevance_suite';
+
+function unkownTokenFactory(terms: string[]) {
+    return ({
+        type: WORD,
+        text: terms.join('_').toUpperCase()
+    } as WordToken);
+}
+
 
 function go() {
     const showPassedCases = false;
@@ -22,7 +30,7 @@ function go() {
     console.log();
 
     const suite = RelevanceSuite.fromYamlString(fs.readFileSync(testFile, 'utf8'));
-    return suite.run2(unified.lexicon, unified.tokenizer, tokenToString, true);
+    return suite.run2(unified.lexicon, unified.tokenizer, tokenToString, unkownTokenFactory, true);
 }
 
 go();
