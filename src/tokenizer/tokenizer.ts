@@ -148,14 +148,11 @@ export class Tokenizer {
     score(query: number[], prefix: number[], isDownstreamTerm: DownstreamTermPredicate<number>, diff: DiffResults<number>) {
         const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = diff;
 
-        // Ratio of match length to match length + edit distance.
-        // const matchFactor = match.length / (match.length + cost);
-        // EXPERIMENTAL ALTERNATIVE to above.
-
-        // let matchFactor = Math.max(0, match.length - cost) / match.length;
-        // if (match.length === 1 && cost === 1 && common === 1) {
-        //     matchFactor = 0.5;
-        // }
+        // The matchFactor attempts to express the quality of the match through
+        // the relationship between the number of terms in the match and the
+        // number of edits made. Note that matchFactor is a heuristic since it
+        // cannot distinguish between edits that are adds, deletions, and
+        // replacements.
         let matchFactor: number;
         const l = rightmostA + 1;
         if (l > cost) {
@@ -165,25 +162,25 @@ export class Tokenizer {
             matchFactor = 1 / (l + cost);
         }
 
-        // if (match.length > cost) {
-        //     matchFactor = (match.length - cost) / match.length;
-        // }
-        // else {
-        //     matchFactor = match.length / (match.length + cost);
-        // }
-
-        // Ratio of match words common to query and prefix and length of match.
+        // The commonFactor attempts to characterize quality of the match
+        // through the fraction of terms in the match that are also in the
+        // query.
         // ISSUE: commonFactor will be less than 1.0 when words are repeated.
         const commonFactor = commonTerms.size / match.length;
-        // EXPERIMENT: replace above line with one of the two following:
-        // const commonFactor = common / (rightmostA + 1);
-        // const commonFactor = common / rightmostA;
 
+        // The positionFactor attempts to characterize the quality of the match
+        // through its starting position in the query. Matches that start at
+        // the beginning of the query has positionFactor === 1.0. The value of
+        // the factor decreases as the match shifts to the right.
         const positionFactor = Math.max(match.length - leftmostA, 0) / match.length;
 
-        // RATIONALE: don't want to boost the score for large values
-        // of rightmostA that represent skipping over the middle of 
-        // the query:
+        // The lengthFactor is the base score for a match and is equal to the
+        // length of the match. The rationale for using match length, instead
+        // of the length of the matched region in the query (rightmostA + 1) or
+        // the prefix (prefix.length) is as follows:
+        //
+        // 1. Don't want to boost the score for large values of rightmostA that
+        // represent skipping over the middle of the query:
         //    query = 'a b c d e f g h i j k'
         //    prefix = 'a k'
         //    match = 'a k'
@@ -192,37 +189,14 @@ export class Tokenizer {
         //    query = 'a k'
         //    prefix = 'a b c d e f g h i j k'
         //    match = 'a k'
-        // const lengthFactor = rightmostA + 1;
-        // const lengthFactor = prefix.length;
         const lengthFactor = match.length;
 
-        // This approach doesn't work because the match can contain trailing garbage.
-        // Really need to count common terms that are not downstream words.
-        // TODO: fix matcher to not return trailing garbage. Example:
-        //   query: 'give me eight and add fog lights'
-        //   prefix: 'eight track;
-        //   match: 'eight and' instead of 'eight'
-        // 
-        // const nonDownstreamWordCount = match.reduce((count, term) => {
-        //     if (this.hashedDownstreamWordsSet.has(term)) {
-        //         return count;
-        //     }
-        //     else {
-        //         return count + 1;
-        //     }
-        // }, 0);
-        // const downstreamWordFactor = nonDownstreamWordCount / match.length;
-        // TODO: Should this be terms common with match, instead of prefix?
-        // const commonTerms = this.commonTerms(query, prefix);
-        // const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), match);
-        // const commonTerms = this.commonTerms(query.slice(0, rightmostA + 1), prefix.slice(0, match.length));
-        const commonDownstreamWords = // this.commonDownstreamWords(commonTerms);
-            new Set([...commonTerms].filter(isDownstreamTerm));
-
         let score = matchFactor * commonFactor * positionFactor * lengthFactor;
-        // if (nonDownstreamWordCount === 0) {
-        //     score = -1;
-        // }
+
+        // These are the terms that the query and match have in common that are
+        // not downstream terms.
+        const commonDownstreamWords = 
+            new Set([...commonTerms].filter(isDownstreamTerm));
 
         // Exclude matches that are all downstream words, except those that
         // match every word in the prefix. This exception is important because
@@ -230,12 +204,6 @@ export class Tokenizer {
         // different entity word. In this cases, the entity should still be
         // allowed to match, if the match is perfect. Note that using a
         // lemmatizer instead of a stemmer could also help here.
-        // const downstreamWordFactor = 
-        //     (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
-        // if (commonTerms.size === commonDownstreamWords.size &&
-        //     commonTerms.size !== prefix.length) {
-        //     score = -1;
-        // }
         const downstreamWordFactor = 
             (commonTerms.size - commonDownstreamWords.size) / commonTerms.size;
 
@@ -270,12 +238,6 @@ export class Tokenizer {
             this.logger.log(`      query="${query}"`);
             this.logger.log(`      prefix="${prefix}"`);
             this.logger.log(`      match="${match}"\n`);
-
-            if (prefixText === "four on the floor") {
-                console.log("four on the floor");
-                isDownstreamTerm(3162218338);
-                isDownstreamTerm(3162218338);
-            }
         }
         return { score, length: rightmostA + 1 };
     }
