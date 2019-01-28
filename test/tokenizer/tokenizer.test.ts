@@ -47,7 +47,7 @@ function tokenizerAlias(pid: PID, text: string): TokenizerAlias
 
 describe('Tokenizer', () => {
     describe('#addItem', () => {
-        it('should add item text to `this.items` and PIDs to `this.pids`', () => {
+        it('Add TokenizerAlias to `this.aliases`.', () => {
             const tokenizer = new Tokenizer(termModel, false);
             const items:Array<[PID, string]> = [
                 [1, 'one'],
@@ -58,14 +58,14 @@ describe('Tokenizer', () => {
                 const [pid, text] = item;
                 tokenizer.addItem(tokenizerAlias(pid, text));
 
-                assert.equal(tokenizer.aliases.length, index + 1);
-                assert.equal(tokenizer.aliases[index].text, text);
-                const pidToken: PIDToken = tokenizer.aliases[index].token as PIDToken;
+                assert.equal(tokenizer['aliases'].length, index + 1);
+                assert.equal(tokenizer['aliases'][index].text, text);
+                const pidToken: PIDToken = tokenizer['aliases'][index].token as PIDToken;
                 assert.equal(pidToken.pid, pid);
             });
         });
 
-        it('should apply MurmurHash3 with seed value of 0.', () => {
+        it('Apply MurmurHash3 with seed value of 0.', () => {
             const tokenizer = new Tokenizer(termModel, false);
             const input = 'small unsweeten ice tea';
             
@@ -73,12 +73,12 @@ describe('Tokenizer', () => {
             lexicon.addDomain(aliasGenerator([input]));
             lexicon.ingest(tokenizer);
 
-            const observed = tokenizer.aliases[0].hashes;
+            const observed = tokenizer['aliases'][0].hashes;
             const expected:number[] = [2557986934, 1506511588, 4077993285, 1955911164];
             assert.deepEqual(observed, expected);
         });
 
-        it('should build posting lists.', () => {
+        it('Construct posting lists.', () => {
             const tokenizer = new Tokenizer(termModel, false);
 
             // DESIGN NOTE: the terms 'a'..'f' are known to stem to themselves.
@@ -90,8 +90,8 @@ describe('Tokenizer', () => {
 
             // Verify that item text and stemmed item text are recorded.
             items.forEach((item, index) => {
-                assert.equal(tokenizer.aliases[index].text, items[index]);
-                assert.equal(tokenizer.aliases[index].stemmed.join(' '), items[index]);
+                assert.equal(tokenizer['aliases'][index].text, items[index]);
+                assert.equal(tokenizer['aliases'][index].stemmed.join(' '), items[index]);
             });
 
             // Verify that posting lists are correct.
@@ -106,7 +106,7 @@ describe('Tokenizer', () => {
             ];
 
             const observedPostings = terms.map((term) =>
-                tokenizer.postings[lexicon.termModel.hashTerm(term)]);
+                tokenizer['postings'][lexicon.termModel.hashTerm(term)]);
             assert.deepEqual(observedPostings, expectedPostings);
 
             // Verify that term frequencies are correct.
@@ -119,7 +119,7 @@ describe('Tokenizer', () => {
                 1   // f
             ];
             const observedFrequencies = terms.map((term) =>
-                tokenizer.hashToFrequency[lexicon.termModel.hashTerm(term)]);
+                tokenizer['hashToFrequency'][lexicon.termModel.hashTerm(term)]);
             assert.deepEqual(observedFrequencies, expectedFrequencies);
         });
 

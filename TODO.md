@@ -1,10 +1,12 @@
 
+* Remove concept of isTokenHash
+* TermModel unit tests - factor from Tokenizer unit tests
+* ~~Figure out how to make non-public members available for unit testing.~~
 * rename numbers to number-parser
 * ~~remove number-to-words dependency~~
 * bring in new repl code
 * decodeTerm should be in ... Lexicon?
 * isNeverDownstreamTerm
-* TermModel unit tests
 * UNIFY HASH and Hash
 * Remove Tokenizer downstream words concept.
 * Remove Tokenizer stemAndHash concept.

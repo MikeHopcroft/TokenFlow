@@ -17,24 +17,24 @@ export interface TokenizerAlias {
 }
 
 export class Tokenizer {
-    debugMode = true;
-    logger: Logger;
+    private debugMode = true;
+    private logger: Logger;
 
-    termModel: TermModel;
-    numberParser: NumberParser | null = null;
+    // TermModel used by NumberParser and Matcher.
+    private termModel: TermModel;
+    private numberParser: NumberParser;
 
-    // NOTE: aliases is public for access by unit tests.
-    // TODO: perhaps this should be protected instead? Then unit test
-    // could derive subclass which can provide access.
-    aliases: TokenizerAlias[] = [];
+    // Holds information about each alias to be considered for matching.
+    private aliases: TokenizerAlias[] = [];
 
+    // Mapping from term Hash back to stemmed text representation.
     private hashToText: { [hash: number]: string } = {};
 
-    // NOTE: hashToFrequency is public for access by unit tests.
-    hashToFrequency: { [hash: number]: number } = {};
+    // Frequency of each hash in the corpus.
+    private hashToFrequency: { [hash: number]: number } = {};
 
-    // NOTE: postings is public for access by unit tests.
-    postings: { [hash: number]: ID[] } = {};
+    // Inverted index mapping Hash to index into this.aliases.
+    private postings: { [hash: number]: ID[] } = {};
 
 
     constructor(
@@ -45,6 +45,8 @@ export class Tokenizer {
         this.termModel = termModel;
         this.debugMode = debugMode;
 
+        // TODO: Eventually we will want to pass in a number parser in order to
+        // handle languages other than English.
         this.numberParser = new NumberParser(this.termModel.stemAndHash);
     }
 
@@ -58,7 +60,8 @@ export class Tokenizer {
     }
 
     // Arrow function to allow use in map.
-    decodeTerm = (hash: number): string => {
+    // Used for debugging messages in this.score().
+    private decodeTerm = (hash: number): string => {
         if (hash in this.hashToText) {
             return this.hashToText[hash];
         }
@@ -100,6 +103,7 @@ export class Tokenizer {
 
         for (const [index, hash] of alias.hashes.entries()) {
             // Add this term to hash_to_text so that we can decode hashes later.
+            // TODO: REVIEW: do we want to use unstemmed text here?
             if (!(hash in this.hashToText)) {
                 this.hashToText[hash] = alias.stemmed[index];
             }
@@ -134,7 +138,7 @@ export class Tokenizer {
     ///////////////////////////////////////////////////////////////////////////
 
     // Arrow function to allow use in map.
-    matchAndScore = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
+    private matchAndScore = (query: number[], alias: TokenizerAlias): { score: number, length: number } => {
         const prefix = alias.hashes;
         const match = alias.matcher(query, prefix, alias.isDownstreamTerm, this.termModel.isTokenHash);
 
