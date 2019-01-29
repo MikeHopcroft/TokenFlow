@@ -2,9 +2,10 @@ import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../numbers';
 import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
-import { TermModel } from './term-model';
-import { HASH, ID } from './types';
+import { Hash, TermModel } from './term-model';
 import { Logger, PeekableSequence } from '../utilities';
+
+type Id = number;
 
 export interface TokenizerAlias {
     token: Token;
@@ -34,7 +35,7 @@ export class Tokenizer {
     private hashToFrequency: { [hash: number]: number } = {};
 
     // Inverted index mapping Hash to index into this.aliases.
-    private postings: { [hash: number]: ID[] } = {};
+    private postings: { [hash: number]: Id[] } = {};
 
 
     constructor(
@@ -219,9 +220,7 @@ export class Tokenizer {
             score = -1;
         }
 
-        // if (score <= 0.25) {
-        //     score = -1;
-        // }
+        // TODO: Is this exclusion necessary?
         if (score <= 0.01) {
             score = -1;
         }
@@ -242,7 +241,7 @@ export class Tokenizer {
         return { score, length: rightmostA + 1 };
     }
 
-    generateGraph(hashed: HASH[], stemmed: string[]): Graph {
+    generateGraph(hashed: Hash[], stemmed: string[]): Graph {
         const edgeLists: Edge[][] = [];
 
         for (const [index, hash] of hashed.entries()) {

@@ -23,7 +23,7 @@ export class DefaultTermModel {
     private static minTokenHash = 2 * DefaultTermModel.lower32;
 
 
-    stem = (term: string) => {
+    stem = (term: string): string => {
         if (term.startsWith('@')) {
             // This term is a token reference. Do not lowercase or stem.
             return term;
@@ -34,11 +34,11 @@ export class DefaultTermModel {
         }
     }
 
-    stemAndHash = (term: string) => {
+    stemAndHash = (term: string): Hash => {
         return this.hashTerm(this.stem(term));
     }
 
-    hashTerm = (term: string) => {
+    hashTerm = (term: string): Hash => {
         // DESIGN NOTE: murmurhash returns 32-bit hashes.
         // Encode natural numbers x as x + (1 * 2^32).
         // Encode tokens as hash(token) + (2 * 2^32)
@@ -63,15 +63,15 @@ export class DefaultTermModel {
         }
     }
 
-    hashNumber = (value: number) => {
+    hashNumber = (value: number): Hash => {
         return value + DefaultTermModel.minNumberHash;
     }
 
-    isNumberHash = (hash: Hash) => {
+    isNumberHash = (hash: Hash): boolean => {
         return hash >= DefaultTermModel.minNumberHash && hash < DefaultTermModel.minTokenHash;
     }
 
-    isTokenHash = (hash: Hash) => {
+    isTokenHash = (hash: Hash): boolean => {
         return hash >= DefaultTermModel.minTokenHash;
     }
 }
