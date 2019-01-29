@@ -1,9 +1,9 @@
 
-* Remove PID. This is a samples concept now.
-* UNIFY HASH and Hash
+* ~~Remove PID. This is a samples concept now.~~
+* ~~UNIFY HASH and Hash~~
 * Remove concept of isTokenHash
 * Remove concept of token references (terms that start with `@`)
-* TermModel unit tests - factor from Tokenizer unit tests
+* ~~TermModel unit tests - factor from Tokenizer unit tests~~
 * rename numbers to number-parser
 * bring in new repl code
 * isNeverDownstreamTerm

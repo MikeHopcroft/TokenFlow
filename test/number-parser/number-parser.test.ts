@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import 'mocha';
 import { v3 } from 'murmurhash';
 
-import { NumberMatch, NumberParser, PeekableSequence } from '../..//src';
+import { NumberMatch, NumberParser, PeekableSequence } from '../../src';
 
 const hashes: Array<[string, number]> = [
     ['zero', 0],

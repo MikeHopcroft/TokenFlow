@@ -1,6 +1,6 @@
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
-import { NumberParser, NumberMatch } from '../numbers';
+import { NumberParser, NumberMatch } from '../number-parser';
 import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
 import { Hash, TermModel } from './term-model';
 import { Logger, PeekableSequence } from '../utilities';
