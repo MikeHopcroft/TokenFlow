@@ -1,14 +1,12 @@
 import * as fs from 'fs';
 
+import { itemMapFromYamlString, Item, PID } from '../../src/items';
 import { levenshtein } from '../../src/matchers';
 import {
     generateAliases,
-    itemMapFromYamlString,
-    Item,
     Lexicon,
     NumberToken,
     NUMBERTOKEN,
-    PID,
     Token,
     Tokenizer,
     UnknownToken,

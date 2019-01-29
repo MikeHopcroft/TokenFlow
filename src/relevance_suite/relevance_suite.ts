@@ -134,7 +134,7 @@ export class TestCase {
         this.expectedTokenText = expected.split(/\s+/);
     }
 
-    run2(
+    run(
         lexicon: Lexicon,
         tokenizer: Tokenizer,
         tokenToString: TokenToString,
@@ -223,7 +223,7 @@ export class RelevanceSuite {
         this.tests = tests;
     }
 
-    run2(
+    run(
         lexicon: Lexicon,
         tokenizer: Tokenizer,
         tokenToString: TokenToString,
@@ -233,7 +233,7 @@ export class RelevanceSuite {
         const aggregator = new AggregatedResults();
 
         for (const test of this.tests) {
-            aggregator.recordResult(test.run2(lexicon, tokenizer, tokenToString, unknownFactory));
+            aggregator.recordResult(test.run(lexicon, tokenizer, tokenToString, unknownFactory));
         }
 
         aggregator.print(showPassedCases);

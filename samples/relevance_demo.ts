@@ -30,7 +30,7 @@ function go() {
     console.log();
 
     const suite = RelevanceSuite.fromYamlString(fs.readFileSync(testFile, 'utf8'));
-    return suite.run2(unified.lexicon, unified.tokenizer, tokenToString, unkownTokenFactory, true);
+    return suite.run(unified.lexicon, unified.tokenizer, tokenToString, unkownTokenFactory, true);
 }
 
 go();

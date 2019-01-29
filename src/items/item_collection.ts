@@ -1,8 +1,11 @@
 import * as Debug from 'debug';
-const debug = Debug('tf:itemMapFromYamlString');
 import * as yaml from 'js-yaml';
 import * as AJV from 'ajv';
-import { PID } from '.';
+
+const debug = Debug('tf:itemMapFromYamlString');
+
+// Product Id. Unique identifier for an item.
+export type PID = number;
 
 export interface Item {
     pid: PID;
