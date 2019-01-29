@@ -21,7 +21,7 @@ function* generateAliasesHelper(prefix:string, options:string[][]):IterableItera
     }
 }
 
-export function* generateAliases(query:string) {
+export function* generateAliases(query: string) {
     const m = /(\[[^\]]*\])|(\([^\)]*\))|([^\[^\()]*)/g;
 
     // Remove leading, trailing, and consecutive spaces.

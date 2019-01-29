@@ -6,17 +6,17 @@ items:
   - pid: 1
     name: Red Two Door convertible Sedan
     aliases:
-      - "[Red] [Two Door] Convertible [Sedan]"
+      - "exact:[Red] [Two Door] Convertible [Sedan]"
 
   - pid: 2
     name: Red Two Door Sedan
     aliases:
-      - "Red [Two Door] Sedan"
+      - relaxed:Red [Two Door] Sedan"
 
   - pid: 3
     name: Red Four Door Convertible Sedan
     aliases:
-      - Red Four Door Convertible Sedan
+      - prefix:Red Four Door Convertible Sedan
 
   - pid: 4
     name: Red Four Door Sedan

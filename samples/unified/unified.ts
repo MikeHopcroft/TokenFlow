@@ -2,8 +2,17 @@ import * as fs from 'fs';
 
 import { generateAliases } from '../../src/alias-generator';
 import { itemMapFromYamlString, Item, PID } from '../../src/items';
-import { levenshtein } from '../../src/matchers';
 import {
+    DownstreamTermPredicate,
+    EqualityPredicate,
+    exactPrefix,
+    GenericEquality,
+    levenshtein,
+    TokenPredicate
+} from '../../src/matchers';
+
+import {
+    Hash,
     Lexicon,
     NumberToken,
     NUMBERTOKEN,
@@ -12,6 +21,7 @@ import {
     UnknownToken,
     UNKNOWNTOKEN
 } from '../../src/tokenizer';
+import { Type } from 'js-yaml';
 
 export const ATTRIBUTE2: unique symbol = Symbol('ATTRIBUTE2');
 export type ATTRIBUTE2 = typeof ATTRIBUTE2;
@@ -104,16 +114,73 @@ export function tokenToString(t: Token) {
 
 type TokenFactory2 = (item: Item) => Token;
 
+function exact(
+    query: Hash[],
+    prefix: Hash[],
+    isDownstreamTerm: DownstreamTermPredicate<Hash>,
+    isToken: TokenPredicate<Hash>,
+    predicate: EqualityPredicate<Hash> = GenericEquality
+) {
+    return exactPrefix(query, prefix, false, isDownstreamTerm, isToken, predicate);
+}
+
+function prefix(
+    query: Hash[],
+    prefix: Hash[],
+    isDownstreamTerm: DownstreamTermPredicate<Hash>,
+    isToken: TokenPredicate<Hash>,
+    predicate: EqualityPredicate<Hash> = GenericEquality
+) {
+    return exactPrefix(query, prefix, true, isDownstreamTerm, isToken, predicate);
+}
+
+function matcherFromExpression(alias: string) {
+    let left = '';
+    let right = alias;
+
+    const index = alias.indexOf(':');
+    if (index !== -1) {
+        left = alias.slice(0, index).trim();
+        right = alias.slice(index + 1);
+
+        if (left === 'exact') {
+            return exact;
+        }
+        else if (left === 'prefix') {
+            return prefix;
+        }
+        else if (left === 'relaxed') {
+            return levenshtein;
+        }
+        else {
+            throw TypeError(`matcherFromAlias: Unknown matcher "${left}"`);
+        }
+    }
+
+    return levenshtein;
+}
+
+function patternFromExpression(alias: string) {
+    const index = alias.indexOf(':');
+    if (index !== -1) {
+        console.log(`"${alias.slice(index + 1)}"`);
+        return alias.slice(index + 1);
+    }
+    return alias;
+}
+
 function* aliasesFromYamlString(yamlText: string, factory: TokenFactory2) {
     const items = itemMapFromYamlString(yamlText);
 
     for (const [pid, item] of items) {
-        for (const aliasPattern of item.aliases) {
-            for (const alias of generateAliases(aliasPattern)) {
+        for (const expression of item.aliases) {
+            const matcher = matcherFromExpression(expression);
+            const pattern = patternFromExpression(expression);
+            for (const text of generateAliases(pattern)) {
                 yield {
                     token: factory(item),
-                    text: alias,
-                    matcher: levenshtein
+                    text,
+                    matcher
                 };
             }
         }

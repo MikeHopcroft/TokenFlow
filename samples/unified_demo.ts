@@ -18,13 +18,14 @@ function go(query: string) {
         path.join(__dirname, './data/intents.yaml'),
         path.join(__dirname, './data/attributes.yaml'),
         path.join(__dirname, './data/quantifiers.yaml'),
-        false);
+        true);
 
     const tokens = unified.processOneQuery(query);
     console.log(tokens.map(tokenToString).join(' '));
 }
 
-go('I would like twenty silver two door convertibles with no tinted windows and extra fuzzy dice and four studded tires');
+go('convertible');
+// go('I would like twenty silver two door convertibles with no tinted windows and extra fuzzy dice and four studded tires');
 
 // Example of "(twenty two) door" vs "twenty (two door)"
 // go('I would like twenty two door convertibles with tinted windows and fuzzy dice');
