@@ -15,7 +15,7 @@ function unkownTokenFactory(terms: string[]) {
 
 function go() {
     const showPassedCases = false;
-    const testFile = path.join(__dirname, './data/cars/tests2.yaml');
+    const testFile = path.join(__dirname, './data/cars/tests.yaml');
 
     Debug.enable('tf-interactive,tf:*');
 

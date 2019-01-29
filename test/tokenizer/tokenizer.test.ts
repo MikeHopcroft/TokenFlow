@@ -1,8 +1,13 @@
 import { assert } from 'chai';
 import 'mocha';
 
-import { DefaultTermModel, Lexicon, Token, Tokenizer, TokenizerAlias } from '../../src/tokenizer';
+import { DefaultTermModel, Token, Tokenizer, TokenizerAlias } from '../../src/tokenizer';
 import { levenshtein } from '../../src';
+
+type PID = number;
+
+const PIDTOKEN: unique symbol = Symbol('PIDTOKEN');
+type PIDTOKEN = typeof PIDTOKEN;
 
 function* aliasGenerator(items: string[]) {
     for (const item of items) {
@@ -14,16 +19,12 @@ function* aliasGenerator(items: string[]) {
     }
 }
 
-const termModel = new DefaultTermModel();
-
-type PID = number;
-const PIDTOKEN: unique symbol = Symbol('PIDTOKEN');
-type PIDTOKEN = typeof PIDTOKEN;
-
 interface PIDToken extends Token {
     type: PIDTOKEN;
     pid: PID;
 }
+
+const termModel = new DefaultTermModel();
 
 function tokenizerAlias(pid: PID, text: string): TokenizerAlias
 {
@@ -44,10 +45,9 @@ function tokenizerAlias(pid: PID, text: string): TokenizerAlias
     };
 }
 
-
 describe('Tokenizer', () => {
     describe('#addItem', () => {
-        it('Add TokenizerAlias to `this.aliases`.', () => {
+        it('Add TokenizerAliases to `this.aliases`.', () => {
             const tokenizer = new Tokenizer(termModel, false);
             const items:Array<[PID, string]> = [
                 [1, 'one'],
@@ -65,28 +65,15 @@ describe('Tokenizer', () => {
             });
         });
 
-        it('Apply MurmurHash3 with seed value of 0.', () => {
-            const tokenizer = new Tokenizer(termModel, false);
-            const input = 'small unsweeten ice tea';
-            
-            const lexicon = new Lexicon();
-            lexicon.addDomain(aliasGenerator([input]));
-            lexicon.ingest(tokenizer);
-
-            const observed = tokenizer['aliases'][0].hashes;
-            const expected:number[] = [2557986934, 1506511588, 4077993285, 1955911164];
-            assert.deepEqual(observed, expected);
-        });
-
         it('Construct posting lists.', () => {
             const tokenizer = new Tokenizer(termModel, false);
 
             // DESIGN NOTE: the terms 'a'..'f' are known to stem to themselves.
             const items = ['a b c', 'b c d', 'd e f'];
 
-            const lexicon = new Lexicon();
-            lexicon.addDomain(aliasGenerator(items));
-            lexicon.ingest(tokenizer);
+            for (const [index, item] of items.entries()) {
+                tokenizer.addItem(tokenizerAlias(index, item));
+            }
 
             // Verify that item text and stemmed item text are recorded.
             items.forEach((item, index) => {
@@ -106,7 +93,7 @@ describe('Tokenizer', () => {
             ];
 
             const observedPostings = terms.map((term) =>
-                tokenizer['postings'][lexicon.termModel.hashTerm(term)]);
+                tokenizer['postings'][termModel.hashTerm(term)]);
             assert.deepEqual(observedPostings, expectedPostings);
 
             // Verify that term frequencies are correct.
@@ -119,22 +106,8 @@ describe('Tokenizer', () => {
                 1   // f
             ];
             const observedFrequencies = terms.map((term) =>
-                tokenizer['hashToFrequency'][lexicon.termModel.hashTerm(term)]);
+                tokenizer['hashToFrequency'][termModel.hashTerm(term)]);
             assert.deepEqual(observedFrequencies, expectedFrequencies);
-        });
-
-        // it should add tokens to downstream terms
-    });
-
-    describe('#stemTerm', () => {
-        it('should apply the Snowball English Stemmer', () => {
-            const tokenizer = new Tokenizer(termModel, false);
-            const input = 'red convertible sedan rims tires knobby spinners slicks turbo charger';
-            const terms = input.split(/\s+/);
-            const stemmed = terms.map((term) => termModel.stem(term));
-            const observed = stemmed.join(' ');
-            const expected = 'red convert sedan rim tire knobbi spinner slick turbo charger';
-            assert.equal(observed, expected);
         });
     });
 });
