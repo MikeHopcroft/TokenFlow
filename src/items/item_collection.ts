@@ -1,6 +1,6 @@
+import * as AJV from 'ajv';
 import * as Debug from 'debug';
 import * as yaml from 'js-yaml';
-import * as AJV from 'ajv';
 
 const debug = Debug('tf:itemMapFromYamlString');
 

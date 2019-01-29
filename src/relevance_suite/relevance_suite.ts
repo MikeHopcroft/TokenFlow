@@ -1,7 +1,10 @@
+import * as AJV from 'ajv';
+import * as Debug from 'debug';
 import * as yaml from 'js-yaml';
 import { GraphWalker } from '../graph';
 import { Lexicon, Token, Tokenizer, UNKNOWNTOKEN } from '../tokenizer';
-import { copyScalar } from '../utilities';
+
+const debug = Debug('tf:itemMapFromYamlString');
 
 export type TokenToString = (token: Token) => string;
 export type UnknownTokenFactory = (terms: string[]) => Token;
@@ -63,7 +66,7 @@ export class AggregatedResults {
     }
 
     print(showPassedCases = false) {
-        if (this.results.find( result => !result.passed)) {
+        if (this.results.find(result => !result.passed)) {
             console.log('Failing tests:');
         }
         else {
@@ -190,30 +193,101 @@ export class TestCase {
                 break;
             }
         }
-        console.log(`${succeeded?"SUCCEEDED":"FAILED"}`);
+        console.log(`${succeeded ? "SUCCEEDED" : "FAILED"}`);
         return new Result(this, observed.join(' '), succeeded);
     }
 }
 
+interface YamlTestCase {
+    priority: string;
+    suites: string;
+    input: string;
+    expected: string;
+    expectedTokenText: string[];
+}
+
 export class RelevanceSuite {
     private tests: TestCase[] = [];
-
+    
     static fromYamlString(yamlText: string) {
-        // tslint:disable-next-line:no-any
-        const yamlTests = yaml.safeLoad(yamlText);
+        const schemaForTestCases = {
+            "definitions": {},
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.com/root.json",
+            "type": "array",
+            "title": "The Root Schema",
+            "items": {
+                "$id": "#/items",
+                "type": "object",
+                "title": "The Items Schema",
+                "required": [
+                    "priority",
+                    "suites",
+                    "input",
+                    "expected"
+                ],
+                "properties": {
+                    "priority": {
+                        "$id": "#/items/properties/priority",
+                        "type": "integer",
+                        "title": "The Priority Schema",
+                        "default": 0,
+                        "examples": [
+                            1
+                        ]
+                    },
+                    "suites": {
+                        "$id": "#/items/properties/suites",
+                        "type": "string",
+                        "title": "The Suites Schema",
+                        "default": "",
+                        "examples": [
+                            "general"
+                        ],
+                        "pattern": "^(.*)$"
+                    },
+                    "input": {
+                        "$id": "#/items/properties/input",
+                        "type": "string",
+                        "title": "The Input Schema",
+                        "default": "",
+                        "examples": [
+                            "I'd like a black sedan with alloy wheels skip the extended warranty and a red convertible jacked with open headers"
+                        ],
+                        "pattern": "^(.*)$"
+                    },
+                    "expected": {
+                        "$id": "#/items/properties/expected",
+                        "type": "string",
+                        "title": "The Expected Schema",
+                        "default": "",
+                        "examples": [
+                            "[ADD_TO_ORDER] [NUMBER:1] [ENTITY:BLACK_FOUR_DOOR_SEDAN,20] [CONJUNCTION] [ENTITY:ALLOY_RIMS,1000] [QUANTIFIER:0] [ENTITY:EXTENDED_WARRANTY,1800] [CONJUNCTION] [NUMBER:1] [ENTITY:RED_TWO_DOOR_CONVERTIBLE_SEDAN,1] [ENTITY:LIFT_KIT,1200] [CONJUNCTION] [ENTITY:OPEN_HEADERS,1203]"
+                        ],
+                        "pattern": "^(.*)$"
+                    }
+                }
+            }
+        };
+        
+        const ajv = new AJV();
+        const validator = ajv.compile(schemaForTestCases);
+                const yamlRoot = yaml.safeLoad(yamlText) as YamlTestCase[];
 
-        if (!Array.isArray(yamlTests)) {
-            throw TypeError('RelevanceTest: expected an array of tests.');
+        if (!validator(yamlRoot)) {
+            const message = 'itemMapFromYamlString: yaml data does not conform to schema.';
+            debug(message);
+            debug(validator.errors);
+            throw TypeError(message);    
         }
 
-        const tests = yamlTests.map((test, index) => {
+        const tests = yamlRoot.map((test, index) => {
             return new TestCase(
                 index,
-                copyScalar<number>(test, 'priority', 'number').toString(),
-                copyScalar<string>(test, 'suites', 'string').split(/\s+/),
-                copyScalar<string>(test, 'input', 'string'),
-                copyScalar<string>(test, 'expected', 'string')
-            );
+                test.priority.toString(),
+                test.suites.split(/\s+/),
+                test.input,
+                test.expected);
         });
 
         return new RelevanceSuite(tests);
