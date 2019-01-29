@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import 'mocha';
 
-import { generateAliases } from '../../src/tokenizer';
+import { generateAliases } from '../../src/alias-generator';
 
 describe('Alias Generation', () => {
     it('should enumerate optionals', () => {

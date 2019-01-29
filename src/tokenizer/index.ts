@@ -1,4 +1,3 @@
-export * from './alias_generator';
 export * from './lexicon';
 export * from './term-model';
 export * from './tokenizer';

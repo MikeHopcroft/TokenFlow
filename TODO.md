@@ -1,16 +1,20 @@
 
-* ~~Remove PID. This is a samples concept now.~~
-* ~~UNIFY HASH and Hash~~
+* Stemmer needs special handling for numbers
+    * Tokenizer constructor should take NumberParser
+    * NumberParser should make its terms available for stemmer.
+* Alias generator should allow specification of matcher.
+* Bring in new repl code
 * Remove concept of isTokenHash
 * Remove concept of token references (terms that start with `@`)
-* ~~TermModel unit tests - factor from Tokenizer unit tests~~
-* rename numbers to number-parser
-* bring in new repl code
-* isNeverDownstreamTerm
-* MOVE tokenizer/item_collection.ts
-* MOVE tokenizer/alias_generator.ts
 * RESTORE: stemmer_confusion_matrix and demo
-* Stemmer needs special handling for numbers
+* isNeverDownstreamTerm
+
+* ~~Remove PID. This is a samples concept now.~~
+* ~~UNIFY HASH and Hash~~
+* ~~TermModel unit tests - factor from Tokenizer unit tests~~
+* ~~rename numbers to number-parser~~
+* ~~MOVE tokenizer/item_collection.ts~~
+* ~~MOVE tokenizer/alias_generator.ts~~
 * 
 ~~Figure out how to make non-public members available for unit testing.~~
 * ~~remove number-to-words dependency~~

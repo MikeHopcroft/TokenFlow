@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 
+import { generateAliases } from '../../src/alias-generator';
 import { itemMapFromYamlString, Item, PID } from '../../src/items';
 import { levenshtein } from '../../src/matchers';
 import {
-    generateAliases,
     Lexicon,
     NumberToken,
     NUMBERTOKEN,
