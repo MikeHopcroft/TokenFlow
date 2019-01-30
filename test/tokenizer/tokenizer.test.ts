@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import 'mocha';
 
+import { EnglishNumberParser } from '../../src/number-parser';
 import { DefaultTermModel, Token, Tokenizer, TokenizerAlias } from '../../src/tokenizer';
 import { levenshtein } from '../../src';
 
@@ -48,7 +49,8 @@ function tokenizerAlias(pid: PID, text: string): TokenizerAlias
 describe('Tokenizer', () => {
     describe('#addItem', () => {
         it('Add TokenizerAliases to `this.aliases`.', () => {
-            const tokenizer = new Tokenizer(termModel, false);
+            const numberParser = new EnglishNumberParser(termModel.stemAndHash);
+            const tokenizer = new Tokenizer(termModel, numberParser, false);
             const items:Array<[PID, string]> = [
                 [1, 'one'],
                 [2, 'two'],
@@ -66,7 +68,8 @@ describe('Tokenizer', () => {
         });
 
         it('Construct posting lists.', () => {
-            const tokenizer = new Tokenizer(termModel, false);
+            const numberParser = new EnglishNumberParser(termModel.stemAndHash);
+            const tokenizer = new Tokenizer(termModel, numberParser, false);
 
             // DESIGN NOTE: the terms 'a'..'f' are known to stem to themselves.
             const items = ['a b c', 'b c d', 'd e f'];

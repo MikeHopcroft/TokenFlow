@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import 'mocha';
 
 import { DefaultTermModel, Lexicon, Tokenizer } from '../../src/tokenizer';
-import { levenshtein } from '../../src';
+import { levenshtein, EnglishNumberParser } from '../../src';
 
 const PIDTOKEN: unique symbol = Symbol('PIDTOKEN');
 type PIDTOKEN = typeof PIDTOKEN;
@@ -20,7 +20,8 @@ function* aliasGenerator(items: string[]) {
 describe('TermModel', () => {
     it('Apply MurmurHash3 with seed value of 0.', () => {
         const termModel = new DefaultTermModel();
-        const tokenizer = new Tokenizer(termModel, false);
+        const numberParser = new EnglishNumberParser(termModel.stemAndHash);
+        const tokenizer = new Tokenizer(termModel, numberParser, false);
         const input = 'small unsweeten ice tea';
         
         const lexicon = new Lexicon();

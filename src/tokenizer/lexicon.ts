@@ -94,6 +94,8 @@ class Domain {
 
     isDownstreamTerm = (hash: Hash) => {
         return this.termModel.isTokenHash(hash) ||
+            // TODO: REVIEW: don't think we want isNumberHash here.
+            // Want hashes of NumberParser.terms().
             this.termModel.isNumberHash(hash) ||
             this.downstreamTerms.has(hash);
     }
