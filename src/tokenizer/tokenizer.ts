@@ -40,6 +40,7 @@ export class Tokenizer {
 
     constructor(
         termModel: TermModel,
+        numberParser: NumberParser,
         debugMode: boolean
     ) {
         this.logger = new Logger('tf:tokenizer');
@@ -48,7 +49,7 @@ export class Tokenizer {
 
         // TODO: Eventually we will want to pass in a number parser in order to
         // handle languages other than English.
-        this.numberParser = new NumberParser(this.termModel.stemAndHash);
+        this.numberParser = numberParser;
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -1,29 +1,17 @@
-import { Logger } from '../utilities';
+import { Lexicon } from '../tokenizer';
 
-export const stemmerConfusionMatrix = "placeholder export during refactoring";
+export function stemmerConfusionMatrix(lexicon: Lexicon): {[term:string]:Set<string>} {
+    const matrix: {[term:string]:Set<string>} = {};
 
-// import { Recognizer, StemmerFunction } from '../tokenizer';
+    const terms = lexicon.terms();
+    for (const term of terms) {
+        const stemmed = lexicon.termModel.stem(term);
+        if (matrix[stemmed] === undefined) {
+            matrix[stemmed] = new Set<string>();
+        }
+        matrix[stemmed].add(term);
+    }
 
-
-// export function stemmerConfusionMatrix(recognizer: Recognizer, stemmer: StemmerFunction) {
-//     const logger = new Logger('tf:stemmerConfusionMatrix');
-
-//     const matrix: {[term:string]:Set<string>} = {};
-
-//     recognizer.terms().forEach( term => {
-//         const lower = term.toLowerCase();
-//         const stemmed = stemmer(lower);
-//         if (matrix[stemmed] === undefined) {
-//             matrix[stemmed] = new Set<string>();
-//         }
-//         matrix[stemmed].add(lower);
-//     });
-
-//     Object.entries(matrix).forEach(([key, value]) => {
-//         if (value.size > 1) {
-//             const values = [...value].join(',');
-//             logger.log(`"${key}": [${values}]`);
-//         }
-//     });
-// }
+    return matrix;
+}
 

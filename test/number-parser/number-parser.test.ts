@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import 'mocha';
 import { v3 } from 'murmurhash';
 
-import { NumberMatch, NumberParser, PeekableSequence } from '../../src';
+import { NumberMatch, EnglishNumberParser, PeekableSequence } from '../../src';
 
 const hashes: Array<[string, number]> = [
     ['zero', 0],
@@ -56,7 +56,7 @@ function stemAndHash(text: string): number {
 }
 
 // Parses one string and compares the result with the expected list of values.
-function test(parser: NumberParser, text: string, expected: NumberMatch[]) {
+function test(parser: EnglishNumberParser, text: string, expected: NumberMatch[]) {
     const output: NumberMatch[] = [];
 
     const terms = text.split(/\s+/);
@@ -243,7 +243,7 @@ describe('NumberParser', () => {
             // 'an million'
          ];
 
-        const parser = new NumberParser(stemAndHash);
+        const parser = new EnglishNumberParser(stemAndHash);
 
         for (const [text, results] of cases) {
             test(parser, text, results);

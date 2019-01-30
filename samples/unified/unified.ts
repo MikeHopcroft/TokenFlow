@@ -163,7 +163,6 @@ function matcherFromExpression(alias: string) {
 function patternFromExpression(alias: string) {
     const index = alias.indexOf(':');
     if (index !== -1) {
-        console.log(`"${alias.slice(index + 1)}"`);
         return alias.slice(index + 1);
     }
     return alias;
@@ -199,7 +198,7 @@ export class Unified {
         debugMode = false
     ) {
         this.lexicon = new Lexicon();
-        this.tokenizer = new Tokenizer(this.lexicon.termModel, debugMode);
+        this.tokenizer = new Tokenizer(this.lexicon.termModel, this.lexicon.numberParser, debugMode);
 
         // Attributes
         const attributes = aliasesFromYamlString(

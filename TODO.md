@@ -1,12 +1,14 @@
 
-* Stemmer needs special handling for numbers
-    * Tokenizer constructor should take NumberParser
-    * NumberParser should make its terms available for stemmer.
-* Alias generator should allow specification of matcher.
+* Fix casing in data.yaml alias patterns - should all be lower case
+* ~~Stemmer needs special handling for numbers~~
+    * ~~Why? As long as numbers are stemmed the same way as other words, what's the problem?~~
+    * ~~Tokenizer constructor should take NumberParser~~
+    * ~~NumberParser should make its terms available for stemmer.~~
+* ~~Alias generator should allow specification of matcher.~~
 * Bring in new repl code
 * Remove concept of isTokenHash
 * Remove concept of token references (terms that start with `@`)
-* RESTORE: stemmer_confusion_matrix and demo
+* ~RESTORE: stemmer_confusion_matrix and demo~~
 * isNeverDownstreamTerm
 
 * ~~Remove PID. This is a samples concept now.~~

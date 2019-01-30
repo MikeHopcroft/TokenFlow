@@ -1,4 +1,4 @@
-import { NumberMatch, NumberParser } from '../src';
+import { NumberMatch, EnglishNumberParser } from '../src';
 import { PeekableSequence } from '../src';
 
 import { v3 } from 'murmurhash';
@@ -53,7 +53,7 @@ function stemAndHash(text: string): number {
     return hash;
 }
 
-const parser = new NumberParser(stemAndHash);
+const parser = new EnglishNumberParser(stemAndHash);
 
 function test(text: string) {
     const output: NumberMatch[] = [];

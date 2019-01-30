@@ -1,17 +1,37 @@
-// import * as path from 'path';
-// import { Pipeline } from './pipeline';
-// import { stemmerConfusionMatrix } from '../src/stemmer_confusion_matrix';
-// import { Tokenizer } from '../src/tokenizer';
+import * as Debug from 'debug';
+import * as path from 'path';
+import { stemmerConfusionMatrix } from '../src/stemmer_confusion_matrix';
+import { Unified } from './unified';
 
-// function stemmerConfusionDemo() {
-//     const pipeline = new Pipeline(
-//         path.join(__dirname, './data/cars/catalog.yaml'),
-//         path.join(__dirname, './data/intents.yaml'),
-//         path.join(__dirname, './data/attributes.yaml'),
-//         path.join(__dirname, './data/quantifiers.yaml'),
-//         undefined);
+function stemmerConfusionDemo() {
+    Debug.enable('tf-interactive,tf:*');
 
-//     stemmerConfusionMatrix(pipeline.compositeRecognizer, Tokenizer.defaultStemTerm);
-// }
+    console.log('Stemmer Confusion Matrix');
+    console.log();
 
-// stemmerConfusionDemo();
+    const unified = new Unified(
+        path.join(__dirname, './data/cars/catalog.yaml'),
+        path.join(__dirname, './data/intents.yaml'),
+        path.join(__dirname, './data/attributes.yaml'),
+        path.join(__dirname, './data/quantifiers.yaml'),
+        true);
+
+    const matrix = stemmerConfusionMatrix(unified.lexicon);
+
+    let entryCount = 0;
+    let collisionCount = 0;
+    for (const [key, value] of Object.entries(matrix)) {
+        ++entryCount;
+        if (value.size > 1) {
+            ++collisionCount;
+            const values = [...value].join(',');
+            console.log(`"${key}": [${values}]`);
+        }
+    }
+
+    console.log();
+    console.log(`${entryCount} unique stemmed terms`);
+    console.log(`${collisionCount} collisions`);
+}
+
+stemmerConfusionDemo();
