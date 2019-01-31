@@ -71,6 +71,7 @@ export class EnglishNumberParser implements NumberParser {
     private stemAndHash: StemAndHash;
 
     private terms: string[];
+    private hashedTerms: Set<Hash>;
 
     private A: Hash;
     private AND: Hash;
@@ -94,6 +95,7 @@ export class EnglishNumberParser implements NumberParser {
     constructor(stemAndHash: StemAndHash) {
         this.stemAndHash = stemAndHash;
         this.terms = [];
+        this.hashedTerms = new Set<Hash>();
 
         this.A = this.stemAndHashInternal('a');
         this.AND = this.stemAndHashInternal('and');
@@ -107,10 +109,13 @@ export class EnglishNumberParser implements NumberParser {
         this.magnitudes = this.createMagnitudeMap(magnitudes);
     }
    
-    // Wrapper for this.stemAndHash that gathers all terms in this.terms.
+    // Wrapper for this.stemAndHash that gathers all terms in this.terms and
+    // this.hashedTerms.
     private stemAndHashInternal = (term: string): Hash => {
         this.terms.push(term);
-        return this.stemAndHash(term);
+        const hash = this.stemAndHash(term);
+        this.hashedTerms.add(hash);
+        return hash;
     }
 
     private createMap(items: Array<[string, number]>): Map<Hash, Period> {
@@ -136,6 +141,10 @@ export class EnglishNumberParser implements NumberParser {
         for (const term of this.terms) {
             terms.add(term);
         }
+    }
+
+    ownHashedTerms() {
+        return this.hashedTerms;
     }
 
     // Parses the input sequence to generate the set of numbers consistent

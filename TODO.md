@@ -1,4 +1,7 @@
 
+* ~~EnglishNumberParser needs to gather ownHashedTerms.~~
+* ~~Lexicon needs to add these terms to the domains as downstream terms.~~
+
 * Fix casing in data.yaml alias patterns - should all be lower case
 * Bring in new repl code
 * Repl command to show alternates/alternate paths.

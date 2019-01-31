@@ -265,7 +265,6 @@ export class Tokenizer {
 
                 // Generate score for all of the items, matched against
                 // the tail of the query.
-                // const tail = hashed.slice(index);
                 const scored = items.map((item) =>
                     ({ ...this.matchAndScore(tail, this.aliases[item]), label: item, isNumber: false }));
 

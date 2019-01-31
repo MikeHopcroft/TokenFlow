@@ -27,7 +27,7 @@ export class Lexicon {
 
     ingest(tokenizer: Tokenizer) {
         for (const domain of this.domains) {
-            domain.addDownstreamTerms(this.domains);
+            domain.addDownstreamTerms(this.numberParser.ownHashedTerms(), this.domains);
             domain.ingest(tokenizer);
         }
     }
@@ -75,8 +75,8 @@ class Domain {
         }
     }
 
-    addDownstreamTerms(domains: Domain[]): void {
-        this.downstreamTerms = new Set<Hash>();
+    addDownstreamTerms(numberTerms: Set<Hash>, domains: Domain[]): void {
+        this.downstreamTerms = new Set<Hash>(numberTerms);
         for (const domain of domains) {
             if (domain !== this) {
                 for (const hash of domain.ownTerms) {
@@ -93,9 +93,10 @@ class Domain {
     }
 
     isDownstreamTerm = (hash: Hash) => {
+        // DESIGN NOTE: technically speaking, we don't need the check for
+        // isNumberHash() because the text should not contain Arabic numerals.
+        // Putting check in to be able to be more flexible with the input.
         return this.termModel.isTokenHash(hash) ||
-            // TODO: REVIEW: don't think we want isNumberHash here.
-            // Want hashes of NumberParser.terms().
             this.termModel.isNumberHash(hash) ||
             this.downstreamTerms.has(hash);
     }

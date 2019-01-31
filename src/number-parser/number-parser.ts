@@ -9,4 +9,5 @@ export interface NumberMatch {
 export interface NumberParser {
     parse(input: PeekableSequence<number>, output: NumberMatch[]): void;
     addTermsToSet(terms: Set<string>): void;
+    ownHashedTerms(): Set<Hash>;
 }
