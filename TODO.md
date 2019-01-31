@@ -5,8 +5,12 @@
 * Fix casing in data.yaml alias patterns - should all be lower case
 * Bring in new repl code
 * Repl command to show alternates/alternate paths.
-* Remove concept of isTokenHash
-* Remove concept of token references (terms that start with `@`)
+* Token references
+    * What is the new analog to this concept? Some sort of graph rewriting?
+    * Scenario is parameterized tokens: NEED_MORE_TIMEL `I need @QUANTITY seconds`
+    * In this scenario, text wraps around tokens.
+    * Remove concept of isTokenHash
+    * Remove concept of token references (terms that start with `@`)
 * isNeverDownstreamTerm
 * ~~Stemmer needs special handling for numbers~~
     * ~~Why? As long as numbers are stemmed the same way as other words, what's the problem?~~
