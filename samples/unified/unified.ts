@@ -8,6 +8,7 @@ import {
     exactPrefix,
     GenericEquality,
     levenshtein,
+    Matcher,
     TokenPredicate
 } from '../../src/matchers';
 
@@ -21,40 +22,39 @@ import {
     UnknownToken,
     UNKNOWNTOKEN
 } from '../../src/tokenizer';
-import { Type } from 'js-yaml';
 
-export const ATTRIBUTE2: unique symbol = Symbol('ATTRIBUTE2');
-export type ATTRIBUTE2 = typeof ATTRIBUTE2;
+export const ATTRIBUTE: unique symbol = Symbol('ATTRIBUTE');
+export type ATTRIBUTE = typeof ATTRIBUTE;
 
-export interface AttributeToken2 extends Token {
-    type: ATTRIBUTE2;
+export interface AttributeToken extends Token {
+    type: ATTRIBUTE;
     pid: PID;
     name: string;
 }
 
-export const ENTITY2: unique symbol = Symbol('ENTITY2');
-export type ENTITY2 = typeof ENTITY2;
+export const ENTITY: unique symbol = Symbol('ENTITY');
+export type ENTITY = typeof ENTITY;
 
-export interface EntityToken2 extends Token {
-    type: ENTITY2;
+export interface EntityToken extends Token {
+    type: ENTITY;
     pid: PID;
     name: string;
 }
 
-export const INTENT2: unique symbol = Symbol('INTENT2');
-export type INTENT2 = typeof INTENT2;
+export const INTENT: unique symbol = Symbol('INTENT');
+export type INTENT = typeof INTENT;
 
-export interface IntentToken2 extends Token {
-    type: INTENT2;
+export interface IntentToken extends Token {
+    type: INTENT;
     id: PID;
     name: string;
 }
 
-export const QUANTIFIER2: unique symbol = Symbol('QUANTIFIER2');
-export type QUANTIFIER2 = typeof QUANTIFIER2;
+export const QUANTIFIER: unique symbol = Symbol('QUANTIFIER');
+export type QUANTIFIER = typeof QUANTIFIER;
 
-export interface QuantifierToken2 extends Token {
-    type: QUANTIFIER2;
+export interface QuantifierToken extends Token {
+    type: QUANTIFIER;
     value: number;
 }
 
@@ -67,11 +67,11 @@ export interface WordToken extends Token {
 }
 
 type AnyToken =
-    AttributeToken2 |
-    EntityToken2 |
-    IntentToken2 |
+    AttributeToken |
+    EntityToken |
+    IntentToken |
     NumberToken |
-    QuantifierToken2 |
+    QuantifierToken |
     UnknownToken |
     WordToken;
 
@@ -79,19 +79,19 @@ export function tokenToString(t: Token) {
     const token = t as AnyToken;
     let name: string;
     switch (token.type) {
-        case ATTRIBUTE2:
+        case ATTRIBUTE:
             const attribute = token.name.replace(/\s/g, '_').toUpperCase();
             name = `[ATTRIBUTE:${attribute},${token.pid}]`;
             break;
-        case ENTITY2:
+        case ENTITY:
             const entity = token.name.replace(/\s/g, '_').toUpperCase();
             name = `[ENTITY:${entity},${token.pid}]`;
             break;
-        case INTENT2:
+        case INTENT:
             // name = `[INTENT:${token.name}]`;
             name = `[${token.name}]`;
             break;
-        case QUANTIFIER2:
+        case QUANTIFIER:
             name = `[QUANTIFIER:${token.value}]`;
             break;
         case WORD:
@@ -112,8 +112,9 @@ export function tokenToString(t: Token) {
     return name;
 }
 
-type TokenFactory2 = (item: Item) => Token;
+type TokenFactory = (item: Item) => Token;
 
+// An exact Matcher.
 function exact(
     query: Hash[],
     prefix: Hash[],
@@ -124,6 +125,7 @@ function exact(
     return exactPrefix(query, prefix, false, isDownstreamTerm, isToken, predicate);
 }
 
+// A prefix matcher.
 function prefix(
     query: Hash[],
     prefix: Hash[],
@@ -134,7 +136,10 @@ function prefix(
     return exactPrefix(query, prefix, true, isDownstreamTerm, isToken, predicate);
 }
 
-function matcherFromExpression(alias: string) {
+// Returns the matching function specified by an expression of the form
+//   ['exact' | 'prefix' | 'levenshtein' ':'] patten
+// If no function is specified, defaults to levenshtein.
+function matcherFromExpression(alias: string): Matcher {
     let left = '';
     let right = alias;
 
@@ -160,6 +165,8 @@ function matcherFromExpression(alias: string) {
     return levenshtein;
 }
 
+// Returns the pattern portion of an expression of the form
+//   ['exact' | 'prefix' | 'levenshtein' ':'] patten
 function patternFromExpression(alias: string) {
     const index = alias.indexOf(':');
     if (index !== -1) {
@@ -168,10 +175,10 @@ function patternFromExpression(alias: string) {
     return alias;
 }
 
-function* aliasesFromYamlString(yamlText: string, factory: TokenFactory2) {
+function* aliasesFromYamlString(yamlText: string, factory: TokenFactory) {
     const items = itemMapFromYamlString(yamlText);
 
-    for (const [pid, item] of items) {
+    for (const item of items.values()) {
         for (const expression of item.aliases) {
             const matcher = matcherFromExpression(expression);
             const pattern = patternFromExpression(expression);
@@ -204,7 +211,7 @@ export class Unified {
         const attributes = aliasesFromYamlString(
             fs.readFileSync(attributesFile, 'utf8'),
             (item: Item) => ({
-                type: ATTRIBUTE2,
+                type: ATTRIBUTE,
                 pid: item.pid,
                 name: item.name
             }));
@@ -214,7 +221,7 @@ export class Unified {
         const entities = aliasesFromYamlString(
             fs.readFileSync(entityFile, 'utf8'),
             (item: Item) => ({
-                type: ENTITY2,
+                type: ENTITY,
                 pid: item.pid,
                 name: item.name
             }));
@@ -224,7 +231,7 @@ export class Unified {
         const quantifiers = aliasesFromYamlString(
             fs.readFileSync(quantifiersFile, 'utf8'),
             (item: Item) => ({
-                type: QUANTIFIER2,
+                type: QUANTIFIER,
                 value: item.pid
             }));
         this.lexicon.addDomain(quantifiers);
@@ -233,7 +240,7 @@ export class Unified {
         const intents = aliasesFromYamlString(
             fs.readFileSync(intentsFile, 'utf8'),
             (item: Item) => ({
-                type: INTENT2,
+                type: INTENT,
                 pid: item.pid,
                 name: item.name
             }));
