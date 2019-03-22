@@ -1,3 +1,4 @@
+export * from './alias-generator';
 export * from './graph';
 export * from './items';
 export * from './matchers';

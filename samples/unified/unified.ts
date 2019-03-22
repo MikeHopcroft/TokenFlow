@@ -140,13 +140,9 @@ function prefix(
 //   ['exact' | 'prefix' | 'levenshtein' ':'] patten
 // If no function is specified, defaults to levenshtein.
 function matcherFromExpression(alias: string): Matcher {
-    let left = '';
-    let right = alias;
-
     const index = alias.indexOf(':');
     if (index !== -1) {
-        left = alias.slice(0, index).trim();
-        right = alias.slice(index + 1);
+        const left = alias.slice(0, index).trim();
 
         if (left === 'exact') {
             return exact;
