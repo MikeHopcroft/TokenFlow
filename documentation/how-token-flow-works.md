@@ -14,22 +14,29 @@ By replacing the infinite variability of text with tokens, we simplify the job o
 
 ## Challenge
 
-The challenge with tokenization is that multiple tokens can be candidates for alignment with a sequence of words. For example, the first position in the phrase, `"gin and tonic"` aligns with both the spirit, `"gin"` and the cocktail, `"gin and tonic"`. The phrase, `"I need a second olive"` aligns with the request for more time, `"I need a second"` and a more complex sequence of tokens representing a request for another olive.
+The challenge with tokenization is that multiple tokens can be candidates for alignment with a given sequence of words. For example, the first position in the phrase, `"gin and tonic"` aligns with both the spirit, `"gin"` and the cocktail, `"gin and tonic"`. The phrase, `"I need a second olive"` aligns with the request for more time, `"I need a second"` and a more complex sequence of tokens representing a request for another olive.
 
 The problem becomes more complex with relaxed matching. Human speech is rarely precise. It contains [disfluencies](https://en.wikipedia.org/wiki/Speech_disfluency), like `"ah"` and `"um"`, unconscious word repetitions and transpositions, [malapropism](https://en.wikipedia.org/wiki/Malapropism), and other errors. Speech to text transcription systems may introduce additional errors, due to factors ranging from background noise to the speaker's accent.
 
 ------
 `token-flow` converts human-readable text into sequences of `tokens` that represent meaning and user intent at a higher semantic level than words alone.
 
-The challenge in recognition systems is to bridge the gap between the messy, approximate ambiguity of the real world and the literal, determinism of the world of computers. A common approach to the recognition problem is to employ a sequence of feature-detecting filters, each of which removes a certain type of noise. As an example, an vision system in an autonomous vehicle might use a pedestrian detector, which filters out the wide variety of human appearances and poses, leaving only the relevant fact that there is a person to be avoided.
+The challenge in recognition systems is to bridge the gap between the messy, approximate ambiguity of the real world and the literal, determinism of the world of computers. A common approach to the recognition problem is to employ a sequence of feature-detecting filters, each of which removes a certain type of noise. As an example, a vision system in an autonomous vehicle might use a pedestrian detector, which filters out the wide variety of human appearances and poses, leaving only the relevant fact that there is a person to be avoided.
 
 Speech recognition systems typically begin with a speech-to-text transcription system that filters out background noise and regional accents, replacing an audio waveform with text. `token-flow` starts with this transcription and uses knowledge of the conversational domain to replace sequences of words with tokens that represent higher level concepts.
 
-For example, `"a couple of"`, `"a pair of"`, `"two"`, `"two more"`, `"double"` and `"dual"` might all correspond to the quantity, `2`, in a certain context. In a speech recognition system, `token-flow` could regularize this input by emitting a `[QUANTITY:2]` token. 
+As an example, the phrases `"a couple of"`, `"a pair of"`, `"two"`, `"two more"`, `"double"` and `"dual"` might all correspond to the quantity, `2`, in a certain context. `token-flow` can regularize this sort of input by emitting a `[QUANTITY:2]` token. 
 
-At first glance, it would seem that this sort of regularization could be performed by a simple pattern recognizer.
+At first glance, it might seem that this sort of regularization could be performed by a simple pattern recognizer that would replace all sequences matching a pattern with a corresponding token. In practice, this approach fails because human language is inherently ambiguous and the process of speaking and transcription introduces errors. 
 
-It would be appealing to perform this sort of regularization with a simple pattern recognizer that would replace all instances of a pattern with a corresponding token. In practice, this approach fails because human language is inherently ambiguous and the process of speaking and transcription introduces errors. In many cases there simply isn't enough information in the phrase to resolve ambiguity.
+The presense of errors in the text diminishes the value of exact pattern matching. An approximate matching algorithm can be used to reduce the
+The presense of errors precludes the use of exact pattern matching, 
+
+
+In many cases there simply isn't enough information in the phrase to resolve ambiguity.
+
+errors preclude the use of exact matching
+and relaxed matching introduces ambiguity
 
 `token-flow` takes a two-pronged approach
 conversational context
@@ -44,6 +51,9 @@ delay all decisions as long as possible
 token-flow is not NLP. It has no knowledge of parts of speech. It has no trained language model.
 
 Just as pedestrians crosswalks come in a wide variety of shapes, sizes, positions, and wardrobe
+
+
+It would be appealing to perform this sort of regularization with a simple pattern recognizer that would replace all instances of a pattern with a corresponding token. 
 
 Human speech is messy, approximate, and ambiguous.
 
