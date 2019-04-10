@@ -14,6 +14,7 @@ function stemmerConfusionDemo() {
         path.join(__dirname, './data/intents.yaml'),
         path.join(__dirname, './data/attributes.yaml'),
         path.join(__dirname, './data/quantifiers.yaml'),
+        path.join(__dirname, './data/stopwords.txt'),
         true);
 
     const matrix = stemmerConfusionMatrix(unified.lexicon);

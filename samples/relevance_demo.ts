@@ -23,6 +23,7 @@ function go() {
         path.join(__dirname, './data/intents.yaml'),
         path.join(__dirname, './data/attributes.yaml'),
         path.join(__dirname, './data/quantifiers.yaml'),
+        path.join(__dirname, './data/stopwords.txt'),
         false);
 
     // Blank line to separate console spew from unified constructor.

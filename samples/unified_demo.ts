@@ -18,6 +18,7 @@ function go(query: string) {
         path.join(__dirname, './data/intents.yaml'),
         path.join(__dirname, './data/attributes.yaml'),
         path.join(__dirname, './data/quantifiers.yaml'),
+        path.join(__dirname, './data/stopwords.txt'),
         true);
 
     const tokens = unified.processOneQuery(query);

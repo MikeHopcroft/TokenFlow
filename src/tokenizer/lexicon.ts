@@ -21,8 +21,8 @@ export class Lexicon {
         this.numberParser = new EnglishNumberParser(this.termModel.stemAndHash);
     }
 
-    addDomain(aliases: IterableIterator<Alias>) {
-        this.domains.push(new Domain(aliases, this.termModel));
+    addDomain(aliases: IterableIterator<Alias>, forIngestion = true) {
+        this.domains.push(new Domain(aliases, this.termModel, forIngestion));
     }
 
     ingest(tokenizer: Tokenizer) {
@@ -48,9 +48,15 @@ class Domain {
     private tokenizerAliases: TokenizerAlias[];
     private ownTerms: Set<Hash>;
     private downstreamTerms: Set<Hash>;
+    private forIngestion: boolean;
 
-    constructor(aliases: IterableIterator<Alias>, termModel: TermModel) {
+    constructor(
+        aliases: IterableIterator<Alias>,
+        termModel: TermModel,
+        forIngestion = true
+    ) {
         this.termModel = termModel;
+        this.forIngestion = forIngestion;
 
         this.tokenizerAliases = [];
         this.ownTerms = new Set<Hash>();
@@ -76,19 +82,23 @@ class Domain {
     }
 
     addDownstreamTerms(numberTerms: Set<Hash>, domains: Domain[]): void {
-        this.downstreamTerms = new Set<Hash>(numberTerms);
-        for (const domain of domains) {
-            if (domain !== this) {
-                for (const hash of domain.ownTerms) {
-                    this.downstreamTerms.add(hash);
+        if (this.forIngestion) {
+            this.downstreamTerms = new Set<Hash>(numberTerms);
+            for (const domain of domains) {
+                if (domain !== this) {
+                    for (const hash of domain.ownTerms) {
+                        this.downstreamTerms.add(hash);
+                    }
                 }
             }
         }
     }
 
     ingest(tokenizer: Tokenizer) {
-        for (const alias of this.tokenizerAliases) {
-            tokenizer.addItem(alias);
+        if (this.forIngestion) {
+            for (const alias of this.tokenizerAliases) {
+                tokenizer.addItem(alias);
+            }
         }
     }
 
