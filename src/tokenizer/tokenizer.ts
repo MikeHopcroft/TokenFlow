@@ -17,7 +17,12 @@ export interface TokenizerAlias {
     isDownstreamTerm: DownstreamTermPredicate<number>;
 }
 
-export class Tokenizer {
+// tslint:disable-next-line:interface-name
+export interface IIngestor {
+    addItem(alias: TokenizerAlias): void;
+}
+
+export class Tokenizer implements IIngestor {
     private debugMode = true;
     private logger: Logger;
 
