@@ -2,7 +2,7 @@ import { Matcher } from '../matchers';
 import { EnglishNumberParser, NumberParser } from '../number-parser';
 import { DefaultTermModel, Hash, TermModel } from './term-model';
 import { Token } from './tokens';
-import { Tokenizer, TokenizerAlias } from './tokenizer';
+import { IIngestor, TokenizerAlias } from './tokenizer';
 
 export interface Alias {
     token: Token;
@@ -25,10 +25,10 @@ export class Lexicon {
         this.domains.push(new Domain(aliases, this.termModel, forIngestion));
     }
 
-    ingest(tokenizer: Tokenizer) {
+    ingest(index: IIngestor) {
         for (const domain of this.domains) {
             domain.addDownstreamTerms(this.numberParser.ownHashedTerms(), this.domains);
-            domain.ingest(tokenizer);
+            domain.ingest(index);
         }
     }
 
@@ -94,10 +94,10 @@ class Domain {
         }
     }
 
-    ingest(tokenizer: Tokenizer) {
+    ingest(index: IIngestor) {
         if (this.forIngestion) {
             for (const alias of this.tokenizerAliases) {
-                tokenizer.addItem(alias);
+                index.addItem(alias);
             }
         }
     }
