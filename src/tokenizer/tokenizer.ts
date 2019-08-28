@@ -173,7 +173,9 @@ export class Tokenizer implements IIngestor {
         // through the fraction of terms in the match that are also in the
         // query.
         // ISSUE: commonFactor will be less than 1.0 when words are repeated.
-        const commonFactor = commonTerms.size / match.length;
+        const matchTerms = new Set<number>(match);
+        const commonFactor = commonTerms.size / matchTerms.size;
+        // const commonFactor = commonTerms.size / match.length;
 
         // The positionFactor attempts to characterize the quality of the match
         // through its starting position in the query. Matches that start at
@@ -220,9 +222,11 @@ export class Tokenizer implements IIngestor {
         // even though prefix.length === 3. ACTUALLY: in diff.ts, common
         // is the number of exact matches, while commonTerms is the set of
         // exact matches (removing duplicates).
+        const prefixTerms = new Set<number>(prefix);
         if (commonTerms.size > 0 &&
             commonTerms.size === commonDownstreamWords.size &&
-            commonTerms.size !== prefix.length) {
+            commonTerms.size !== prefixTerms.size) {
+            // commonTerms.size !== prefix.length) {
             score = -1;
         }
 
