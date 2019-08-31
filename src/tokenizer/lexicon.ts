@@ -1,8 +1,9 @@
 import { Matcher } from '../matchers';
 import { EnglishNumberParser, NumberParser } from '../number-parser';
-import { DefaultTermModel, Hash, TermModel } from './term-model';
-import { Token } from './tokens';
+
+import { DefaultTermModel, Hash, ITermModel } from './term-model';
 import { IIngestor, TokenizerAlias } from './tokenizer';
+import { Token } from './tokens';
 
 export interface Alias {
     token: Token;
@@ -11,13 +12,19 @@ export interface Alias {
 }
 
 export class Lexicon {
-    termModel: TermModel;
+    termModel: ITermModel;
     numberParser: NumberParser;
     private domains: Domain[];
 
-    constructor() {
+    constructor(termModel?: ITermModel) {
         this.domains = [];
-        this.termModel = new DefaultTermModel();
+
+        if (termModel) {
+            this.termModel = termModel;
+        } else {
+            this.termModel = new DefaultTermModel();
+        }
+        
         this.numberParser = new EnglishNumberParser(this.termModel.stemAndHash);
     }
 
@@ -43,7 +50,7 @@ export class Lexicon {
 }
 
 class Domain {
-    private termModel: TermModel;
+    private termModel: ITermModel;
 
     private tokenizerAliases: TokenizerAlias[];
     private ownTerms: Set<Hash>;
@@ -52,7 +59,7 @@ class Domain {
 
     constructor(
         aliases: IterableIterator<Alias>,
-        termModel: TermModel,
+        termModel: ITermModel,
         forIngestion = true
     ) {
         this.termModel = termModel;

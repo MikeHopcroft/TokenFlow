@@ -1,9 +1,10 @@
 import { Edge, DynamicGraph, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../number-parser';
-import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
-import { Hash, TermModel } from './term-model';
 import { Logger, PeekableSequence } from '../utilities';
+
+import { Hash, ITermModel } from './term-model';
+import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
 
 type Id = number;
 
@@ -27,7 +28,7 @@ export class Tokenizer implements IIngestor {
     private logger: Logger;
 
     // TermModel used by NumberParser and Matcher.
-    private termModel: TermModel;
+    private termModel: ITermModel;
     private numberParser: NumberParser;
 
     // Holds information about each alias to be considered for matching.
@@ -44,7 +45,7 @@ export class Tokenizer implements IIngestor {
 
 
     constructor(
-        termModel: TermModel,
+        termModel: ITermModel,
         numberParser: NumberParser,
         debugMode: boolean
     ) {

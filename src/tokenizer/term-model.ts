@@ -1,9 +1,14 @@
-import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 import { v3 } from 'murmurhash';
+import { newStemmer, Stemmer as SnowballStemmer } from 'snowball-stemmers';
 
 export type Hash = number;
 
-export interface TermModel {
+// NOTE: disabling tslint rule locally because TSLint only offers the choice of
+// all interfaces start with 'I' or no interfaces start with 'I'. On this
+// project, we use the 'I' prefix for interfaces that are like abstract base
+// classes, but not interfaces that are POJO structs.
+// tslint:disable-next-line:interface-name
+export interface ITermModel {
     stem: (text: string) => string;
     stemAndHash: (test: string) => Hash;
     hashTerm: (text: string) => Hash;
@@ -11,6 +16,8 @@ export interface TermModel {
     isNumberHash: (hash: Hash) => boolean;
     isTokenHash: (hash: Hash) => boolean;
 }
+
+export type StemmerFunction = (word: string) => string;
 
 export class DefaultTermModel {
     private static snowballStemmer = newStemmer('english');
@@ -22,6 +29,15 @@ export class DefaultTermModel {
     private static minNumberHash = 1 * DefaultTermModel.lower32;
     private static minTokenHash = 2 * DefaultTermModel.lower32;
 
+    private stemmer: StemmerFunction;
+
+    constructor(stemmer?: StemmerFunction) {
+        if (stemmer) {
+            this.stemmer = stemmer;
+        } else {
+            this.stemmer = DefaultTermModel.snowballStemmer.stem;
+        }
+    }
 
     stem = (term: string): string => {
         if (term.startsWith('@')) {
@@ -30,7 +46,7 @@ export class DefaultTermModel {
         }
         else {
             // This is a regular term. Lowercase then stem.
-            return DefaultTermModel.snowballStemmer.stem(term.toLowerCase());
+            return this.stemmer(term.toLowerCase());
         }
     }
 
