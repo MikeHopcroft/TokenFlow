@@ -1,6 +1,6 @@
 # How token-flow works
 
-`token-flow` converts human-readable text into sequences of `tokens` that represent meaning and user intent at a higher semantic level than words alone. Human speech and text is mess]y and approximate and has many different ways to express the same concept. For example, `"a couple of"`, `"a pair of"`, `"two"`, `"two more"`, `"double"` and `"dual"` might all correspond to the quantity, `2`, in a certain context.
+`token-flow` converts human-readable text into sequences of `tokens` that represent meaning and user intent at a higher semantic level than words alone. Human speech and text is messy and approximate and has many different ways to express the same concept. For example, `"a couple of"`, `"a pair of"`, `"two"`, `"two more"`, `"double"` and `"dual"` might all correspond to the quantity, `2`, in a certain context.
 
 token-flow attempts to simplify the sentence by replacing each of these phrases with a `token` denoting a quanity:
 

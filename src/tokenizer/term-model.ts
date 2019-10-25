@@ -9,6 +9,7 @@ export type Hash = number;
 // classes, but not interfaces that are POJO structs.
 // tslint:disable-next-line:interface-name
 export interface ITermModel {
+    breakWords: (text: string) => string[];
     stem: (text: string) => string;
     stemAndHash: (test: string) => Hash;
     hashTerm: (text: string) => Hash;
@@ -17,6 +18,7 @@ export interface ITermModel {
     isTokenHash: (hash: Hash) => boolean;
 }
 
+export type WordBreakerFunction = (text: string) => string[];
 export type StemmerFunction = (word: string) => string;
 
 export class DefaultTermModel {
@@ -29,13 +31,20 @@ export class DefaultTermModel {
     private static minNumberHash = 1 * DefaultTermModel.lower32;
     private static minTokenHash = 2 * DefaultTermModel.lower32;
 
+    breakWords: WordBreakerFunction;
     private stemmer: StemmerFunction;
 
-    constructor(stemmer?: StemmerFunction) {
-        if (stemmer) {
-            this.stemmer = stemmer;
-        } else {
-            this.stemmer = DefaultTermModel.snowballStemmer.stem;
+    constructor(
+        extensions?: {
+            breaker?: WordBreakerFunction,
+            stemmer?: StemmerFunction
+        }
+    ) {
+        this.breakWords = DefaultTermModel.defaultBreaker;
+        this.stemmer = DefaultTermModel.snowballStemmer.stem;
+        if (extensions) {
+            this.breakWords = extensions.breaker || this.breakWords;
+            this.stemmer = extensions.stemmer || this.stemmer;
         }
     }
 
@@ -89,5 +98,9 @@ export class DefaultTermModel {
 
     isTokenHash = (hash: Hash): boolean => {
         return hash >= DefaultTermModel.minTokenHash;
+    }
+
+    static defaultBreaker(text: string): string[] {
+        return text.split(/\s+/);
     }
 }

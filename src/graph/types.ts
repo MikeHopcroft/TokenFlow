@@ -8,6 +8,11 @@ export interface Edge {
     discarded?: boolean;
 }
 
+export interface Span {
+    start: number;
+    length: number;
+}
+
 export interface Graph {
     edgeLists: Edge[][];
 
