@@ -2,6 +2,8 @@ import { assert } from 'chai';
 import 'mocha';
 
 import { DynamicGraph, Edge, GraphWalker } from '../../src/graph';
+import { Token } from '../../src/tokenizer';
+
 import { StaticGraph } from './static_graph';
 
 // Returns a string representation of the current path and its score.
@@ -54,6 +56,21 @@ function* walk(g: GraphWalker): IterableIterator<string> {
     }
 }
 
+const TEST_TOKEN: unique symbol = Symbol('TEST_TOKEN');
+type TEST_TOKEN = typeof TEST_TOKEN;
+
+interface TestToken extends Token {
+    type: TEST_TOKEN;
+    value: number;
+}
+
+function testToken(value: number): TestToken {
+    return {
+        type: TEST_TOKEN,
+        value
+    };
+}
+
 function makeEdgeList(vertexCount: number): Edge[][] {
     const edgeList: Edge[][] = [];
 
@@ -61,10 +78,12 @@ function makeEdgeList(vertexCount: number): Edge[][] {
         const edges: Edge[] = [];
         for (let j = 2; i + j <= vertexCount; ++j) {
             const label = i * 10 + i + j;
+            const token = testToken(label);
             const length = j;
             const score = j - Math.pow(0.2, j);
-            const isNumber = false;
-            edges.push({ score, length, label, isNumber });
+            // const isNumber = false;
+            // edges.push({ score, length, token, label, isNumber });
+            edges.push({ score, length, token });
         }
         edgeList.push(edges);
     }

@@ -16,3 +16,7 @@ export type UNKNOWNTOKEN = typeof UNKNOWNTOKEN;
 export interface UnknownToken extends Token {
     type: UNKNOWNTOKEN;
 }
+
+export const theUnknownToken: UnknownToken = {
+    type: UNKNOWNTOKEN
+};

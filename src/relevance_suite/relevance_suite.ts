@@ -161,7 +161,8 @@ export class TestCase {
                 end += edge.length;
 
                 // TODO: Really need an 'undefined'/'word' token.
-                let token = tokenizer.tokenFromEdge(edge);
+                // let token = tokenizer.tokenFromEdge(edge);
+                let token = edge.token;
                 if (token.type === UNKNOWNTOKEN) {
                     const start = end - edge.length;
                     token = unknownFactory(terms.slice(start, end));

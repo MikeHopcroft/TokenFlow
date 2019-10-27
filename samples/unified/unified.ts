@@ -279,7 +279,8 @@ export class Unified {
 
         const tokens: Token[] = [];
         for (const [index, edge] of path.entries()) {
-            let token = this.tokenizer.tokenFromEdge(edge);
+            // let token = this.tokenizer.tokenFromEdge(edge);
+            let token = edge.token;
             if (token.type === UNKNOWNTOKEN) {
                 const end = index + 1;
                 const start = end - edge.length;

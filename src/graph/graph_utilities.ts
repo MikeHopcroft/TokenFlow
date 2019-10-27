@@ -3,6 +3,7 @@ import { Span, Token, Tokenizer } from '..';
 import { DynamicGraph } from './dynamic_graph';
 import { GraphWalker } from './graph_walker';
 import { Edge, Graph } from './types';
+import { theUnknownToken } from '../tokenizer';
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -11,7 +12,7 @@ import { Edge, Graph } from './types';
 ///////////////////////////////////////////////////////////////////////////////
 
 // Exercises the GraphWalker API to generates all paths in a graph.
-function* walk(
+export function* walk(
     tokenizer: Tokenizer,
     graph: Graph,
     walker: GraphWalker
@@ -43,7 +44,8 @@ function* walkRecursion(
             let start = 0;
             for (const edge of path) {
                 tokens.push({
-                    ...tokenizer.tokenFromEdge(edge),
+                    // ...tokenizer.tokenFromEdge(edge),
+                    ...edge.token,
                     start,
                     length: edge.length
                 });
@@ -69,8 +71,7 @@ function* walkRecursion(
     }
 }
 
-
-function *equivalentPaths(
+export function *equivalentPaths(
     tokenizer: Tokenizer,
     graph: Graph,
     path: Edge[]
@@ -99,7 +100,8 @@ function *equivalentPathsRecursion(
             if (edge.score === currentEdge.score &&
                 edge.length === currentEdge.length)
             {
-                const token: Token = tokenizer.tokenFromEdge(edge);
+                // const token: Token = tokenizer.tokenFromEdge(edge);
+                const token = edge.token;
                 if (!tokens.has(token)) {
                     tokens.add(token);
                     prefix.push({
@@ -130,7 +132,7 @@ function *equivalentPathsRecursion(
 // Graph filtering
 //
 ///////////////////////////////////////////////////////////////////////////////
-class Map2D<A,B,V> {
+export class Map2D<A,B,V> {
     entries = new Map<A, Map<B,V>>();
 
     get(a:A, b:B): V | undefined {
@@ -153,6 +155,10 @@ class Map2D<A,B,V> {
         }
     }
 
+    isEmpty(): boolean {
+        return this.entries.size === 0;
+    }
+
     *values(): IterableIterator<V> {
         for (const d2 of this.entries.values()) {
             yield* d2.values();
@@ -170,8 +176,10 @@ export function coalesceGraph(tokenizer: Tokenizer, graph: Graph) {
 
         for (const edge of edgeList) {
             // Don't copy default edges.
-            if (edge.label !== -1) {
-                const token = tokenizer.tokenFromEdge(edge);
+            if (edge.token !== theUnknownToken) {
+            // if (edge.label !== -1) {
+                // const token = tokenizer.tokenFromEdge(edge);
+                const token = edge.token;
                 const existing = edges.get(token, edge.length);
                 if (existing) {
                     // Keep only the highest scoring edge for each
@@ -200,8 +208,13 @@ export function filterGraph(graph: Graph, threshold: number) {
         const edgeList = graph.edgeLists[i];
         const edges: Edge[] = [];
 
+        // for (const edge of edgeList) {
+        //     if ((edge.score >= threshold) && (edge.label !== -1)) {
+        //         edges.push(edge);
+        //     }
+        // }
         for (const edge of edgeList) {
-            if ((edge.score >= threshold) && (edge.label !== -1)) {
+            if ((edge.score >= threshold) && (edge.token !== theUnknownToken)) {
                 edges.push(edge);
             }
         }

@@ -3,8 +3,9 @@ import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../number-parser';
 import { Logger, PeekableSequence } from '../utilities';
 
+import { NumberTokenFactory } from './number_token_factory';
 import { Hash, ITermModel } from './term-model';
-import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN} from './tokens';
+import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN, theUnknownToken} from './tokens';
 
 type Id = number;
 
@@ -30,6 +31,8 @@ export class Tokenizer implements IIngestor {
     // TermModel used by NumberParser and Matcher.
     private termModel: ITermModel;
     private numberParser: NumberParser;
+
+    private numberTokens = new NumberTokenFactory();
 
     // Holds information about each alias to be considered for matching.
     private aliases: TokenizerAlias[] = [];
@@ -78,20 +81,33 @@ export class Tokenizer implements IIngestor {
         }
     }
 
-    tokenFromEdge = (edge: Edge): Token => {
-        if (edge.isNumber) {
-            return ({
-                type: NUMBERTOKEN,
-                value: edge.label
-            } as NumberToken);
-        }
-        else if (edge.label === -1) {
-            return {
-                type: UNKNOWNTOKEN
-            };
+    // tokenFromEdge = (edge: Edge): Token => {
+    //     if (edge.isNumber) {
+    //         // TODO: shouldn't really synthesize a token here.
+    //         // This prevents use of token equality in equivalentPaths().
+    //         return ({
+    //             type: NUMBERTOKEN,
+    //             value: edge.label
+    //         } as NumberToken);
+    //     }
+    //     else if (edge.label === -1) {
+    //         // TODO: shouldn't really synthesize a token here.
+    //         // This prevents use of token equality in equivalentPaths().
+    //         return {
+    //             type: UNKNOWNTOKEN
+    //         };
+    //     }
+    //     else {
+    //         return this.aliases[edge.label].token;
+    //     }
+    // }
+
+    tokenFromLabel = (label: number): Token => {
+        if (label === -1) {
+            return theUnknownToken;
         }
         else {
-            return this.aliases[edge.label].token;
+            return this.aliases[label].token;
         }
     }
 
@@ -275,8 +291,15 @@ export class Tokenizer implements IIngestor {
 
                 // Generate score for all of the items, matched against
                 // the tail of the query.
-                const scored = items.map((item) =>
-                    ({ ...this.matchAndScore(tail, this.aliases[item]), label: item, isNumber: false }));
+                const scored = items.map((item) => {
+                    const token = this.tokenFromLabel(item);
+                    return {
+                        ...this.matchAndScore(tail, this.aliases[item]),
+                        token,
+                        label: item,
+                        isNumber: false,
+                    };
+                });
 
                 edges = edges.concat(scored);
             }
@@ -299,7 +322,14 @@ export class Tokenizer implements IIngestor {
                     };
     
                     const { score, length } = this.score(hashed, match, Tokenizer.isNeverDownstreamTerm, diff);
-                    edges.push({ score, length, label: value.value, isNumber: true });
+                    const token = this.numberTokens.get(value.value);
+                    edges.push({
+                        score,
+                        length,
+                        token,
+                        // label: value.value,
+                        // isNumber: true
+                    });
                     // console.log(`NUMBER: value: ${value.value}, length: ${length}, score: ${score}`);
                 }
             }

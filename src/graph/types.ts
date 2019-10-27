@@ -1,8 +1,11 @@
+import { Token } from "../tokenizer";
+
 export interface Edge {
     score: number;
     length: number;
-    label: number;
-    isNumber: boolean;
+    token: Token;
+    // label: number;
+    // isNumber: boolean;
 
     // TODO: consider whether to expose the discarded property to the caller.
     discarded?: boolean;

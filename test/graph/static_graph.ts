@@ -1,4 +1,5 @@
 import { Edge, Graph } from '../../src/graph/types';
+import { theUnknownToken } from '../../src/tokenizer';
 
 export interface Path2 {
     edges: Edge[];
@@ -33,7 +34,7 @@ export class StaticGraph implements Graph {
         // Perhaps use `undefined`?
         // NOTE: using label value of -1 as sentinel for edge with no label.
         this.edgeLists = edgeLists.map((edges: Edge[]) => [
-            { score: 0, length: 1, label: -1, isNumber: false }, ...edges
+            { score: 0, length: 1, token: theUnknownToken, label: -1, isNumber: false }, ...edges
         ]);
 
         // Add outgoing edges for final vertex.
