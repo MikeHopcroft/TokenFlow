@@ -1,7 +1,7 @@
 import * as AJV from 'ajv';
 import * as Debug from 'debug';
 import * as yaml from 'js-yaml';
-import { GraphWalker } from '../graph';
+// import { GraphWalker } from '../graph';
 import { Lexicon, Token, Tokenizer, UNKNOWNTOKEN } from '../tokenizer';
 
 const debug = Debug('tf:itemMapFromYamlString');
@@ -144,56 +144,56 @@ export class TestCase {
         unknownFactory: UnknownTokenFactory
     ): Result {
         console.log('=========================');
-        const terms = this.input.split(/\s+/);
-        const stemmed = terms.map(lexicon.termModel.stem);
-        const hashed = stemmed.map(lexicon.termModel.hashTerm);
-        const graph = tokenizer.generateGraph(hashed, stemmed);
-        const walker = new GraphWalker(graph);
+        // const terms = this.input.split(/\s+/);
+        // const stemmed = terms.map(lexicon.termModel.stem);
+        // const hashed = stemmed.map(lexicon.termModel.hashTerm);
+        // const graph = tokenizer.generateGraph(hashed, stemmed);
+        // // const walker = new GraphWalker(graph);
 
-        let end = 0;
+        // let end = 0;
         const observed: string[] = [];
-        let succeeded = false;
-        for (const term of this.expectedTokenText) {
-            console.log(`Check ${term}`);
-            succeeded = false;
-            while (walker.advance()) {
-                const edge = walker.left[walker.left.length - 1];
-                end += edge.length;
+        const succeeded = false;
+        // for (const term of this.expectedTokenText) {
+        //     console.log(`Check ${term}`);
+        //     succeeded = false;
+        //     while (walker.advance()) {
+        //         const edge = walker.left[walker.left.length - 1];
+        //         end += edge.length;
 
-                // TODO: Really need an 'undefined'/'word' token.
-                // let token = tokenizer.tokenFromEdge(edge);
-                let token = edge.token;
-                if (token.type === UNKNOWNTOKEN) {
-                    const start = end - edge.length;
-                    token = unknownFactory(terms.slice(start, end));
-                }
-                const text = tokenToString(token);
+        //         // TODO: Really need an 'undefined'/'word' token.
+        //         // let token = tokenizer.tokenFromEdge(edge);
+        //         let token = edge.token;
+        //         if (token.type === UNKNOWNTOKEN) {
+        //             const start = end - edge.length;
+        //             token = unknownFactory(terms.slice(start, end));
+        //         }
+        //         const text = tokenToString(token);
 
-                if (text === term) {
-                    console.log(`  ${text} - score: ${walker.currentEdgeScore()} ok`);
-                    succeeded = true;
-                    // TODO: NOTE: everything in observed will always match the prefix of terms.
-                    // Do we still need observed?
-                    observed.push(text);
-                    break;
-                }
+        //         if (text === term) {
+        //             console.log(`  ${text} - score: ${walker.currentEdgeScore()} ok`);
+        //             succeeded = true;
+        //             // TODO: NOTE: everything in observed will always match the prefix of terms.
+        //             // Do we still need observed?
+        //             observed.push(text);
+        //             break;
+        //         }
 
-                console.log(`  ${text} - score: ${walker.currentEdgeScore()} no match <<<<<<<<<<<<<<<<<<<<`);
-                walker.retreat(false);
-                // TODO: should we be looking at the return value of discard()?
-                walker.discard();
-                end -= edge.length;
+        //         console.log(`  ${text} - score: ${walker.currentEdgeScore()} no match <<<<<<<<<<<<<<<<<<<<`);
+        //         walker.retreat(false);
+        //         // TODO: should we be looking at the return value of discard()?
+        //         walker.discard();
+        //         end -= edge.length;
 
-                // TODO: Need to either have a list of expected tokens,
-                // or need some way of formatting token before comparing
-                // with expected text. Formatting routine would have to
-                // be passed in.
-                // const text = 
-            }
-            if (!succeeded) {
-                break;
-            }
-        }
+        //         // TODO: Need to either have a list of expected tokens,
+        //         // or need some way of formatting token before comparing
+        //         // with expected text. Formatting routine would have to
+        //         // be passed in.
+        //         // const text = 
+        //     }
+        //     if (!succeeded) {
+        //         break;
+        //     }
+        // }
         console.log(`${succeeded ? "SUCCEEDED" : "FAILED"}`);
         return new Result(this, observed.join(' '), succeeded);
     }

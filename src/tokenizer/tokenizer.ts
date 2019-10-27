@@ -5,7 +5,7 @@ import { Logger, PeekableSequence } from '../utilities';
 
 import { NumberTokenFactory } from './number_token_factory';
 import { Hash, ITermModel } from './term-model';
-import { Token, NUMBERTOKEN, NumberToken, UNKNOWNTOKEN, theUnknownToken} from './tokens';
+import { Token, theUnknownToken} from './tokens';
 
 type Id = number;
 
@@ -81,27 +81,6 @@ export class Tokenizer implements IIngestor {
         }
     }
 
-    // tokenFromEdge = (edge: Edge): Token => {
-    //     if (edge.isNumber) {
-    //         // TODO: shouldn't really synthesize a token here.
-    //         // This prevents use of token equality in equivalentPaths().
-    //         return ({
-    //             type: NUMBERTOKEN,
-    //             value: edge.label
-    //         } as NumberToken);
-    //     }
-    //     else if (edge.label === -1) {
-    //         // TODO: shouldn't really synthesize a token here.
-    //         // This prevents use of token equality in equivalentPaths().
-    //         return {
-    //             type: UNKNOWNTOKEN
-    //         };
-    //     }
-    //     else {
-    //         return this.aliases[edge.label].token;
-    //     }
-    // }
-
     tokenFromLabel = (label: number): Token => {
         if (label === -1) {
             return theUnknownToken;
@@ -169,7 +148,12 @@ export class Tokenizer implements IIngestor {
         return this.score(query, prefix, alias.isDownstreamTerm, match);
     }
 
-    score(query: number[], prefix: number[], isDownstreamTerm: DownstreamTermPredicate<number>, diff: DiffResults<number>) {
+    score(
+        query: number[],
+        prefix: number[],
+        isDownstreamTerm: DownstreamTermPredicate<number>,
+        diff: DiffResults<number>
+    ) {
         const { match, cost, leftmostA, rightmostA, alignments, commonTerms } = diff;
 
         // The matchFactor attempts to express the quality of the match through
@@ -327,8 +311,6 @@ export class Tokenizer implements IIngestor {
                         score,
                         length,
                         token,
-                        // label: value.value,
-                        // isNumber: true
                     });
                     // console.log(`NUMBER: value: ${value.value}, length: ${length}, score: ${score}`);
                 }

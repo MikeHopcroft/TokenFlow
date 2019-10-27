@@ -22,6 +22,7 @@ import {
     UnknownToken,
     UNKNOWNTOKEN
 } from '../../src/tokenizer';
+import { maximalPaths } from '../../src';
 
 export const ATTRIBUTE: unique symbol = Symbol('ATTRIBUTE');
 export type ATTRIBUTE = typeof ATTRIBUTE;
@@ -275,11 +276,16 @@ export class Unified {
 
         // TODO: terms should be stemmed and hashed by TermModel in Lexicon.
         const graph = this.tokenizer.generateGraph(hashed, stemmed);
-        const path = graph.findPath([], 0);
 
+        const pathItem = maximalPaths(graph.edgeLists).next();
+        if (pathItem.done) {
+            const message = "No paths";
+            throw TypeError(message);
+        }
+
+        const path = pathItem.value!;
         const tokens: Token[] = [];
         for (const [index, edge] of path.entries()) {
-            // let token = this.tokenizer.tokenFromEdge(edge);
             let token = edge.token;
             if (token.type === UNKNOWNTOKEN) {
                 const end = index + 1;

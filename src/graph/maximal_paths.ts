@@ -19,6 +19,8 @@ import { Edge } from './types';
 //   rename walk() to allPaths().
 //   reimplement allPaths() as a variant of maximalPaths() that keeps all back links.
 //   make maximalPaths() and allPaths() static members of Graph?
+//   Update samples/unified
+//   Reinstate relevance_suite.ts
 
 // export interface Edge2 extends Edge {
 // export interface Edge2 {
@@ -28,10 +30,10 @@ import { Edge } from './types';
 // }
 
 class Vertex {
-    score = 0;
+    score = -1;
     back = new Map2D<Vertex, Token, Edge>();
 
-    addBackLink(previous: Vertex, edge: Edge) {
+    addTopScoringBackLink(previous: Vertex, edge: Edge) {
         const score = previous.score + edge.score;
         if (score > this.score) {
             // We've found a higher scoring path to this vertex.
@@ -49,6 +51,37 @@ class Vertex {
             // paths to this vertex.
         }
     }
+
+    addBackLink(previous: Vertex, edge: Edge) {
+        this.score = 1;
+        this.back.set(previous, edge.token, edge);
+    }
+}
+
+export function *allPaths(edgeLists:Edge[][]): IterableIterator<Edge[]> {
+    // Create array of vertices
+    const vertices: Vertex[] = [];
+    for (let i=0; i <= edgeLists.length; ++i) {
+        vertices.push(new Vertex());
+    }
+
+    // Forward propagate
+    vertices[0].score = 0;
+    for (let i=0; i < edgeLists.length; ++i) {
+        const from = vertices[i];
+
+        // Only add edges if `from` vertex lies on a path from the start.
+        if (from.score >= 0) {
+            const edges = edgeLists[i];
+            for (const edge of edges) {
+                const to = vertices[edge.length + i];
+                to.addBackLink(from, edge);
+            }
+        }
+    }
+
+    // Back trace
+    yield* backtraceRecursion(vertices[vertices.length - 1], []);
 }
 
 export function *maximalPaths(edgeLists:Edge[][]): IterableIterator<Edge[]> {
@@ -59,17 +92,21 @@ export function *maximalPaths(edgeLists:Edge[][]): IterableIterator<Edge[]> {
     }
 
     // Forward propagate
+    vertices[0].score = 0;
     for (let i=0; i < edgeLists.length; ++i) {
         const from = vertices[i];
-        const edges = edgeLists[i];
-        for (const edge of edges) {
-            const to = vertices[edge.length + i];
-            to.addBackLink(from, edge);
+
+        // Only add edges if `from` vertex lies on a path from the start.
+        if (from.score >= 0) {
+            const edges = edgeLists[i];
+            for (const edge of edges) {
+                const to = vertices[edge.length + i];
+                to.addTopScoringBackLink(from, edge);
+            }
         }
     }
 
     // Back trace
-    // const path = [];
     yield* backtraceRecursion(vertices[vertices.length - 1], []);
 }
 
