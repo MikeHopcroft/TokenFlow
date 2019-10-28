@@ -81,7 +81,7 @@ export function filterGraph(graph: Graph, threshold: number) {
 
     // Copy and filter all but the last edgeList, which is added by the
     // DynamicGraph constructor.
-    for (let i = 0; i < graph.edgeLists.length - 1; ++i) {
+    for (let i = 0; i < graph.edgeLists.length; ++i) {
         const edgeList = graph.edgeLists[i];
         const edges: Edge[] = [];
 
