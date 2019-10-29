@@ -1,37 +1,44 @@
 import { Token } from '../tokenizer';
+
 import { Map2D } from './graph_utilities';
 import { Edge } from './types';
+// import { tokenToString } from '../../samples/unified';
 
 // TODO:
+//   Fix breaking api changes in short-order
+//   Move this list to TODO.md
+//   Move this code into graph_utilities?
+//   Verify filter and coalesce
+//   Unit test filter and coalesce
 //   x unit tests
 //   improve unit test by sorting paths
 //   improve unit test with ascii diagram
-//   remove graph.test.ts
-//   remove static_graph.ts
-//   matcher labels edges with tokens
-//   remove tokenFromEdge
+//   remove graph.test.ts - why?
+//   x remove static_graph.ts
+//   x matcher labels edges with tokens
+//   x remove tokenFromEdge
 //   get rid of DynamicGraph data structure? Or retain for upcoming, non-linear DAG?
-//   unique number token factory
-//   remove Edge.label, Edge.isNumber
+//   x unique number token factory
+//   x remove Edge.label, Edge.isNumber
 //   possibly add Edge.alias
-//   remove equivalentPaths()
-//   remove findPath() - what about ignorePrefix - what is this for?
-//   rename walk() to allPaths().
-//   reimplement allPaths() as a variant of maximalPaths() that keeps all back links.
+//   x remove equivalentPaths()
+//   x remove findPath() - what about ignorePrefix - what is this for?
+//   x rename walk() to allPaths().
+//   x reimplement allPaths() as a variant of maximalPaths() that keeps all back links.
 //   make maximalPaths() and allPaths() static members of Graph?
 //   Update samples/unified
 //   Reinstate relevance_suite.ts
-
-// export interface Edge2 extends Edge {
-// export interface Edge2 {
-//     token: Token;
-//     length: number;
-//     score: number;
-// }
+//   Update repl with enhancements from short-order
+//   Document that score should never be -1. Ensure that this never happens.
 
 class Vertex {
     score = -1;
     back = new Map2D<Vertex, Token, Edge>();
+    id: number;
+
+    constructor(id: number) {
+        this.id = id;
+    }
 
     addTopScoringBackLink(previous: Vertex, edge: Edge) {
         const score = previous.score + edge.score;
@@ -62,7 +69,7 @@ export function *allPaths(edgeLists:Edge[][]): IterableIterator<Edge[]> {
     // Create array of vertices
     const vertices: Vertex[] = [];
     for (let i=0; i <= edgeLists.length; ++i) {
-        vertices.push(new Vertex());
+        vertices.push(new Vertex(i));
     }
 
     // Forward propagate
@@ -74,8 +81,14 @@ export function *allPaths(edgeLists:Edge[][]): IterableIterator<Edge[]> {
         if (from.score >= 0) {
             const edges = edgeLists[i];
             for (const edge of edges) {
-                const to = vertices[edge.length + i];
-                to.addBackLink(from, edge);
+                // TODO: REVIEW: why check for edges off the end here and not
+                // in maximalPaths().
+                // Add edges that don't extend beyond last vertex.
+                const toIndex = edge.length + i;
+                if (toIndex < vertices.length) {
+                    const to = vertices[toIndex];
+                    to.addBackLink(from, edge);
+                }
             }
         }
     }
@@ -88,7 +101,7 @@ export function *maximalPaths(edgeLists:Edge[][]): IterableIterator<Edge[]> {
     // Create array of vertices
     const vertices: Vertex[] = [];
     for (let i=0; i <= edgeLists.length; ++i) {
-        vertices.push(new Vertex());
+        vertices.push(new Vertex(i));
     }
 
     // Forward propagate
@@ -100,11 +113,31 @@ export function *maximalPaths(edgeLists:Edge[][]): IterableIterator<Edge[]> {
         if (from.score >= 0) {
             const edges = edgeLists[i];
             for (const edge of edges) {
-                const to = vertices[edge.length + i];
-                to.addTopScoringBackLink(from, edge);
+                const toIndex = edge.length + i;
+                // TODO: REVIEW: why check for edges off the end in
+                // allPaths() and not here?
+                // if (toIndex < vertices.length) {
+                    const to = vertices[toIndex];
+                    to.addTopScoringBackLink(from, edge);
+                // }
             }
         }
     }
+
+    // for (const vertex of vertices) {
+    //     console.log(`Vertex ${vertex.id}`);
+    //     for (const [k, v] of vertex.back.entries.entries()) {
+    //         console.log(`  From ${k.id}`);
+    //         for (const [k2, v2] of v.entries()) {
+    //             console.log(`    ${tokenToString(v2.token)}`);
+    //         }
+    //     }
+    // }
+
+    // const l = [...backtraceRecursion(vertices[vertices.length - 1], [])];
+    // for (const x of l) {
+    //     yield x;
+    // }
 
     // Back trace
     yield* backtraceRecursion(vertices[vertices.length - 1], []);
@@ -114,6 +147,12 @@ function *backtraceRecursion(
     vertex: Vertex,
     path: Edge[]
 ): IterableIterator<Edge[]> {
+    // if (path.length === 0) {
+    //     console.log(`backtraceRecursion: ${btrCounter} path length === 0`);
+    // }
+    // if (path.length < 10) {
+    //     console.log(`backtraceRecursion: ${path.map(e => tokenToString(e.token))}`);
+    // }
     if (vertex.back.isEmpty()) {
         // Recursive base case. Yield a copy of the path.
         yield [...path];

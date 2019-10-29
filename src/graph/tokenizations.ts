@@ -1,6 +1,6 @@
 import { Token } from '../tokenizer';
 
-import { allPaths, maximalPaths } from './maximal_paths';
+import { allPaths, maximalPaths } from './paths';
 import { Edge, Span } from './types';
 
 export function *allTokenizations(
