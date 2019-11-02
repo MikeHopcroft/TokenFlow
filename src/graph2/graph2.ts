@@ -1,17 +1,26 @@
 import { Hash, theUnknownToken, Token } from '../tokenizer';
 
-export interface Edge2 {
+export interface Edge2<T> {
     from: number;
     to: number;
-    token: Token;
+    token: T;
     score: number;
 }
 
-export class Graph2 {
+export function createEdge2<T>(
+    from: number,
+    score: number,
+    to: number,
+    token: T
+): Edge2<T> {
+    return { from, score, to, token };
+}
+
+export class Graph2<T> {
     // Data structure that maintains the mapping,
     //   (from, to, token) => edge
     // where `from` and `to` are vertex numbers.
-    private edges: Array<Map<number, Map<Token, Edge2>>>;
+    private edges: Array<Map<number, Map<T, Edge2<T>>>>;
 
     // Maintains the number incoming edges by vertex number.
     private inDegree: number[];
@@ -21,18 +30,20 @@ export class Graph2 {
         this.edges = [];
         this.inDegree = [];
         for (let i=0; i<vertexCount; ++i) {
-            this.edges.push(new Map<number, Map<Token, Edge2>>());
+            this.edges.push(new Map<number, Map<T, Edge2<T>>>());
             this.inDegree.push(0);
         }
-        
-        for (let i=0; i<vertexCount - 1; ++i) {
-            this.addEdge({
-                from: i,
-                to: i+1,
-                token: theUnknownToken,
-                score: 0
-            });
-        }
+
+        // TODO: this code should be in the matcher.
+        // An input graph would not have a default path.
+        // for (let i=0; i<vertexCount - 1; ++i) {
+        //     this.addEdge({
+        //         from: i,
+        //         to: i+1,
+        //         token: theUnknownToken,
+        //         score: 0
+        //     });
+        // }
     }
 
     vertexCount(): number {
@@ -42,7 +53,7 @@ export class Graph2 {
     // Attempts an edge to the graph.
     // An edge will only be added if it is the highest scoring edge connecting
     // a pair of vertices with a specific token.
-    addEdge(edge: Edge2) {
+    addEdge(edge: Edge2<T>) {
         const tokenToEdge = this.edges[edge.from].get(edge.to);
         if (tokenToEdge) {
             // We already have a tokenToEdge map for (edge.from, edge.to).
@@ -72,7 +83,7 @@ export class Graph2 {
         return true;
     }
 
-    *edgesFrom(v: number): IterableIterator<Edge2>
+    *edgesFrom(v: number): IterableIterator<Edge2<T>>
     {
         for (const tokenToEdge of this.edges[v].values()) {
             for (const edge of tokenToEdge.values()) {
@@ -81,14 +92,14 @@ export class Graph2 {
         }
     }
 
-    *allPaths(): IterableIterator<Edge2[]> {
+    *allPaths(): IterableIterator<Array<Edge2<T>>> {
         yield* this.allPathsRecursion(0, []);
     }
 
     private *allPathsRecursion(
         v: number,
-        path: Edge2[]
-    ): IterableIterator<Edge2[]> {
+        path: Array<Edge2<T>>
+    ): IterableIterator<Array<Edge2<T>>> {
         if (v === this.edges.length) {
             // Recursive base case
             yield path;
@@ -101,26 +112,26 @@ export class Graph2 {
         }
     }
 
-    *maximalPaths(): IterableIterator<Edge2[]> {
+    *maximalPaths(): IterableIterator<Array<Edge2<T>>> {
         // TODO: implement
     }
 
-    private *maximalPathsRecursion(): IterableIterator<Edge2[]> {
+    private *maximalPathsRecursion(): IterableIterator<Array<Edge2<T>>> {
         // TODO: implement
     }
 }
 
-// TODO: Consider templating Graph2 and Edge2 by token Type.
-// This will allow us to run directly against a graph of Hashes.
-export function *match2(
-    graph: Graph2,
-    from: number,
-    prefix: Hash[],
-    token: Token
-): IterableIterator<Edge2> {
-    // TODO: implement
-}
+// // TODO: Consider templating Graph2 and Edge2 by token Type.
+// // This will allow us to run directly against a graph of Hashes.
+// export function *match2(
+//     graph: Graph2<Hash>,
+//     from: number,
+//     prefix: Hash[],
+//     token: Token
+// ): IterableIterator<Edge2<Token>> {
+//     // TODO: implement
+// }
 
-function *match2Recursion(): IterableIterator<Edge2> {
-    // TODO: implement
-}
+// function *match2Recursion(): IterableIterator<Edge2<Token>> {
+//     // TODO: implement
+// }
