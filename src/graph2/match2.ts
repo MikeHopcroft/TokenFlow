@@ -8,11 +8,14 @@ import { Hash, Token } from '../tokenizer';
 import { createEdge2, Edge2, Graph2 } from './graph2';
 
 // TODO:
+//   is leftMostA always equal to zero?
+//   backtrace needs to be able to prune off trailing vertices
 //   graphLevenshtein unit tests
 //   graph tokenizer outer loop
 //   better way to do debugging/tracing in computeScore()
-//   exact matcher on graph
-//   number parser on graph
+//   implement exact matcher on graph2
+//   implement number parser on graph2
+//   implement maximalPaths on graph2
 
 // Types of edits used in dynamic programming algorithm.
 enum Edit {
@@ -57,7 +60,7 @@ export function *graphLevenshtein(
     from: number,
     bVector: Hash[],
     token: Token,
-    isDownstreamTerm: (hash: Hash) => boolean
+    isDownstreamTerm: DownstreamTermPredicate<Hash>
 ): IterableIterator<Edge2<Token>> {
     const matrix: Cell[][] = [];
     const aVector: Hash[] = [];
@@ -81,7 +84,7 @@ function *graphLevenshteinRecursion(
     aVector: Hash[],        // Hashes along current path
     bVector: Hash[],        // Prefix sequence to match against path in graph
     token: Token,           // Token to use as label for matching edges
-    isDownstreamTerm: (hash: Hash) => boolean
+    isDownstreamTerm: DownstreamTermPredicate<Hash>
 ): IterableIterator<Edge2<Token>> {
     let atEndOfPath = true;
 
@@ -178,7 +181,7 @@ function createCell(
 function backtrace(
     matrix: Cell[][],
     a: Hash[],
-    isDownstreamTerm: (hash: Hash) => boolean
+    isDownstreamTerm: DownstreamTermPredicate<Hash>
 ): DiffResults<Hash> {
     const path = [];
 

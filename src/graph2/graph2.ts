@@ -71,7 +71,7 @@ export class Graph2<T> {
             }
         } else {
                 // Create a the tokenToEdge map and add edge.
-                const tokenToEdge = new Map<Token, Edge2>();
+                const tokenToEdge = new Map<T, Edge2<T>>();
                 tokenToEdge.set(edge.token, edge);
                 this.edges[edge.from].set(edge.to, tokenToEdge);
                 this.inDegree[edge.to]++;
@@ -120,18 +120,3 @@ export class Graph2<T> {
         // TODO: implement
     }
 }
-
-// // TODO: Consider templating Graph2 and Edge2 by token Type.
-// // This will allow us to run directly against a graph of Hashes.
-// export function *match2(
-//     graph: Graph2<Hash>,
-//     from: number,
-//     prefix: Hash[],
-//     token: Token
-// ): IterableIterator<Edge2<Token>> {
-//     // TODO: implement
-// }
-
-// function *match2Recursion(): IterableIterator<Edge2<Token>> {
-//     // TODO: implement
-// }
