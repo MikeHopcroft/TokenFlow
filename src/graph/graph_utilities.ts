@@ -47,7 +47,7 @@ export function coalesceGraph(tokenizer: Tokenizer, graph: Graph) {
     // TODO: Review the part about the last edgeList. This may have changed.
     // Copy and filter all but the last edgeList, which is added by the
     // DynamicGraph constructor.
-    for (let i = 0; i < graph.edgeLists.length - 1; ++i) {
+    for (let i = 0; i < graph.edgeLists.length; ++i) {
         const edgeList = graph.edgeLists[i];
         const edges = new Map2D<Token,number,Edge>();
 

@@ -1,3 +1,6 @@
+* Top
+  * Link all .md files into top-level README.txt
+  * In tokens.ts - use Symbol.for
 
 * ~~EnglishNumberParser needs to gather ownHashedTerms.~~
 * ~~Lexicon needs to add these terms to the domains as downstream terms.~~
