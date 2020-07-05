@@ -96,7 +96,7 @@ describe('Tokenizer', () => {
             ];
 
             const observedPostings = terms.map((term) =>
-                tokenizer['postings'][termModel.hashTerm(term)]);
+                tokenizer['postings'].get(termModel.hashTerm(term)));
             assert.deepEqual(observedPostings, expectedPostings);
 
             // Verify that term frequencies are correct.

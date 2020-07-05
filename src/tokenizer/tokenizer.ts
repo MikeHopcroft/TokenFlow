@@ -19,6 +19,18 @@ export interface TokenizerAlias {
     isDownstreamTerm: DownstreamTermPredicate<number>;
 }
 
+export interface PostingListForHash {
+  term: string;
+  hash: Hash;
+  tokenToAliases: Map<Token, TokenizerAlias[]>;
+}
+
+export interface InvertedIndex {
+  terms: PostingListForHash[];
+  idToToken: Map<number, Token>;
+  tokenToId: Map<Token, number>;
+}
+
 // tslint:disable-next-line:interface-name
 export interface IIngestor {
     addItem(alias: TokenizerAlias): void;
@@ -44,7 +56,7 @@ export class Tokenizer implements IIngestor {
     private hashToFrequency: { [hash: number]: number } = {};
 
     // Inverted index mapping Hash to index into this.aliases.
-    private postings: { [hash: number]: Id[] } = {};
+    private postings = new Map<Hash, Id[]>();
 
 
     constructor(
@@ -124,13 +136,63 @@ export class Tokenizer implements IIngestor {
 
             // Add current item to posting list for this term.
             // This is the inverted index.
-            if (hash in this.postings) {
-                this.postings[hash].push(id);
-            }
-            else {
-                this.postings[hash] = [id];
+            const postingList = this.postings.get(hash);
+            if (postingList) {
+              postingList.push(id);
+            } else {
+              this.postings.set(hash, [id]);
             }
         }
+    }
+
+    getPostings(): InvertedIndex {
+      const idToToken = new Map<number, Token>();
+      const tokenToId = new Map<Token, number>();
+
+      function recordToken(token: Token) {
+        if (!tokenToId.has(token)) {
+          const id = tokenToId.size;
+          tokenToId.set(token, id);
+          idToToken.set(id, token);
+        }
+      }
+
+      const terms: PostingListForHash[]= [];
+      for (const [hash, ids] of this.postings.entries()) {
+        const term = this.decodeTerm(hash);
+        const aliases = ids.map(id => this.aliases[id]);
+        const tokenToAliases = new Map<Token, TokenizerAlias[]>();
+        for (const entry of aliases) {
+          recordToken(entry.token);
+          const x = tokenToAliases.get(entry.token);
+          if (x) {
+            x.push(entry);
+          } else {
+            tokenToAliases.set(entry.token, [entry]);
+          }
+        }
+        terms.push({
+          term,
+          hash,
+          tokenToAliases,
+        });
+      }
+
+      terms.sort((a,b) => {
+        const d = b.tokenToAliases.size - a.tokenToAliases.size;
+        if (d) {
+          return d;
+        } else {
+          return a.term.localeCompare(b.term);
+        }
+      });
+
+
+      return {
+        terms,
+        idToToken,
+        tokenToId,
+      };
     }
 
 
@@ -261,7 +323,8 @@ export class Tokenizer implements IIngestor {
             let edges: Edge[] = [];
             const tail = hashed.slice(index);
 
-            if (hash in this.postings) {
+            const items = this.postings.get(hash);
+            if (items) {
                 // This query term is in at least one product term.
                 if (this.debugMode) {
                     const stemmedText = stemmed.slice(index).join(' ');
@@ -271,7 +334,6 @@ export class Tokenizer implements IIngestor {
                 // Get all of the items containing this query term.
                 // Items not containing this term will match better
                 // at other starting positions.
-                const items = this.postings[hash];
 
                 // Generate score for all of the items, matched against
                 // the tail of the query.
