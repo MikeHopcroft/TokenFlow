@@ -94,7 +94,6 @@ export class Tokenizer implements IIngestor {
     }
 
     tokenFromLabel = (label: number): Token => {
-      // console.log('======== tokenFromLabel() ===========');
       if (label === -1) {
             // TODO: investigate whether label can ever be negative.
             console.log('======== tokenFromLabel(-1) ===========');

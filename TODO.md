@@ -1,4 +1,7 @@
 * Top
+  * Explore adding new token type: INPUT (vs UNKNOWNTOKEN)
+    * What are all of the uses of UNKNOWNTOKEN that are not inputs?
+    * Stopwords?
   * Link all .md files into top-level README.txt
   * In tokens.ts - use Symbol.for
 
