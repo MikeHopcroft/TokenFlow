@@ -1,7 +1,7 @@
 import { theUnknownToken } from '../tokenizer';
 import { Edge, Graph } from './types';
 
-export class DynamicGraph implements Graph {
+export class DynamicGraph1 implements Graph {
     edgeLists: Edge[][];
 
     constructor(edgeLists: Edge[][]) {
@@ -18,4 +18,12 @@ export class DynamicGraph implements Graph {
         // Add outgoing edges for final vertex.
         // this.edgeLists.push([]);
     }
+}
+
+export class DynamicGraph2 implements Graph {
+  edgeLists: Edge[][];
+
+  constructor(edgeLists: Edge[][]) {
+    this.edgeLists = edgeLists;
+  }
 }

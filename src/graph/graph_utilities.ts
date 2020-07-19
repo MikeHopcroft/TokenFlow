@@ -1,6 +1,6 @@
 import { theUnknownToken, Token, Tokenizer } from '../tokenizer';
 
-import { DynamicGraph } from './dynamic_graph';
+import { DynamicGraph2 } from './dynamic_graph';
 import { Edge, Graph } from './types';
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,28 +52,39 @@ export function coalesceGraph(tokenizer: Tokenizer, graph: Graph) {
         const edges = new Map2D<Token,number,Edge>();
 
         for (const edge of edgeList) {
-            // Don't copy default edges.
-            if (edge.token !== theUnknownToken) {
-            // if (edge.label !== -1) {
-                // const token = tokenizer.tokenFromEdge(edge);
-                const token = edge.token;
-                const existing = edges.get(token, edge.length);
-                if (existing) {
-                    // Keep only the highest scoring edge for each
-                    // (token, length) pair.
-                    if (existing.score < edge.score) {
-                        edges.set(token, edge.length, edge);
-                    }
-                } else {
+            // // Don't copy default edges.
+            // if (edge.token !== theUnknownToken) {
+            // // if (edge.label !== -1) {
+            //     // const token = tokenizer.tokenFromEdge(edge);
+            //     const token = edge.token;
+            //     const existing = edges.get(token, edge.length);
+            //     if (existing) {
+            //         // Keep only the highest scoring edge for each
+            //         // (token, length) pair.
+            //         if (existing.score < edge.score) {
+            //             edges.set(token, edge.length, edge);
+            //         }
+            //     } else {
+            //         edges.set(token, edge.length, edge);
+            //     }
+            // }
+            const token = edge.token;
+            const existing = edges.get(token, edge.length);
+            if (existing) {
+                // Keep only the highest scoring edge for each
+                // (token, length) pair.
+                if (existing.score < edge.score) {
                     edges.set(token, edge.length, edge);
                 }
+            } else {
+                edges.set(token, edge.length, edge);
             }
         }
         const filtered = [...edges.values()].sort((a,b) => b.score - a.score);
         edgeLists.push(filtered);
     }
 
-    return new DynamicGraph(edgeLists);
+    return new DynamicGraph2(edgeLists);
 }
 
 export function filterGraph(graph: Graph, threshold: number) {
@@ -85,19 +96,25 @@ export function filterGraph(graph: Graph, threshold: number) {
         const edgeList = graph.edgeLists[i];
         const edges: Edge[] = [];
 
+        // for (const edge of edgeList) {
+        //     if ((edge.score >= threshold) && (edge.token !== theUnknownToken)) {
+        //         edges.push(edge);
+        //     }
+        // }
         for (const edge of edgeList) {
-            if ((edge.score >= threshold) && (edge.token !== theUnknownToken)) {
-                edges.push(edge);
-            }
+          // TODO: investigate whether theUnknownToken can appear anywhere
+          // other than input edges.
+          if ((edge.score >= threshold) || (edge.token === theUnknownToken)) {
+              edges.push(edge);
+          }
         }
 
         edgeLists.push(edges);
     }
 
-    const g2 = new DynamicGraph(edgeLists);
+    const g2 = new DynamicGraph2(edgeLists);
     for (const edgeList of g2.edgeLists) {
         edgeList.sort((a,b) => b.score - a.score);
     }
     return g2;
 }
-

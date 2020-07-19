@@ -1,4 +1,4 @@
-import { Edge, DynamicGraph, Graph } from '../graph';
+import { Edge, DynamicGraph2, Graph } from '../graph';
 import { DiffResults, DownstreamTermPredicate, Matcher } from '../matchers';
 import { NumberParser, NumberMatch } from '../number-parser';
 import { Logger, PeekableSequence } from '../utilities';
@@ -94,7 +94,10 @@ export class Tokenizer implements IIngestor {
     }
 
     tokenFromLabel = (label: number): Token => {
-        if (label === -1) {
+      // console.log('======== tokenFromLabel() ===========');
+      if (label === -1) {
+            // TODO: investigate whether label can ever be negative.
+            console.log('======== tokenFromLabel(-1) ===========');
             return theUnknownToken;
         }
         else {
@@ -319,8 +322,11 @@ export class Tokenizer implements IIngestor {
 
         for (const [index, hash] of hashed.entries()) {
             // TODO: exclude starting at hashes that are conjunctions.
-
-            let edges: Edge[] = [];
+            let edges: Edge[] = [{
+                score: 0,
+                length: 1,
+                token: theUnknownToken,
+            }];
             const tail = hashed.slice(index);
 
             const items = this.postings.get(hash);
@@ -388,7 +394,7 @@ export class Tokenizer implements IIngestor {
             edgeLists.push(sorted);
         }
 
-        const graph = new DynamicGraph(edgeLists);
+        const graph = new DynamicGraph2(edgeLists);
         return graph;
     }
 }
