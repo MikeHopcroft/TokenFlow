@@ -1,6 +1,6 @@
 # token-flow [![Build Status](https://travis-ci.com/MikeHopcroft/TokenFlow.svg?branch=master)](https://travis-ci.com/MikeHopcroft/TokenFlow)
 
-**token-flow** is an exerimental natural language tokenizer intended for domains with a fixed vocabulary of entities and a small number of intents.
+**token-flow** is an experimental natural language tokenizer intended for domains with a fixed vocabulary of entities and a small number of intents.
 Uses might include purchasing items from a catalog, ordering food from a restaurant or organizing your song collection.
 
 The first stage of development is a set of tokenizers that detect entities, intents, and quantities.
